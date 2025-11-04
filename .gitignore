@@ -97,3 +97,68 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+
+#######################################################
+# META XR / OCULUS / OPENXR SPECIFIC IGNORES
+#######################################################
+
+# Plugin binaries & caches
+[Aa]ssets/MetaXR/Plugins/
+[Aa]ssets/MetaXR/Generated/
+[Aa]ssets/MetaXR/Simulator/Cache/
+[Aa]ssets/MetaXR/Simulator/Generated/
+[Aa]ssets/Oculus/VR/Plugins/
+[Aa]ssets/Oculus/Spatializer/Plugins/
+[Aa]ssets/Oculus/AudioManager/
+[Aa]ssets/Oculus/Spatializer/Native/
+[Aa]ssets/Oculus/VoiceSDK/Libs/
+[Aa]ssets/Oculus/VoiceSDK/Generated/
+[Aa]ssets/Oculus/Interaction/Tests/
+[Aa]ssets/MetaXR/Documentation/
+
+# Meta XR SDK installation packages
+[Aa]ssets/MetaXR/MetaXRAllInOneSDK.unitypackage
+[Aa]ssets/MetaXR/MetaXRAllInOneSDK/Documentation/
+
+# OpenXR temporary configs
+[Pp]rojectSettings/OpenXRSettings.asset
+[Pp]rojectSettings/XRPackageSettings.asset
+
+# Gradle build caches for Android
+[Aa]ssets/Plugins/Android/.gradle/
+[Aa]ssets/Plugins/Android/.idea/
+[Aa]ssets/Plugins/Android/libs/
+[Aa]ssets/Plugins/Android/gradle.properties
+[Aa]ssets/Plugins/Android/gradlew*
+
+#######################################################
+# INPUT SYSTEM & GENERATED SETTINGS
+#######################################################
+
+# Input System auto-generated actions & import cache
+[Aa]ssets/InputSystem/Generated/
+[Aa]ssets/InputSystem/Editor/
+[Aa]ssets/InputSystem/PlayerInputActions.inputactions*.meta
+[Aa]ssets/InputSystem/PlayerInputActions.inputactions*
+[Aa]ssets/InputSystem/Logs/
+[Aa]ssets/InputSystem/.cache/
+
+#######################################################
+# OTHER COMMON UNITY CACHES
+#######################################################
+
+# Auto-generated packages or readmes from tutorials
+[Aa]ssets/TutorialInfo/
+[Aa]ssets/Settings/EditorUserSettings.asset
+[Aa]ssets/Settings/PlayerSettings.asset
+[Aa]ssets/TextMesh Pro/Examples & Extras/
+[Aa]ssets/TextMesh Pro/Sprites/
+[Aa]ssets/TextMesh Pro/Fonts/Resources/
+
+# Local testing builds
+[Bb]uilds/
+[Bb]uild/
+*.apk
+*.aab
+*.unitypackage
