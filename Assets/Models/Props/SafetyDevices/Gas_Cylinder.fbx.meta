@@ -3,12 +3,7 @@ guid: 3db54e758525d094fb681458fe092cf7
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: GasCylinder
-    second: {fileID: 2100000, guid: 5ef42a40ed58266448aa504effc2aeaf, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
