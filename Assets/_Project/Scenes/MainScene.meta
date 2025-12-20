@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Assets/_Project/Scenes/MainScene.meta
 guid: 0d3255c2e7944284e851fd8ebe017fdb
+=======
+guid: 2b3a981a8799f7a4781f029631883be2
+>>>>>>> origin/main:Assets/Project/Scenes/MainScene.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
