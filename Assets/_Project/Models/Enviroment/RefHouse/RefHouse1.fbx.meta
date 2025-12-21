@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a085f157cd4465745bd01b3aa8f2da6b
+guid: f1d7deacf2541634dacd5783fdeca1f9
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,33 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: KitchenSink
-    second: {fileID: 2100000, guid: e527cb05b1591984c854dd856b6674ca, type: 2}
+      name: ReferenceHouse1
+    second: {fileID: 2100000, guid: 1916c73e4b6a5c04f905bc719b584a4e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: White plaster
+    second: {fileID: 2100000, guid: 34dbcd62005e39045a192b38e168edc5, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ReferenceHouse1
+    second: {fileID: 2800000, guid: 9e8804a9ae345b64d8f18f46906d7d9c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_BaseColor
+    second: {fileID: 2800000, guid: 44edc673a4e09eb408aa9e889611d4aa, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Normal
+    second: {fileID: 2800000, guid: ea11a054b8dae3e4da6c485d2960d5bc, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Roughness
+    second: {fileID: 2800000, guid: 5fccb6643f2fd034bb8350df23af7adf, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

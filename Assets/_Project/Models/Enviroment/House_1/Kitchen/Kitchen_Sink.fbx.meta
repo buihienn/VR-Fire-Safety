@@ -3,7 +3,12 @@ guid: 4babf9e93a92f8b4eab60047c6abc394
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: KitchenSink
+    second: {fileID: 2100000, guid: e527cb05b1591984c854dd856b6674ca, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
