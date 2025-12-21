@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a085f157cd4465745bd01b3aa8f2da6b
+guid: 0826906fb85277d45bb13eb2c0c69940
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: KitchenSink
-    second: {fileID: 2100000, guid: e527cb05b1591984c854dd856b6674ca, type: 2}
+      name: m_wood_tv_stand
+    second: {fileID: 2100000, guid: 660edad85687d0f42baf376325d1389c, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: m_wood_tv_stand_albedo
+    second: {fileID: 2800000, guid: a49ddf25d16d1024d95db11588ccf8b1, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: m_wood_tv_stand_roughness
+    second: {fileID: 2800000, guid: 08a30954d0f77d2498e3de4bf373b1f1, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
