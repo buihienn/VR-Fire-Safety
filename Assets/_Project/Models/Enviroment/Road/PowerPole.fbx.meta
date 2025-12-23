@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f1d7deacf2541634dacd5783fdeca1f9
+guid: 36804a081820c444488afb7ba4c9acbb
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,33 +7,23 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: ReferenceHouse1
-    second: {fileID: 2100000, guid: 995d22aaed2a62e4a9deaa4da9167dc1, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: White plaster
-    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+      name: pole_power_m
+    second: {fileID: 2100000, guid: 2b75540562d11614b9c1b3672be6b16d, type: 2}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: ReferenceHouse1
-    second: {fileID: 2800000, guid: da15643cf103d3b4f9e9f97988894c88, type: 3}
+      name: power_pole_2_low_pole_power_m_BaseColor
+    second: {fileID: 2800000, guid: 86a2a04334bedc94e826b57790f4d465, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: white plaster_BaseColor
-    second: {fileID: 2800000, guid: 5e2219cc06a29224daa32e3c94332286, type: 3}
+      name: power_pole_2_low_pole_power_m_Metallic
+    second: {fileID: 2800000, guid: 38755655097235b48a9637b8316023db, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: white plaster_Normal
-    second: {fileID: 2800000, guid: 3c550f583e9533b4c92f0411c621c390, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: white plaster_Roughness
-    second: {fileID: 2800000, guid: 1466b0377c124e44891ef353ba54af0e, type: 3}
+      name: power_pole_2_low_pole_power_m_Roughness
+    second: {fileID: 2800000, guid: c84a64d97cb250c499ba61e599cbf523, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
