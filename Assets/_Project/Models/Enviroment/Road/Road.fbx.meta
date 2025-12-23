@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f1d7deacf2541634dacd5783fdeca1f9
+guid: 55c6b8b3941b22e449e7ec388af6f10e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,33 +7,33 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: ReferenceHouse1
-    second: {fileID: 2100000, guid: 995d22aaed2a62e4a9deaa4da9167dc1, type: 2}
+      name: Pavement
+    second: {fileID: 2100000, guid: 13def6e8893f414458a62dce3e49927c, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: White plaster
-    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+      name: Pavement2
+    second: {fileID: 2100000, guid: bf95a80d9a647d74e8769fcfed854c45, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Road
+    second: {fileID: 2100000, guid: b1ee1db6256cb2b4788d0cb62fd338d5, type: 2}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: ReferenceHouse1
-    second: {fileID: 2800000, guid: da15643cf103d3b4f9e9f97988894c88, type: 3}
+      name: Pavement2_Base
+    second: {fileID: 2800000, guid: 408cc94dbae01094a8691e7bc737b3e2, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: white plaster_BaseColor
-    second: {fileID: 2800000, guid: 5e2219cc06a29224daa32e3c94332286, type: 3}
+      name: Pavement_Base
+    second: {fileID: 2800000, guid: bcbb4d94ca534d44b8e9f090cc93606f, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: white plaster_Normal
-    second: {fileID: 2800000, guid: 3c550f583e9533b4c92f0411c621c390, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: white plaster_Roughness
-    second: {fileID: 2800000, guid: 1466b0377c124e44891ef353ba54af0e, type: 3}
+      name: Road
+    second: {fileID: 2800000, guid: 191d9f167dd06444ea3c754ca6d823cd, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
