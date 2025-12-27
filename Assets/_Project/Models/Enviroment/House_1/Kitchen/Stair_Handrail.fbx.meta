@@ -12,13 +12,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Material
-    second: {fileID: 2100000, guid: 541d6895f4589b84a8c9d1232efe091c, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: tripo_mat_e7279390
-    second: {fileID: 2100000, guid: 61222d12e96d10c4abbb4fe9d08feb26, type: 2}
+      name: Wood09-basecolor
+    second: {fileID: 2100000, guid: e8657e7fface7604cb25b8e640ad5f5a, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

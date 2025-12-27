@@ -7,13 +7,38 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: KitchenWall
-    second: {fileID: 2100000, guid: 2ec7eb54509435a4aa8b4eea84f2342b, type: 2}
+      name: Marble Dark
+    second: {fileID: 2100000, guid: 7f550fad19711464fb21ee79f96232c6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wall3
+    second: {fileID: 2100000, guid: 8120fa4ef0556954cb506711bdade1b6, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: White plaster
     second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: texture
+    second: {fileID: 2800000, guid: ea2c3593351f48e4fbcd719f0bc78755, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_BaseColor
+    second: {fileID: 2800000, guid: f8a5226f0c1dae04491d3936842921a8, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Normal
+    second: {fileID: 2800000, guid: 3e7a882f05b57e742baf500e37d91e22, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Roughness
+    second: {fileID: 2800000, guid: 6a68b01a430a3db4b90d83feef3b9ef3, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
