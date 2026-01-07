@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ab541fe125280644cb038e5f3d776fc2
+guid: 7fe3cf1d42d9acf4e954002c9aeeb5f9
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,13 +7,13 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: KitchenWall
-    second: {fileID: 2100000, guid: 2ec7eb54509435a4aa8b4eea84f2342b, type: 2}
+      name: glass
+    second: {fileID: 2100000, guid: 8966b1cd5d7d1ca45bce308c04eff75d, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: White plaster
-    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+      name: window
+    second: {fileID: 2100000, guid: 2d53a30895a68874abdf250fa4ec5ec4, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
