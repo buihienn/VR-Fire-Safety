@@ -222,7 +222,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9056008931779895284}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9cf2a74d69b1c1e41916d2a7afdff5be, type: 3}
   m_Name: 
@@ -292,7 +292,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1193673140260968222}
+      - m_Target: {fileID: 4786654301639914189}
         m_TargetAssemblyTypeName: FanButton, Assembly-CSharp
         m_MethodName: PressButton
         m_Mode: 1
@@ -470,7 +470,7 @@ PrefabInstance:
       addedObject: {fileID: 1803489078564829077}
     - targetCorrespondingSourceObject: {fileID: 158684856873152341, guid: 80a24f18355d3a5439d63c7b5a976621, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1193673140260968222}
+      addedObject: {fileID: 4786654301639914189}
   m_SourcePrefab: {fileID: 100100000, guid: 80a24f18355d3a5439d63c7b5a976621, type: 3}
 --- !u!1 &87490073617260317 stripped
 GameObject:
@@ -535,7 +535,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 158684856873152341, guid: 80a24f18355d3a5439d63c7b5a976621, type: 3}
   m_PrefabInstance: {fileID: 1006477635785155148}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1193673140260968222
+--- !u!114 &4786654301639914189
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
