@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 2088365a255d61849b54b11c5ca8580b
+guid: 1f049dae97f289748ba00b30a1dc4b41
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,23 +7,33 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Plant
-    second: {fileID: 2100000, guid: e354db5e4f6848e4898204d662994742, type: 2}
+      name: White plaster
+    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: white plaser
+    second: {fileID: 2100000, guid: 250e5e83f7b98b64c8b0ffd0ae720299, type: 2}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Plant_Pot_1_Plant_BaseColor
-    second: {fileID: 2800000, guid: c01505aa92c011240896c59251e57de2, type: 3}
+      name: Gemini_Generated_Image_b83xzbb83xzbb83x
+    second: {fileID: 2800000, guid: e7452fc5ba508bd4d9deb1ec25f6f975, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Plant_Pot_1_Plant_Metallic
-    second: {fileID: 2800000, guid: 3f01bb93b0018af43b795f6b438d1dd7, type: 3}
+      name: white plaster_BaseColor
+    second: {fileID: 2800000, guid: 3664fcb052cac2940897b79090606a39, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Plant_Pot_1_Plant_Roughness
-    second: {fileID: 2800000, guid: 84c9f9f5b826831458ca65ea5a9d40e4, type: 3}
+      name: white plaster_Normal
+    second: {fileID: 2800000, guid: 112d595f58117d54788297283719ce7b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Roughness
+    second: {fileID: 2800000, guid: 79e71ffca08caff40ad3c73c064a6021, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

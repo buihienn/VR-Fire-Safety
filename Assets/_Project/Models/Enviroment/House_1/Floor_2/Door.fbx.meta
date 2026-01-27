@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 2088365a255d61849b54b11c5ca8580b
+guid: 16a726da7dc6d21438a9d902867ada88
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,23 +7,28 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Plant
-    second: {fileID: 2100000, guid: e354db5e4f6848e4898204d662994742, type: 2}
+      name: D2
+    second: {fileID: 2100000, guid: a18c0f0ba260d7f4ca28a4725a0b7c5c, type: 2}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Plant_Pot_1_Plant_BaseColor
-    second: {fileID: 2800000, guid: c01505aa92c011240896c59251e57de2, type: 3}
+      name: Door2Color
+    second: {fileID: 2800000, guid: 6398c58121ea7a644a4e943e3a1353aa, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Plant_Pot_1_Plant_Metallic
-    second: {fileID: 2800000, guid: 3f01bb93b0018af43b795f6b438d1dd7, type: 3}
+      name: Door2Normal
+    second: {fileID: 2800000, guid: d6e2d7813d619124da69cd038e6dc394, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Plant_Pot_1_Plant_Roughness
-    second: {fileID: 2800000, guid: 84c9f9f5b826831458ca65ea5a9d40e4, type: 3}
+      name: Door2Roughness
+    second: {fileID: 2800000, guid: a774e75ce881d434ab27a8380f5d71bb, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: DoorsMetallic
+    second: {fileID: 2800000, guid: ca57a1b245f71e240a7b40cf2e0612ce, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
