@@ -13,22 +13,22 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Palm_Test_2_lambert2_BaseColor.tga
-    second: {fileID: 2800000, guid: e27064ac50cb12a4a8ff3089bdf5655c, type: 3}
+    second: {fileID: 2800000, guid: d2d48db0765c7f441bbb5d30385c37a2, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Palm_Test_2_lambert2_Metallic.tga
-    second: {fileID: 2800000, guid: cc4ee3abbf41fb34da19b9c79c62fbee, type: 3}
+    second: {fileID: 2800000, guid: 5a5e68b05e63aa54e8539f06042b7c0d, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Palm_Test_2_lambert2_Roughness.tga
-    second: {fileID: 2800000, guid: b2c9d4b403eb36f41bd20e2119637ca6, type: 3}
+    second: {fileID: 2800000, guid: 0a12516287cf81f478162266bd599c9b, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Palm_Tree_Alpha.tga
-    second: {fileID: 2800000, guid: df57d1a662b5f9741aa9c3d7e8c3060e, type: 3}
+    second: {fileID: 2800000, guid: 4fff5358ef89a47488f3dc48715a42e7, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

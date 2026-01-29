@@ -18,17 +18,17 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Image_1.011
-    second: {fileID: 2800000, guid: 6bcef018610824748a90e6042a02aa60, type: 3}
+    second: {fileID: 2800000, guid: ffa2d2c70650e0848811040f7a79b6aa, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Image_2.011
-    second: {fileID: 2800000, guid: 18d72eecbe71274488d93c115862b4e4, type: 3}
+    second: {fileID: 2800000, guid: b46ab99333ca1a74baac7d8c51c3ec21, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Image_4.011
-    second: {fileID: 2800000, guid: 9bf79b18c08a47b469c241de0f4442f8, type: 3}
+    second: {fileID: 2800000, guid: 01bcc8617e9b1e441af48100cb9393bf, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
