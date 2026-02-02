@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 668011530a296454b8d0cd5a9603fe78
+guid: 0a5f8010616827e45a1d950c9a13dcae
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,13 +7,38 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Tiles22
-    second: {fileID: 2100000, guid: 24c447d9717f3b24ba41bacef3997f3a, type: 2}
+      name: Plant A
+    second: {fileID: 2100000, guid: 4faed19cdb7a9374a921e36e17ddaa92, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: White plaster
-    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+      name: Pot A
+    second: {fileID: 2100000, guid: f95df704cd4ac154a90afbe28f4072fc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: soil A
+    second: {fileID: 2100000, guid: 3a34ae9bed715bb478a15eb0eedec7d5, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Plant_A
+    second: {fileID: 2800000, guid: 5f1e66fd0fc91854aa627c9d1706e21a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Pot_A_albedo
+    second: {fileID: 2800000, guid: 85efacf70b170614fbb2a05668ed5d10, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Pot_A_roughness
+    second: {fileID: 2800000, guid: 0613bb04b7334314392fa46a858a56dc, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: soil
+    second: {fileID: 2800000, guid: 52d1799fe35a309458577e69a266f1f5, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

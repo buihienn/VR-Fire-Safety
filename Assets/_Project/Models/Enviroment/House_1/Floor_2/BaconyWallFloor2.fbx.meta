@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: cdf4eb8582406e244a4bc253d389c90d
+guid: 8b4e8f823ffe9724eac255afdf0c979e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,13 +7,33 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Tiles22
-    second: {fileID: 2100000, guid: 24c447d9717f3b24ba41bacef3997f3a, type: 2}
+      name: White plaster
+    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: White plaster
-    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+      name: white plaser
+    second: {fileID: 2100000, guid: 250e5e83f7b98b64c8b0ffd0ae720299, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Gemini_Generated_Image_b83xzbb83xzbb83x
+    second: {fileID: 2800000, guid: bb00f2a2d15e9b14890053a419599041, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_BaseColor
+    second: {fileID: 2800000, guid: c2fc11a2d42c93c49b8af47d5b29b327, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Normal
+    second: {fileID: 2800000, guid: 4b0d48ce7c0232947a5e7d0ca430d04b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Roughness
+    second: {fileID: 2800000, guid: 385b79f596e9b554a9ef8f0a9f6e8767, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
