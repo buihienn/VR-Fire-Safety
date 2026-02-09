@@ -5,10 +5,10 @@ using System.Reflection;
 public class ToggleParentRigidbodyOnGrab : MonoBehaviour
 {
     [Header("Drag the HandGrabInteractable component here (as MonoBehaviour)")]
-    public MonoBehaviour handGrab;          // kéo component Hand Grab Interactable vào đây
+    public MonoBehaviour handGrab;          
 
     [Header("Target Rigidbody (parent / root)")]
-    public Rigidbody parentRigidbody;       // kéo Rigidbody cha vào đây
+    public Rigidbody parentRigidbody;       
 
     private object _stateEnumValueSelect;
     private PropertyInfo _stateProp;
@@ -24,7 +24,6 @@ public class ToggleParentRigidbodyOnGrab : MonoBehaviour
     {
         if (handGrab == null) return;
 
-        // Tìm property "State"
         _stateProp = handGrab.GetType().GetProperty("State", BindingFlags.Instance | BindingFlags.Public);
         if (_stateProp == null)
         {
@@ -32,8 +31,7 @@ public class ToggleParentRigidbodyOnGrab : MonoBehaviour
             return;
         }
 
-        // Lấy enum InteractableState.Select (theo tên string) để so sánh
-        Type stateType = _stateProp.PropertyType; // thường là enum InteractableState
+        Type stateType = _stateProp.PropertyType; 
         _stateEnumValueSelect = Enum.Parse(stateType, "Select");
     }
 
