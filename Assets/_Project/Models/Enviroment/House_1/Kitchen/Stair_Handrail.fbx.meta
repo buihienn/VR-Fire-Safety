@@ -1,34 +1,9 @@
 fileFormatVersion: 2
-guid: 211c8733e6dc97145bcb31b62754843a
+guid: 6d36ebf720cfb074baab3625daa8ffe3
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: branches.001
-    second: {fileID: 2100000, guid: 746d7cce296bc774e81558b023d79cd9, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: leaves.001
-    second: {fileID: 2100000, guid: a994cb5ab24725944b524056e6b0e5b2, type: 2}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: Image_1.001
-    second: {fileID: 2800000, guid: 2be5c92a9347e7a48bc839e6b379c3fe, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: Image_2.001
-    second: {fileID: 2800000, guid: bce1c0b02d85acb43af0dd64f4000397, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: Image_4.001
-    second: {fileID: 2800000, guid: 15682634ba9b9fb49a79843989738416, type: 3}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
