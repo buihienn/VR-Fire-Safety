@@ -934,11 +934,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 2a6997a4-46f0-4cf8-96be-74d497ca17f4
+  cloudProjectId: 8becc55e-d251-44cf-a3fb-4e9ca9723f36
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: VR_FireSafety 2025-09-07_11-31-47
-  organizationId: bhien22
+  projectName: VR_FireSafety
+  organizationId: hpvinh22
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
