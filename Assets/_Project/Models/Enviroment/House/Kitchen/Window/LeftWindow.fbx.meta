@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 13669c6c768cfcf489846abd09a942cd
+guid: 2815bb403459c284da66be1f9a565b17
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -14,21 +14,6 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: window
     second: {fileID: 2100000, guid: 2d53a30895a68874abdf250fa4ec5ec4, type: 2}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: Gemini_Generated_Image_y1lzuqy1lzuqy1lz
-    second: {fileID: 2800000, guid: 4f44cccedb6e6d5459a1104b39863892, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: window_w_Metallic
-    second: {fileID: 2800000, guid: ee1631532f5e3ea42b894128c278e835, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: window_w_Roughness
-    second: {fileID: 2800000, guid: 418fa6f1fedc99e4c95415da26b8a0bc, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

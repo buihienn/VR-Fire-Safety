@@ -6,33 +6,35 @@ public class HandleGrabRelay : MonoBehaviour
     [SerializeField] private DoorLeftOpenByHandle doorController;
 
     private Grabbable _grabbable;
-    private bool _wasGrabbed;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    void Awake()
     {
-        
+        _grabbable = GetComponent<Grabbable>();
+
+        if (_grabbable == null)
+            Debug.LogError("Missing Grabbable component!");
     }
 
-    // Update is called once per frame
-    void Update()
+    void OnEnable()
     {
-        if (_grabbable == null || doorController == null) return;
+        if (_grabbable != null)
+            _grabbable.WhenPointerEventRaised += OnPointerEvent;
+    }
 
-        bool grabbed = _grabbable.SelectingPointsCount > 0;
+    void OnDisable()
+    {
+        if (_grabbable != null)
+            _grabbable.WhenPointerEventRaised -= OnPointerEvent;
+    }
 
-        if (grabbed != _wasGrabbed)
-            Debug.Log($"[HandleGrabRelay] grabbed={grabbed}, selectingCount={_grabbable.SelectingPointsCount}");
-        // Rising edge: grab
-        if (grabbed && !_wasGrabbed)
+    private void OnPointerEvent(PointerEvent evt)
+    {
+        if (doorController == null) return;
+
+        if (evt.Type == PointerEventType.Select)
             doorController.OnHandleGrabbed();
 
-        // Falling edge: release
-        if (!grabbed && _wasGrabbed) {
+        if (evt.Type == PointerEventType.Unselect)
             doorController.OnHandleReleased();
-            // transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-        }
-
-        _wasGrabbed = grabbed;
     }
 }

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: b082f984db7f7a5479e719d0cfd69a35
+guid: 8fb55ef9ce9bdb945b03204d747002de
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Generated Image October 13, 2025 - 2_13PM
-    second: {fileID: 2100000, guid: b94d36b003891e34a9208362e38410c4, type: 2}
+      name: Aluminum
+    second: {fileID: 2100000, guid: 325297da17bd9514785fa4d4fd1f2bc0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: EntranceDoor
+    second: {fileID: 2100000, guid: 3420e842f74240d448659e2a85539c11, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Entrance_Door_Base
+    second: {fileID: 2800000, guid: 718f3e4e868957043930ea5eb8079a20, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

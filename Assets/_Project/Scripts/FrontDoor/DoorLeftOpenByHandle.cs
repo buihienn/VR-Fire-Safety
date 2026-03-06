@@ -151,7 +151,6 @@ public class DoorLeftOpenByHandle : MonoBehaviour
             f.Normalize();
 
         // Góc có dấu quanh Vector3.up (trục đứng thế giới)
-        // Nếu bạn muốn xoay theo local-up của hinge, có thể đổi Vector3.up -> doorHingePivot.up
         float signed = Vector3.SignedAngle(f, v, Vector3.up);
         return signed;
     }
