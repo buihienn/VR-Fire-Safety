@@ -1,102 +1,180 @@
 using UnityEngine;
 
+/// <summary>
+/// Điều khiển việc mở cửa trái bằng tay nắm (handle).
+/// 
+/// Luồng hoạt động:
+/// 1. User grab handle → HandleController gọi OnHandleGrabbed() 
+/// 2. Mỗi frame, HandleController gọi UpdateHandPosition() với vị trí tay thật
+/// 3. Script kiểm tra: handle đã xoay đủ góc chưa? (IsUnlocked)
+///    - Nếu cửa đang đóng → cần xoay handle ≥ unlockAtDeg mới mở được
+///    - Nếu cửa đã mở → luôn cho phép (không cần giữ handle)
+/// 4. Nếu unlocked → tính góc cửa dựa trên vị trí tay quanh bản lề → xoay cửa
+/// 5. User thả handle → HandleController gọi OnHandleReleased() → ngừng theo dõi
+/// </summary>
 public class DoorLeftOpenByHandle : MonoBehaviour
 {
+    // --- Enum định nghĩa trục xoay ---
+    
+    // Trục xoay của cửa (LocalY = bản lề đứng, thường dùng nhất)
     public enum DoorAxis { LocalX, LocalY, LocalZ }
 
+    // Trục đọc góc của handle (Z = handle xoay quanh trục forward)
     public enum HandleAxis { X, Y, Z }
 
     [Header("Refs")]
+    // Transform của pivot bản lề cửa — cửa xoay quanh điểm này
     public Transform doorHingePivot;
+    
+    // Transform của handle — dùng để đọc góc xoay handle
     public Transform handlePivot;
-    public Transform handTransform;
+
+    // Vị trí tay thật trong world space (nhận từ HandleController mỗi frame)
+    // Dùng GrabPoints[0] thay vì handTransform vì HandGrabPose snap tay visual
+    // vào vị trí cố định → handTransform không di chuyển → không thể tính góc cửa
+    private Vector3 _handPosition;
 
     [Header("Handle Rotation Reading")]
+    // Trục để đọc góc xoay của handle (thường là Z cho handle xoay kiểu bật xuống)
     public HandleAxis handleAxis = HandleAxis.Z;
 
+    // true = handle kéo xuống cho góc âm (ví dụ: 0° → -90°)
+    // Khi đọc góc, sẽ đảo dấu để so sánh với unlockAtDeg (giá trị dương)
     public bool handleDownIsNegative = true;
 
     [Header("Unlock by Handle Angle")]
+    // Góc tối thiểu handle phải xoay (tính bằng độ) để "mở khóa" cửa
+    // Ví dụ: 30° = user phải kéo handle xuống ít nhất 30° mới đẩy được cửa
     public float unlockAtDeg = 30f;
 
     [Header("Door Rotation")]
+    // Trục xoay của cửa trên pivot (thường LocalY cho cửa xoay ngang)
     public DoorAxis hingeAxis = DoorAxis.LocalY;
 
+    // Góc cửa khi đóng hoàn toàn (thường = 0°)
     public float closedAngle = 0f;
 
+    // Góc cửa khi mở hoàn toàn (ví dụ: 170° = gần 180° nhưng không chạm tường)
     public float openAngle = 170f;
 
     [Header("Optional Tuning")]
+    // Đảo chiều mở cửa (nếu cửa mở sai hướng so với mong muốn)
     public bool invertDoorDirection = false;
 
+    // Bật/tắt debug log trong Console
     public bool debugLogs = false;
 
     [Header("Smoothing")]
+    // Thời gian làm mượt chuyển động cửa (SmoothDamp) — giá trị nhỏ = phản hồi nhanh
     public float doorSmoothTime = 0.06f;
+    
+    // Tốc độ xoay tối đa của cửa (độ/giây)
     public float maxDoorSpeed = 999f;
 
-    private float _doorVel; // velocity cho SmoothDampAngle
+    // Velocity nội bộ cho SmoothDampAngle — SDK dùng, không cần quan tâm
+    private float _doorVel;
 
-    // Trạng thái grab
+    // === Trạng thái nội bộ ===
+    
+    // true khi user đang grab handle
     private bool _isGrabbed;
 
-    // Góc cửa hiện tại (được apply lên pivot)
+    // Góc cửa hiện tại (đang được apply lên doorHingePivot)
     private float _doorAngle;
 
-    // Mốc lúc bắt đầu grab để tránh snap:
-    // - _handYawStart: yaw của tay quanh hinge tại thời điểm bắt đầu grab
-    // - _doorAngleStart: góc cửa tại thời điểm bắt đầu grab
+    // Mốc tham chiếu lúc bắt đầu grab — dùng để tính DELTA thay vì góc tuyệt đối
+    // → tránh cửa nhảy đột ngột khi bắt đầu grab
+    
+    // Yaw của tay quanh bản lề tại thời điểm grab
     private float _handYawStart;
+    
+    // Góc cửa tại thời điểm grab
     private float _doorAngleStart;
     
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    /// <summary>
+    /// Khởi tạo: đặt cửa về vị trí đóng.
+    /// </summary>
     void Start()
     {
-        // Set cửa về góc đóng ngay từ đầu
         _doorAngle = closedAngle;
         ApplyDoorRotation(_doorAngle);
     }
 
-    // Update is called once per frame
+    /// <summary>
+    /// Mỗi frame: nếu đang grab VÀ handle đã xoay đủ → tính góc cửa mới từ vị trí tay.
+    /// </summary>
     void Update()
     {
+        // Không grab → không làm gì
         if (!_isGrabbed) return;
+        
+        // Handle chưa xoay đủ góc (và cửa đang đóng) → không cho mở
         if (!IsUnlocked()) return;
 
-        // Lấy yaw hiện tại của tay quanh bản lề
+        // === Tính góc cửa dựa trên vị trí tay ===
+
+        // Lấy yaw hiện tại: góc của tay quanh bản lề trên mặt phẳng ngang (XZ)
         float handYawNow = GetHandYawAroundHinge();
 
-        // Tính delta yaw
+        // Tính delta: tay đã xoay bao nhiêu độ SO VỚI lúc bắt đầu grab
+        // DeltaAngle xử lý wrap-around (ví dụ: 350° → 10° = +20° chứ không phải -340°)
         float deltaYaw = Mathf.DeltaAngle(_handYawStart, handYawNow);
 
-        // Nếu muốn đảo chiều mở cửa
+        // Đảo chiều nếu cần (tùy setup scene)
         if (invertDoorDirection) deltaYaw = -deltaYaw;
 
-        // Tính góc cửa mục tiêu dựa trên mốc lúc bắt đầu grab
+        // Góc mục tiêu = góc cửa lúc grab + delta tay
+        // → cửa di chuyển TƯƠNG ĐỐI theo tay, không nhảy về 0°
         float targetAngle = _doorAngleStart + deltaYaw;
 
-        // Clamp để cửa chỉ mở 1 phía (closedAngle -> openAngle)
+        // Clamp: giới hạn cửa trong khoảng [closedAngle, openAngle]
+        // → cửa không xoay quá mức (không xuyên tường)
         float min = Mathf.Min(closedAngle, openAngle);
         float max = Mathf.Max(closedAngle, openAngle);
 
-
         float clamped = Mathf.Clamp(targetAngle, min, max);
+        
+        // SmoothDamp: làm mượt chuyển động cửa (tránh giật)
+        // _doorAngle tiến dần về clamped thay vì nhảy trực tiếp
         _doorAngle = Mathf.SmoothDampAngle(_doorAngle, clamped, ref _doorVel, doorSmoothTime, maxDoorSpeed);
+        
+        // Apply góc lên transform của pivot cửa
         ApplyDoorRotation(_doorAngle);
 
+        // Debug log mỗi 15 frame (không spam console)
         if (debugLogs && Time.frameCount % 15 == 0)
         {
             Debug.Log($"[Door] handYawNow={handYawNow:F1}, deltaYaw={deltaYaw:F1}, doorAngle={_doorAngle:F1}");
         }
     }
 
+    /// <summary>
+    /// Kiểm tra handle đã "mở khóa" chưa.
+    /// - Cửa đã mở (cách closedAngle > 1°) → luôn true (không cần giữ handle)
+    /// - Cửa đang đóng → phải xoay handle ≥ unlockAtDeg mới true
+    /// </summary>
     bool IsUnlocked()
     {
         if (handlePivot == null) return false;
 
+        // Kiểm tra cửa đã mở chưa: so sánh góc hiện tại với góc đóng
+        float doorDelta = Mathf.Abs(Mathf.DeltaAngle(_doorAngle, closedAngle));
+        
+        // Cửa cách vị trí đóng > 1° → coi như đã mở → luôn cho phép đẩy tiếp
+        if (doorDelta > 1f) return true;
+
+        // === Cửa đang đóng → kiểm tra góc handle ===
+        
+        // Đọc góc xoay của handle trên trục đã chọn (thường là Z)
+        // localEulerAngles trả về [0, 360) → NormalizeAngle chuyển về [-180, 180)
         float raw = NormalizeAngle(ReadHandleAxisAngle());
+        
+        // Nếu handleDownIsNegative = true: handle kéo xuống cho góc âm
+        // → đảo dấu để so sánh với unlockAtDeg (giá trị dương)
+        // Ví dụ: raw = -45° → mag = 45° → 45 >= 30 → unlocked!
         float mag = handleDownIsNegative ? -raw : raw;
 
+        // So sánh: handle đã xoay đủ góc chưa?
         bool unlocked = mag >= unlockAtDeg;
 
         if (debugLogs && Time.frameCount % 15 == 0)
@@ -107,6 +185,10 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         return unlocked;
     }
 
+    /// <summary>
+    /// Đọc góc xoay của handle trên trục đã chọn (X, Y, hoặc Z).
+    /// Trả về giá trị từ localEulerAngles (0° → 360°).
+    /// </summary>
     private float ReadHandleAxisAngle()
     {
         Vector3 e = handlePivot.localEulerAngles;
@@ -115,48 +197,56 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         {
             case HandleAxis.X: return e.x;
             case HandleAxis.Y: return e.y;
-            default: return e.z;
+            default: return e.z; // Z là mặc định
         }
     }
 
     /// <summary>
-    /// Tính "yaw" của tay quanh hinge:
-    /// - Lấy vector từ hinge -> hand
-    /// - Chiếu xuống mặt phẳng ngang (bỏ Y)
-    /// - Tính SignedAngle so với doorHingePivot.forward quanh trục Up (Vector3.up)
-    ///
-    /// Kết quả là một góc (độ) biểu diễn tay đang ở đâu quanh bản lề.
+    /// Tính "yaw" (góc ngang) của tay quanh bản lề cửa.
+    /// 
+    /// Cách tính:
+    /// 1. Vector từ bản lề → tay (bỏ Y → chỉ xét mặt phẳng ngang XZ)
+    /// 2. So sánh với hướng forward của bản lề
+    /// 3. Dùng SignedAngle quanh trục Up → ra góc có dấu
+    /// 
+    /// Kết quả: góc (độ) biểu diễn tay đang ở đâu quanh bản lề.
+    /// Ví dụ: 0° = thẳng trước bản lề, +90° = bên phải, -90° = bên trái
     /// </summary>
     private float GetHandYawAroundHinge()
     {
-        Vector3 v = handTransform.position - doorHingePivot.position;
+        // Vector từ bản lề → vị trí tay thật
+        Vector3 v = _handPosition - doorHingePivot.position;
 
-        // Bỏ thành phần Y để chỉ xét mặt phẳng ngang (XZ)
+        // Chiếu xuống mặt phẳng ngang (bỏ cao độ Y)
+        // → chỉ quan tâm tay ở đâu trên mặt bằng, không quan tâm cao thấp
         v.y = 0f;
 
-        // Nếu tay quá gần hinge, tránh chia 0
+        // Tay quá gần bản lề → vector gần zero → không thể tính góc → trả về 0
         if (v.sqrMagnitude < 0.000001f)
             return 0f;
 
         v.Normalize();
 
-        // Hướng reference (forward của hinge), cũng chiếu xuống XZ
+        // Hướng tham chiếu: forward của bản lề, cũng chiếu xuống XZ
         Vector3 f = doorHingePivot.forward;
         f.y = 0f;
 
-        // Nếu f bị lệch/zero (hiếm), fallback
+        // Fallback nếu forward bị zero (rất hiếm, chỉ khi pivot bị lật 90°)
         if (f.sqrMagnitude < 0.000001f)
             f = Vector3.forward;
         else
             f.Normalize();
 
-        // Góc có dấu quanh Vector3.up (trục đứng thế giới)
+        // SignedAngle: góc từ f → v, quay quanh Vector3.up (trục đứng)
+        // Dương = tay xoay theo chiều kim đồng hồ (nhìn từ trên xuống)
+        // Âm = tay xoay ngược chiều kim đồng hồ
         float signed = Vector3.SignedAngle(f, v, Vector3.up);
         return signed;
     }
 
     /// <summary>
-    /// Apply rotation lên pivot cửa theo trục hingeAxis.
+    /// Gán rotation cho pivot cửa theo đúng trục đã chọn (hingeAxis).
+    /// Chỉ thay đổi 1 trục, 2 trục còn lại = 0.
     /// </summary>
     private void ApplyDoorRotation(float angle)
     {
@@ -165,7 +255,7 @@ public class DoorLeftOpenByHandle : MonoBehaviour
             case DoorAxis.LocalX:
                 doorHingePivot.localRotation = Quaternion.Euler(angle, 0f, 0f);
                 break;
-            case DoorAxis.LocalY:
+            case DoorAxis.LocalY: // Phổ biến nhất: cửa xoay ngang
                 doorHingePivot.localRotation = Quaternion.Euler(0f, angle, 0f);
                 break;
             case DoorAxis.LocalZ:
@@ -174,18 +264,53 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Chuyển góc từ [0, 360) sang [-180, 180).
+    /// Unity localEulerAngles trả về [0, 360) → cần chuyển để tính toán đúng.
+    /// Ví dụ: 350° → -10°, 270° → -90°
+    /// </summary>
     private float NormalizeAngle(float a)
     {
         if (a > 180f) a -= 360f;
         return a;
     }
 
-    public void OnHandleGrabbed()
-    {
-        _isGrabbed = true;
-        _doorAngleStart = _doorAngle;
+    // ============================================================
+    // === API công khai — được gọi bởi HandleController ===
+    // ============================================================
 
-        if (handTransform != null && doorHingePivot != null)
+    /// <summary>
+    /// Nhận vị trí tay thật mỗi frame từ HandleController.
+    /// Dùng Grabbable.GrabPoints[0].position — đây là vị trí tay TRACKED,
+    /// không bị snap bởi HandGrabPose (tay visual bị snap nhưng grab point thì không).
+    /// </summary>
+    public void UpdateHandPosition(Vector3 worldPos)
+    {
+        _handPosition = worldPos;
+    }
+
+    /// <summary>
+    /// Gọi khi user bắt đầu grab handle.
+    /// Lưu mốc tham chiếu (góc cửa + yaw tay) để tính DELTA sau này.
+    /// 
+    /// Tại sao dùng delta thay vì góc tuyệt đối:
+    /// Nếu cửa đang mở 45° và user grab → tay ở yaw 60°
+    /// → nếu dùng tuyệt đối: cửa nhảy về 60° (giật!)
+    /// → nếu dùng delta: cửa giữ 45°, chỉ thay đổi khi tay DI CHUYỂN thêm
+    /// </summary>
+    public void OnHandleGrabbed(Vector3 handWorldPos)
+    {
+        // Đánh dấu đang grab
+        _isGrabbed = true;
+        
+        // Lưu góc cửa hiện tại làm mốc
+        _doorAngleStart = _doorAngle;
+        
+        // Lưu vị trí tay ban đầu
+        _handPosition = handWorldPos;
+
+        // Tính và lưu yaw ban đầu của tay quanh bản lề
+        if (doorHingePivot != null)
             _handYawStart = GetHandYawAroundHinge();
         else
             _handYawStart = 0f;
@@ -194,6 +319,10 @@ public class DoorLeftOpenByHandle : MonoBehaviour
             Debug.Log($"[Door] Grabbed. doorAngleStart={_doorAngleStart:F1}, handYawStart={_handYawStart:F1}");
     }
 
+    /// <summary>
+    /// Gọi khi user thả handle. Ngừng theo dõi vị trí tay.
+    /// Cửa sẽ giữ nguyên ở vị trí hiện tại (không tự đóng).
+    /// </summary>
     public void OnHandleReleased()
     {
         _isGrabbed = false;
