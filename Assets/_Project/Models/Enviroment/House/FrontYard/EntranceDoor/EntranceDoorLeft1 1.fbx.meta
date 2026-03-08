@@ -1,19 +1,9 @@
 fileFormatVersion: 2
-guid: 83558d57b50470d4b913589744e256f2
+guid: da0225c3f55984c4288e15ca7a1753e1
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Aluminum
-    second: {fileID: 2100000, guid: 325297da17bd9514785fa4d4fd1f2bc0, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: EntranceDoor2
-    second: {fileID: 2100000, guid: 017c5a800bbf9ca40b548e8df14eb9be, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0

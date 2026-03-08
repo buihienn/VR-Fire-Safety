@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: abbc805a12e4c534c8ef87cb06abd1e3
+guid: 1cd0ae9e8e7c5ef479fb88c56a220528
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Floor Yard
-    second: {fileID: 2100000, guid: 8ce6a160a714e6847a57cdbe99d6e418, type: 2}
+      name: front tiles
+    second: {fileID: 2100000, guid: a0edcd4bafe5208499ff4c2d7ce6da31, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
