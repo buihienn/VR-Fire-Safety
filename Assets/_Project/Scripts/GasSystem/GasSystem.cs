@@ -1,95 +1,80 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GasSystem : MonoBehaviour
 {
-    [Header("Gas State (0..1)")]
-    [Range(0f, 1f)] public float gas01 = 0.2f;
+    [Header("Gas State")]
+    [Range(0f, 1f)] public float gas01 = 0f;
     public bool leakActive = true;
+
+    [Header("Demo Timing")]
+    [Tooltip("10s = tang 1 level khi tat ca cua dong")]
+    public float fillSecondsPerLevel = 10f;
+
+    [Tooltip("10s = giam 1 level cho moi cua/cua so dang mo")]
+    public float drainSecondsPerLevelPerOpening = 10f;
+
+    [Header("Openings / Vent Sources")]
+    public List<GasVentByAngle> vents = new();
+
+    [Header("Read Only")]
+    [SerializeField] private int activeOpenings = 0;
     [Range(0f, 1f)] public float vent01 = 0f;
 
-    [Header("Timing")]
-    public float increaseToMaxSeconds = 300f;        // leak: lên max sau ~5 phút
-    public float ventToZeroSecondsAtFullOpen = 180f; // vent=1: về 0 sau ~3 phút
-
-    [Header("Fog Link (optional)")]
-    public ParticleSystem gasFog;        // kéo GasFogPS vào đây
-    public float maxEmission = 200f;     // gas01=1 => emission = maxEmission
-    public float stopThreshold = 0.02f;  // dưới mức này thì Stop()
-
-    [Header("Debug (optional)")]
-    public bool logToConsole = true;
-    public float logInterval = 0.5f;
-
-    float _logT;
-
-    void Awake()
+    private void Update()
     {
-        if (!gasFog) gasFog = FindFirstObjectByType<ParticleSystem>(); // optional
-    }
+        activeOpenings = 0;
+        float ventSum = 0f;
 
-    void Update()
-    {
-        float dt = Time.deltaTime;
-
-        // tăng do rò
-        if (leakActive)
-            gas01 = Mathf.Clamp01(gas01 + dt / Mathf.Max(1f, increaseToMaxSeconds));
-
-        // giảm do cửa mở (mở càng nhiều giảm càng nhanh)
-        float ventRate = vent01 * (dt / Mathf.Max(1f, ventToZeroSecondsAtFullOpen));
-        gas01 = Mathf.Clamp01(gas01 - ventRate);
-
-        ApplyFog();
-        DebugLogTick(dt);
-    }
-
-    void ApplyFog()
-    {
-        if (!gasFog) return;
-
-        var em = gasFog.emission;
-        em.enabled = true;
-
-        float rate = gas01 * maxEmission;
-        em.rateOverTime = rate; // constant
-
-        // Play/Stop để bạn thấy rõ thay đổi
-        if (rate > stopThreshold)
+        for (int i = 0; i < vents.Count; i++)
         {
-            if (!gasFog.isPlaying) gasFog.Play();
+            var v = vents[i];
+            if (!v) continue;
+
+            float open01 = v.GetOpen01();
+            ventSum += open01;
+
+            if (v.IsOpenEnough())
+                activeOpenings++;
         }
+
+        vent01 = vents.Count > 0 ? Mathf.Clamp01(ventSum / vents.Count) : 0f;
+
+        float fillRate01PerSec = leakActive ? 1f / (fillSecondsPerLevel * 3f) : 0f;
+        float drainRate01PerSec = activeOpenings > 0
+            ? activeOpenings / (drainSecondsPerLevelPerOpening * 3f)
+            : 0f;
+
+        // Demo logic:
+        // he mo cua la uu tien giam gas ngay
+        if (activeOpenings > 0)
+            gas01 -= drainRate01PerSec * Time.deltaTime;
         else
-        {
-            if (gasFog.isPlaying) gasFog.Stop();
-        }
-    }
+            gas01 += fillRate01PerSec * Time.deltaTime;
 
-    void DebugLogTick(float dt)
-    {
-        if (!logToConsole) return;
-
-        _logT += dt;
-        if (_logT < logInterval) return;
-        _logT = 0f;
-
-        float emission = -1;
-        int pCount = -1;
-        if (gasFog)
-        {
-            emission = gasFog.emission.rateOverTime.constant;
-            pCount = gasFog.particleCount;
-        }
-
-        Debug.Log($"[GAS] gas01={gas01:0.00} L={GasLevel()} vent01={vent01:0.00} leak={leakActive} em={emission:0} pCount={pCount}");
+        gas01 = Mathf.Clamp01(gas01);
     }
 
     public int GasLevel()
     {
-        if (gas01 < 0.10f) return 0;
-        if (gas01 < 0.40f) return 1;
-        if (gas01 < 0.75f) return 2;
+        if (gas01 < 1f / 3f) return 0;
+        if (gas01 < 2f / 3f) return 1;
+        if (gas01 < 1f) return 2;
         return 3;
     }
 
-    public void SetVent01(float v) => vent01 = Mathf.Clamp01(v);
+    public bool AnyOpeningOpen() => activeOpenings > 0;
+    public int ActiveOpenings() => activeOpenings;
+
+    public string GasLevelText()
+    {
+        return GasLevel() switch
+        {
+            0 => "An toan",
+            1 => "Mui gas nhe",
+            2 => "Mui manh",
+            3 => "Nong nac - nguy hiem",
+            _ => "Khong xac dinh"
+        };
+    }
 }
