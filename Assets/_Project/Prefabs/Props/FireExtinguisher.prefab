@@ -750,7 +750,7 @@ GameObject:
   - component: {fileID: 855870184059378982}
   m_Layer: 0
   m_Name: FireSmoke_Particle System
-  m_TagString: Untagged
+  m_TagString: ExtinguisherSpray
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -765,7 +765,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: -0.011, z: 0.177}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.05}
+  m_LocalScale: {x: 0.15, y: 0.15, z: 0.15}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2717442743164481636}
@@ -1488,7 +1488,7 @@ ParticleSystem:
     sphericalDirectionAmount: 0
     randomPositionAmount: 0
     radius:
-      value: 0.001
+      value: 0.1
       mode: 0
       spread: 0
       speed:
@@ -4533,7 +4533,7 @@ ParticleSystem:
     maxCollisionShapes: 256
     quality: 0
     voxelSize: 0.5
-    collisionMessages: 0
+    collisionMessages: 1
     collidesWithDynamic: 1
     interiorCollisions: 0
   TriggerModule:
@@ -5537,7 +5537,7 @@ ParticleSystemRenderer:
   m_MeshDistribution: 0
   m_SortMode: 0
   m_MinParticleSize: 0
-  m_MaxParticleSize: 0.5
+  m_MaxParticleSize: 1
   m_CameraVelocityScale: 0
   m_VelocityScale: 0
   m_LengthScale: 2
@@ -8798,15 +8798,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 29dae41d1ad5fb5438341b61d587fe14, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.858
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 29dae41d1ad5fb5438341b61d587fe14, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.787
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 29dae41d1ad5fb5438341b61d587fe14, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -10.544
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 29dae41d1ad5fb5438341b61d587fe14, type: 3}
       propertyPath: m_LocalRotation.w
