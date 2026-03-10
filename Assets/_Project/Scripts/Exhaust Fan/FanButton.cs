@@ -1,15 +1,31 @@
+using System.Collections;
 using UnityEngine;
 
 public class FanButton : MonoBehaviour
 {
-    public float offAngle = 98f;
-    public float onAngle = 82f;
+    [Header("Button Visual")]
+    [SerializeField] private float offAngle = 98f;
+    [SerializeField] private float onAngle = 82f;
+
+    [Header("Electric Spark")]
+    [SerializeField] private ParticleSystem sparksFx;
+    [SerializeField] private float igniteDelay = 0.05f;
+
+    [Header("Fire")]
+    [SerializeField] private FlameNode[] nodesToIgnite;
+    [SerializeField] private bool triggerOnlyWhenTurningOn = true;
+    [SerializeField] private bool igniteOnlyOnce = true;
 
     private bool isPressed = false;
+    private bool hasIgnited = false;
+    private Coroutine igniteRoutine;
 
     void Start()
     {
-        SetAngle(offAngle); // góc ban đầu
+        SetAngle(offAngle);
+
+        if (sparksFx != null)
+            sparksFx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
     // GỌI TỪ When Select()
@@ -17,9 +33,45 @@ public class FanButton : MonoBehaviour
     {
         isPressed = !isPressed;
         SetAngle(isPressed ? onAngle : offAngle);
+
+        bool shouldTrigger = !triggerOnlyWhenTurningOn || isPressed;
+        if (!shouldTrigger) return;
+
+        if (igniteOnlyOnce && hasIgnited) return;
+
+        PlaySparks();
+
+        if (igniteRoutine != null)
+            StopCoroutine(igniteRoutine);
+
+        igniteRoutine = StartCoroutine(IgniteAfterDelay());
     }
 
-    void SetAngle(float angle)
+    private IEnumerator IgniteAfterDelay()
+    {
+        yield return new WaitForSeconds(igniteDelay);
+
+        if (nodesToIgnite != null)
+        {
+            foreach (var node in nodesToIgnite)
+            {
+                if (node != null)
+                    node.Ignite();
+            }
+        }
+
+        hasIgnited = true;
+    }
+
+    private void PlaySparks()
+    {
+        if (sparksFx == null) return;
+
+        sparksFx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        sparksFx.Play(true);
+    }
+
+    private void SetAngle(float angle)
     {
         Vector3 euler = transform.localEulerAngles;
         euler.y = angle;
