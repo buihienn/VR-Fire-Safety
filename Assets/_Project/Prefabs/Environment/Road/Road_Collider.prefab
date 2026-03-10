@@ -17,7 +17,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &4167814601689737158
 Transform:
@@ -31,9 +31,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1699271019536574564}
-  - {fileID: 8023251097608779547}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &3677024303791048748
@@ -76,8 +74,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 7.5708313, y: 0.18238416, z: 0.934803}
-  m_Center: {x: 2.1572952, y: -0.03393227, z: -3.4336276}
+  m_Size: {x: 7.5708313, y: 0.18238416, z: 1.1839769}
+  m_Center: {x: 2.1572952, y: -0.03393227, z: -3.3590026}
 --- !u!65 &442991765607713449
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -97,111 +95,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 7.5708313, y: 0.18238416, z: 0.934803}
-  m_Center: {x: 2.1572952, y: -0.03393227, z: 3.433628}
---- !u!1 &4701606401958240919
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8023251097608779547}
-  - component: {fileID: 8831249384119425946}
-  m_Layer: 0
-  m_Name: RoadColliderPartion2
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8023251097608779547
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4701606401958240919}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.3090171, y: 0, z: 0, w: 0.95105654}
-  m_LocalPosition: {x: 0, y: 2, z: 4.91}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 4167814601689737158}
-  m_LocalEulerAnglesHint: {x: -36, y: 0, z: 0}
---- !u!65 &8831249384119425946
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4701606401958240919}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 7.573496, y: 0.082069516, z: 0.4}
-  m_Center: {x: 2.1583662, y: -0.45895353, z: -2.8483822}
---- !u!1 &7034120387009783855
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1699271019536574564}
-  - component: {fileID: 2891372194090860235}
-  m_Layer: 0
-  m_Name: RoadColliderPartion1
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1699271019536574564
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7034120387009783855}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.3139924, y: 0, z: 0, w: 0.9494256}
-  m_LocalPosition: {x: 0, y: -1.42, z: -0.34}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 4167814601689737158}
-  m_LocalEulerAnglesHint: {x: 36.6, y: 0, z: 0}
---- !u!65 &2891372194090860235
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7034120387009783855}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 7.573496, y: 0.082069516, z: 0.4}
-  m_Center: {x: 2.1583662, y: -0.45895353, z: -2.8483822}
+  m_Size: {x: 7.5708313, y: 0.18238416, z: 1.1445003}
+  m_Center: {x: 2.1572952, y: -0.03393227, z: 3.3287795}
