@@ -1,7 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
-<<<<<<< Updated upstream
-=======
 --- !u!1 &1120747321400217527
 GameObject:
   m_ObjectHideFlags: 0
@@ -63,7 +61,11 @@ GameObject:
   - component: {fileID: 2779186033436840525}
   - component: {fileID: 1104724298317219284}
   m_Layer: 0
+<<<<<<< HEAD
   m_Name: GasLevelCanvas
+=======
+  m_Name: Canvas
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -76,7 +78,11 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3379121172439394913}
+<<<<<<< HEAD
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+=======
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
   m_LocalPosition: {x: 0, y: 0, z: 1.7279997}
   m_LocalScale: {x: 0.0015, y: 0.0015, z: 0.0015}
   m_ConstrainProportionsScale: 0
@@ -86,7 +92,11 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
+<<<<<<< HEAD
   m_AnchoredPosition: {x: -0.028, y: 0.412}
+=======
+  m_AnchoredPosition: {x: -0.7129998, y: 0.78714}
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
   m_SizeDelta: {x: 800, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &5954980575132793887
@@ -165,7 +175,11 @@ GameObject:
   - component: {fileID: 8950845750604760539}
   - component: {fileID: 8360372540554496830}
   m_Layer: 0
+<<<<<<< HEAD
   m_Name: GasLevelLabel
+=======
+  m_Name: Text (TMP)
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -305,7 +319,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gas: {fileID: 0}
   hudText: {fileID: 8950845750604760539}
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
 --- !u!1001 &3144871604570767010
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -320,15 +337,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1566026221738899810, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_LocalPosition.x
+<<<<<<< HEAD
 <<<<<<< Updated upstream
       value: -2.79
+=======
+      value: -2.152
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
       objectReference: {fileID: 0}
     - target: {fileID: 1566026221738899810, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.50386
+      value: 0.65
       objectReference: {fileID: 0}
     - target: {fileID: 1566026221738899810, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_LocalPosition.z
+<<<<<<< HEAD
       value: -8.8
 =======
       value: 0
@@ -341,6 +363,9 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0
 >>>>>>> Stashed changes
+=======
+      value: -13.278
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
       objectReference: {fileID: 0}
     - target: {fileID: 1566026221738899810, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_LocalRotation.w
@@ -370,12 +395,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+<<<<<<< HEAD
 <<<<<<< Updated upstream
+=======
+    - target: {fileID: 2452385146283409975, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2755591471652181532, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1566026221738899810, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8345699980917977877}
+    - targetCorrespondingSourceObject: {fileID: 941308517851434977, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8183840981701999221}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+<<<<<<< HEAD
 =======
     - target: {fileID: 1616485347695889343, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_Enabled
@@ -423,6 +466,8 @@ PrefabInstance:
       addedObject: {fileID: 4821291236604991790}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+=======
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
 --- !u!4 &2789108142069428547 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 941308517851434977, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
@@ -433,6 +478,7 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1566026221738899810, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
   m_PrefabInstance: {fileID: 3144871604570767010}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
 --- !u!1001 &7606025501719858727
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -496,3 +542,5 @@ Transform:
   m_PrefabInstance: {fileID: 7606025501719858727}
   m_PrefabAsset: {fileID: 0}
 >>>>>>> Stashed changes
+=======
+>>>>>>> eb197bb3444522c8f42dab6285149cfca3e58832
