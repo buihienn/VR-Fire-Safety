@@ -29,9 +29,13 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     // Transform của handle — dùng để đọc góc xoay handle
     public Transform handlePivot;
 
+    // HingeJoint trên cửa (nếu có) — dùng để bật/tắt physics khi mở bằng handle
+    public HingeJoint doorHingeJoint;
+
+    // Rigidbody của cửa — dùng để bật/tắt physics (isKinematic)
+    public Rigidbody doorRigidbody;
+
     // Vị trí tay thật trong world space (nhận từ HandleController mỗi frame)
-    // Dùng GrabPoints[0] thay vì handTransform vì HandGrabPose snap tay visual
-    // vào vị trí cố định → handTransform không di chuyển → không thể tính góc cửa
     private Vector3 _handPosition;
 
     [Header("Handle Rotation Reading")]
@@ -90,6 +94,9 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     
     // Góc cửa tại thời điểm grab
     private float _doorAngleStart;
+
+    // Coroutine delay cho SyncHingeJointEnabled khi thả handle
+    private Coroutine _syncDelayRoutine;
     
     /// <summary>
     /// Khởi tạo: đặt cửa về vị trí đóng.
@@ -98,6 +105,7 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     {
         _doorAngle = closedAngle;
         ApplyDoorRotation(_doorAngle);
+        SetHingeJointEnabled(false);
     }
 
     /// <summary>
@@ -141,11 +149,8 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         // Apply góc lên transform của pivot cửa
         ApplyDoorRotation(_doorAngle);
 
-        // Debug log mỗi 15 frame (không spam console)
-        if (debugLogs && Time.frameCount % 15 == 0)
-        {
-            Debug.Log($"[Door] handYawNow={handYawNow:F1}, deltaYaw={deltaYaw:F1}, doorAngle={_doorAngle:F1}");
-        }
+        // Khi đang grab thì luôn tắt hinge joint để tránh physics cản trở
+        SetHingeJointEnabled(false);
     }
 
     /// <summary>
@@ -155,13 +160,14 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     /// </summary>
     bool IsUnlocked()
     {
-        if (handlePivot == null) return false;
-
         // Kiểm tra cửa đã mở chưa: so sánh góc hiện tại với góc đóng
         float doorDelta = Mathf.Abs(Mathf.DeltaAngle(_doorAngle, closedAngle));
-        
+
         // Cửa cách vị trí đóng > 1° → coi như đã mở → luôn cho phép đẩy tiếp
         if (doorDelta > 1f) return true;
+
+        // Cửa đang đóng → cần handle để mở khóa
+        if (handlePivot == null) return false;
 
         // === Cửa đang đóng → kiểm tra góc handle ===
         
@@ -183,6 +189,38 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         }
 
         return unlocked;
+    }
+
+    /// <summary>
+    /// Bật/tắt physics của cửa. Khi mở bằng handle thì tắt để tránh physics cản trở.
+    /// </summary>
+    private void SetHingeJointEnabled(bool enabled)
+    {
+        Rigidbody rb = doorRigidbody;
+        if (rb == null && doorHingeJoint != null)
+            rb = doorHingeJoint.GetComponent<Rigidbody>();
+        if (rb == null) return;
+
+        bool shouldBeKinematic = !enabled;
+        if (rb.isKinematic == shouldBeKinematic) return;
+        rb.isKinematic = shouldBeKinematic;
+    }
+
+    /// <summary>
+    /// Đồng bộ trạng thái physics theo unlock.
+    /// Nếu cửa chưa unlock thì tắt physics để không đẩy được.
+    /// </summary>
+    private void SyncHingeJointEnabled()
+    {
+        bool unlocked = IsUnlocked();
+        SetHingeJointEnabled(unlocked);
+
+        Rigidbody rb = doorRigidbody;
+            if (rb == null && doorHingeJoint != null)
+                rb = doorHingeJoint.GetComponent<Rigidbody>();
+
+            string rbState = rb == null ? "rb=null" : (rb.isKinematic ? "kinematic" : "dynamic");
+            Debug.Log($"[Door] SyncHingeJointEnabled: unlocked={unlocked}, rb={rbState}");
     }
 
     /// <summary>
@@ -212,7 +250,7 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     /// Kết quả: góc (độ) biểu diễn tay đang ở đâu quanh bản lề.
     /// Ví dụ: 0° = thẳng trước bản lề, +90° = bên phải, -90° = bên trái
     /// </summary>
-    private float GetHandYawAroundHinge()
+    public float GetHandYawAroundHinge()
     {
         // Vector từ bản lề → vị trí tay thật
         Vector3 v = _handPosition - doorHingePivot.position;
@@ -302,6 +340,16 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     {
         // Đánh dấu đang grab
         _isGrabbed = true;
+
+        // Hủy delay nếu đang chờ sau khi thả handle
+        if (_syncDelayRoutine != null)
+        {
+            StopCoroutine(_syncDelayRoutine);
+            _syncDelayRoutine = null;
+        }
+
+        // Tắt hinge joint khi mở bằng handle
+        SetHingeJointEnabled(false);
         
         // Lưu góc cửa hiện tại làm mốc
         _doorAngleStart = _doorAngle;
@@ -327,7 +375,18 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     {
         _isGrabbed = false;
 
-        if (debugLogs)
-            Debug.Log("[Door] Released");
+        // Sau khi thả handle, đợi 2s rồi mới sync physics
+        if (_syncDelayRoutine != null)
+            StopCoroutine(_syncDelayRoutine);
+        _syncDelayRoutine = StartCoroutine(DelaySyncHingeJointEnabled(2f));
+        
+        Debug.Log("[Door] Released");
+    }
+
+    private System.Collections.IEnumerator DelaySyncHingeJointEnabled(float delaySeconds)
+    {
+        yield return new WaitForSeconds(delaySeconds);
+        SyncHingeJointEnabled();
+        _syncDelayRoutine = null;
     }
 }

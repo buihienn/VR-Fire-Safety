@@ -5,6 +5,19 @@ TagManager:
   serializedVersion: 3
   tags:
   - ExtinguisherSpray
+<<<<<<< Updated upstream
+=======
+  - QDSUIBackplateGradient
+  - QDSUIPrimaryButton
+  - QDSUIAccentColor
+  - QDSUITextInvertedColor
+  - QDSUITextSecondaryInvertedColor
+  - QDSUIDestructiveButton
+  - QDSUISharedThemeColor
+  - QDSUIBorderlessButton
+  - QDSUIIcon
+  - Hand
+>>>>>>> Stashed changes
   layers:
   - Default
   - TransparentFX
@@ -15,9 +28,9 @@ TagManager:
   - Wall
   - Floor
   - Grabbable
-  - 
-  - 
-  - 
+  - DoorAndWindow
+  - Hand
+  - Player
   - Wire
   - 
   - 

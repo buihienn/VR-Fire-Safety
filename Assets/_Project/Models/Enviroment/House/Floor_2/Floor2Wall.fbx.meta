@@ -13,27 +13,27 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: white plaser
-    second: {fileID: 2100000, guid: 250e5e83f7b98b64c8b0ffd0ae720299, type: 2}
+    second: {fileID: 2100000, guid: 5af378a81f1ec964dbf0eafad4b60964, type: 2}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Gemini_Generated_Image_b83xzbb83xzbb83x
-    second: {fileID: 2800000, guid: e7452fc5ba508bd4d9deb1ec25f6f975, type: 3}
+    second: {fileID: 2800000, guid: 5b639abe358581340812fe1be01a33a0, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: white plaster_BaseColor
-    second: {fileID: 2800000, guid: 3664fcb052cac2940897b79090606a39, type: 3}
+    second: {fileID: 2800000, guid: 8e0eeb9edf43a4540a27109178459fff, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: white plaster_Normal
-    second: {fileID: 2800000, guid: 112d595f58117d54788297283719ce7b, type: 3}
+    second: {fileID: 2800000, guid: eb789ac11b5837249ac2f92ec697f766, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: white plaster_Roughness
-    second: {fileID: 2800000, guid: 79e71ffca08caff40ad3c73c064a6021, type: 3}
+    second: {fileID: 2800000, guid: 5b5a576967f049046bafdc0aecb71c07, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
