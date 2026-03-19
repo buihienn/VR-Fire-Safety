@@ -22,6 +22,12 @@ public class DoorRightOpen : MonoBehaviour
     // Component Grabbable trên cửa phải — bật/tắt để cho phép/ngăn grab
     public Grabbable rightGrabbable;
 
+    // HingeJoint trên cửa phải (nếu có) — dùng để bật/tắt physics
+    public HingeJoint rightHingeJoint;
+
+    // Rigidbody của cửa phải — dùng để bật/tắt physics (isKinematic)
+    public Rigidbody rightRigidbody;
+
     [Header("Settings")]
     // Góc tối thiểu (độ) cửa trái phải mở để unlock cửa phải
     // Ví dụ: 10° = cửa trái mở hé ít nhất 10° thì cửa phải mới grab được
@@ -50,6 +56,24 @@ public class DoorRightOpen : MonoBehaviour
         
         // Bật/tắt Grabbable — khi disabled, SDK không cho phép grab object này
         rightGrabbable.enabled = canOpen;
+
+        // Nếu không được mở thì tắt physics của cửa phải
+        SetRightDoorPhysicsEnabled(canOpen);
+    }
+
+    /// <summary>
+    /// Bật/tắt physics của cửa phải. Khi không được mở thì tắt để không đẩy được.
+    /// </summary>
+    private void SetRightDoorPhysicsEnabled(bool enabled)
+    {
+        Rigidbody rb = rightRigidbody;
+        if (rb == null && rightHingeJoint != null)
+            rb = rightHingeJoint.GetComponent<Rigidbody>();
+        if (rb == null) return;
+
+        bool shouldBeKinematic = !enabled;
+        if (rb.isKinematic == shouldBeKinematic) return;
+        rb.isKinematic = shouldBeKinematic;
     }
 
     /// <summary>
