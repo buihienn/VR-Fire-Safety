@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.65
+      value: -2.643
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.155
+      value: 2.17
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6.407454
+      value: -6.444116
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
       propertyPath: m_LocalRotation.w
@@ -52,6 +52,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: StairPartion
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -59,6 +63,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6633698722190394112}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3752997125354632402}
   m_SourcePrefab: {fileID: 100100000, guid: 11d8716758311b54d8c92c81d3253d04, type: 3}
 --- !u!1 &511019842467984187 stripped
 GameObject:
@@ -86,3 +93,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.4163737, y: 3.5595634, z: 0.5443635}
   m_Center: {x: 0.053856134, y: -0.0010355711, z: -0.014291525}
+--- !u!114 &3752997125354632402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 511019842467984187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SerializedVersion: 0
+  m_OverrideArea: 0
+  m_Area: 0
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 1
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
