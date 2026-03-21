@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 19f35caf30368b34cadcca2263d378ca
+guid: 4f1202efa4203d343b3698641255077e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,18 +7,43 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Marble Dark
-    second: {fileID: 2100000, guid: ab7c7ec2a87ebde44942da45208da77e, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Wall3
-    second: {fileID: 2100000, guid: 5833c4e9ae3d1b24f8c674c623adb726, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
       name: White plaster
-    second: {fileID: 2100000, guid: 6f52d76dc27b76446bb56fa2932007a1, type: 2}
+    second: {fileID: 2100000, guid: 552666dcdae422c42909ee4234cb7385, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wood floor tiles
+    second: {fileID: 2100000, guid: 68b28a75c42e1894c94333235da0b5bd, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: dark_shiny_wood_tiles_6_diffuse
+    second: {fileID: 2800000, guid: c79d1b3abec18894bbae148acb365d36, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: dark_shiny_wood_tiles_6_normal
+    second: {fileID: 2800000, guid: 871b05bc37062b04182c5bedb274a3bd, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: dark_shiny_wood_tiles_6_specular
+    second: {fileID: 2800000, guid: 256c9873c53313f46a1c86e887a18053, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_BaseColor
+    second: {fileID: 2800000, guid: 38dd36f625a2af34fac6a6323aec6db8, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Normal
+    second: {fileID: 2800000, guid: db179e4c8783e6e4382b71f5077a8340, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: white plaster_Roughness
+    second: {fileID: 2800000, guid: 2837d04acce854e46b5496b333e37c7f, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
