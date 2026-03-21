@@ -21,8 +21,7 @@ public class GasSystem : MonoBehaviour
     [SerializeField] private int activeOpenings = 0;
     [Range(0f, 1f)] public float vent01 = 0f;
 
-    private void Update()
-    {
+    private void Update(){
         activeOpenings = 0;
         float ventSum = 0f;
 
@@ -55,11 +54,17 @@ public class GasSystem : MonoBehaviour
         gas01 = Mathf.Clamp01(gas01);
     }
 
-    public int GasLevel()
-    {
-        if (gas01 < 1f / 3f) return 0;
-        if (gas01 < 2f / 3f) return 1;
+    public int GasLevel(){
+        // 0 = chua co / gan nhu chua co gas
+        if (gas01 <= 0.001f) return 0;
+
+        // 0 -> 30s
+        if (gas01 < 0.25f) return 1;
+
+        // 30s -> 120s
         if (gas01 < 1f) return 2;
+
+        // >= 120s
         return 3;
     }
 

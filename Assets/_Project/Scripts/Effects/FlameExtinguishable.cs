@@ -49,13 +49,11 @@ public class FlameExtinguishable : MonoBehaviour
 
         extinguishProgress += hitCount * extinguishPerHit;
 
-        Debug.Log($"{gameObject.name} hit by spray. Progress: {extinguishProgress}/{extinguishNeeded}");
 
         if (extinguishProgress >= extinguishNeeded)
         {
             flameNode.Extinguish();
             extinguishProgress = 0f;
-            Debug.Log($"{gameObject.name} extinguished");
         }
     }
 }
