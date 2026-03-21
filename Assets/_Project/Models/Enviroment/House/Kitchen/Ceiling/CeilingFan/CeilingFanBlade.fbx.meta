@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 19f35caf30368b34cadcca2263d378ca
+guid: 3aa5b0975bba89445958824a567d3452
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,18 +7,23 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Marble Dark
-    second: {fileID: 2100000, guid: ab7c7ec2a87ebde44942da45208da77e, type: 2}
+      name: lambert1
+    second: {fileID: 2100000, guid: 9e672d29ee0a8974b90ec094be411498, type: 2}
   - first:
-      type: UnityEngine:Material
+      type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Wall3
-    second: {fileID: 2100000, guid: 5833c4e9ae3d1b24f8c674c623adb726, type: 2}
+      name: ceilingfan1_BaseColor
+    second: {fileID: 2800000, guid: dc001ae7246f57b4c864a72ebd439fe2, type: 3}
   - first:
-      type: UnityEngine:Material
+      type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: White plaster
-    second: {fileID: 2100000, guid: 6f52d76dc27b76446bb56fa2932007a1, type: 2}
+      name: ceilingfan1_Metallic
+    second: {fileID: 2800000, guid: 42b4edb441cf9a24f873b12d4ce6fbc0, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ceilingfan1_Roughness
+    second: {fileID: 2800000, guid: 47d8f95508b5a614aa1e7674872caeb8, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

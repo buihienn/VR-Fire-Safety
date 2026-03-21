@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 19f35caf30368b34cadcca2263d378ca
+guid: 67cd04fa2e644e94681f8d7fbd9b15f5
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,18 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Marble Dark
-    second: {fileID: 2100000, guid: ab7c7ec2a87ebde44942da45208da77e, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Wall3
-    second: {fileID: 2100000, guid: 5833c4e9ae3d1b24f8c674c623adb726, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: White plaster
-    second: {fileID: 2100000, guid: 6f52d76dc27b76446bb56fa2932007a1, type: 2}
+      name: lamp_01
+    second: {fileID: 2100000, guid: 5b7a2761ac69763469d92e99a62f4c8f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
