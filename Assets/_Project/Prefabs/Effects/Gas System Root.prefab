@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 7803578771894569161}
   - component: {fileID: 1388893088952792348}
   m_Layer: 0
-  m_Name: HazardSystem
+  m_Name: GasSystem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -60,7 +60,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 9176499504312786188}
   m_Father: {fileID: 6206085718605303378}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1388893088952792348
@@ -93,7 +94,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6206085718605303378}
   m_Layer: 0
-  m_Name: Hazards
+  m_Name: Gas System Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -113,7 +114,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7803578771894569161}
-  - {fileID: 9176499504312786188}
   - {fileID: 1606667685097116072}
   - {fileID: 4980315869637912255}
   m_Father: {fileID: 0}
@@ -4964,7 +4964,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f301ea872dd1cfa44b9f2d59a55fab30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gas: {fileID: 0}
+  gas: {fileID: 1388893088952792348}
   emissionMin: 0
   maxParticlesMin: 0
   alphaMin: 0
@@ -5029,13 +5029,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7922509942933286374}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7193031975059168984}
-  m_Father: {fileID: 6206085718605303378}
+  m_Father: {fileID: 7803578771894569161}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &7662535837134974415
 BoxCollider:
