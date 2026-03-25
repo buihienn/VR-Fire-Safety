@@ -20,6 +20,7 @@ public class FanButton : MonoBehaviour
     private bool hasIgnited = false;
     private Coroutine igniteRoutine;
 
+    // Khởi tạo góc nút và đảm bảo tia lửa đã dừng khi bắt đầu.
     void Start()
     {
         SetAngle(offAngle);
@@ -28,7 +29,7 @@ public class FanButton : MonoBehaviour
             sparksFx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
-    // GỌI TỪ When Select()
+    // Được gọi từ sự kiện chọn để bật/tắt nút và có thể kích hoạt đánh lửa.
     public void PressButton()
     {
         isPressed = !isPressed;
@@ -47,6 +48,7 @@ public class FanButton : MonoBehaviour
         igniteRoutine = StartCoroutine(IgniteAfterDelay());
     }
 
+    // Chờ một khoảng ngắn trước khi đánh lửa các nút lửa đã cấu hình.
     private IEnumerator IgniteAfterDelay()
     {
         yield return new WaitForSeconds(igniteDelay);
@@ -63,6 +65,7 @@ public class FanButton : MonoBehaviour
         hasIgnited = true;
     }
 
+    // Khởi động lại hiệu ứng tia lửa để tạo tín hiệu đánh lửa rõ ràng.
     private void PlaySparks()
     {
         if (sparksFx == null) return;
@@ -71,6 +74,7 @@ public class FanButton : MonoBehaviour
         sparksFx.Play(true);
     }
 
+    // Đặt góc xoay Y cục bộ để khớp trạng thái hiển thị của nút.
     private void SetAngle(float angle)
     {
         Vector3 euler = transform.localEulerAngles;
