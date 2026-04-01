@@ -5,12 +5,22 @@ using UnityEngine.UI;
 
 public class StartButton : MonoBehaviour
 {
-    [SerializeField] private GameObject loadingPanel;
+    [SerializeField] private GameObject startMenuLayout;
+    [SerializeField] private GameObject loadingLayout;
     [SerializeField] private Slider progressBar;
 
     public void StartGame()
     {
-        loadingPanel.SetActive(true);
+        if (startMenuLayout != null)
+        {
+            startMenuLayout.SetActive(false);
+        }
+
+        if (loadingLayout != null)
+        {
+            loadingLayout.SetActive(true);
+        }
+
         StartCoroutine(LoadSceneAsync());
     }
 
