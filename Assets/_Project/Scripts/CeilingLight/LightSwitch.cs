@@ -44,6 +44,8 @@ public class LightSwitch : MonoBehaviour
 
         if (sparksFx != null)
             sparksFx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        SetLights(false);
     }
 
     // Được gọi từ sự kiện chọn để bật/tắt nút, đèn và có thể kích hoạt đánh lửa.
