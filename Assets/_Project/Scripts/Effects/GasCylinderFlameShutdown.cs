@@ -22,7 +22,6 @@ public class GasCylinderFlameShutdown : MonoBehaviour
     [SerializeField] private float extinguishDelay = 0.2f;
     [SerializeField] private bool stopLeakToo = true;
     [SerializeField] private bool disableSpreadToo = true;
-    [SerializeField] private bool debugLog = false;
 
     private float shutoffTimer;
     private bool alreadyExtinguished;
@@ -54,16 +53,11 @@ public class GasCylinderFlameShutdown : MonoBehaviour
             if (stopLeakToo && gasSystem != null)
                 gasSystem.leakActive = false;
 
-            if (debugLog)
-                Debug.Log($"Valve near closed... timer = {shutoffTimer:0.00}");
-
             if (shutoffTimer >= extinguishDelay)
             {
                 flameNode.Extinguish();
                 alreadyExtinguished = true;
 
-                if (debugLog)
-                    Debug.Log("Gas cylinder flame extinguished by valve shutoff.");
             }
         }
         else
