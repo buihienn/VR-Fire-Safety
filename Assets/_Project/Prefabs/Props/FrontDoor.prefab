@@ -303,6 +303,7 @@ GameObject:
   - component: {fileID: 4864443692287221567}
   - component: {fileID: 7642859747707165704}
   - component: {fileID: 8824904051231178816}
+  - component: {fileID: 528119011713167854}
   m_Layer: 0
   m_Name: ISDK_HandGrabInteractionRight
   m_TagString: Untagged
@@ -369,6 +370,29 @@ MonoBehaviour:
   _handGrabPoses:
   - {fileID: 2616339631758174445}
 --- !u!114 &8824904051231178816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3469955663683388010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a1bc992571301d4a9602ac95ef4c71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 4113016574954995578}
+  _rigidbody: {fileID: 2562107224740015131}
+  _grabSource: {fileID: 0}
+  _useClosestPointAsGrabSource: 0
+  _releaseDistance: 0
+  _resetGrabOnGrabsUpdated: 1
+  _physicsGrabbable: {fileID: 0}
+--- !u!114 &528119011713167854
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -541,6 +565,7 @@ MonoBehaviour:
   handlePivot: {fileID: 1952874196460816440}
   doorHingeJoint: {fileID: 7334805794934290193}
   doorRigidbody: {fileID: 4033012017465496764}
+  doorMesh: {fileID: 499749862016104321}
   handleAxis: 2
   handleDownIsNegative: 1
   unlockAtDeg: 30
@@ -729,8 +754,34 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 152b7285bcc6be446b4be7258caf9065, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6090527975983778929}
   m_SourcePrefab: {fileID: 100100000, guid: 152b7285bcc6be446b4be7258caf9065, type: 3}
+--- !u!1 &499749862016104321 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 152b7285bcc6be446b4be7258caf9065, type: 3}
+  m_PrefabInstance: {fileID: 733556825894947536}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6090527975983778929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 499749862016104321}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 1
+  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineWidth: 2
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!4 &983094746349399355 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 152b7285bcc6be446b4be7258caf9065, type: 3}
@@ -816,6 +867,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 291a5f25d276e664a984da5fb26da21b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7523266317615175403}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 291a5f25d276e664a984da5fb26da21b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6508287355153902232}
   m_SourcePrefab: {fileID: 100100000, guid: 291a5f25d276e664a984da5fb26da21b, type: 3}
 --- !u!1 &1175949747972903554 stripped
 GameObject:
@@ -864,7 +918,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -948,6 +1002,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   doorController: {fileID: 751836389873074040}
   returnSpeed: 10
+--- !u!114 &6508287355153902232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1175949747972903554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 1
+  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineWidth: 2
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!4 &1952874196460816440 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 291a5f25d276e664a984da5fb26da21b, type: 3}
@@ -1030,6 +1102,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fdb7a1a3f540c35448e9e54ea14949a3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5673245659708777394}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fdb7a1a3f540c35448e9e54ea14949a3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5663393100300354707}
   m_SourcePrefab: {fileID: 100100000, guid: fdb7a1a3f540c35448e9e54ea14949a3, type: 3}
 --- !u!1 &1406595717726558373 stripped
 GameObject:
@@ -1144,6 +1219,7 @@ MonoBehaviour:
   rightGrabbable: {fileID: 3041715749411490818}
   rightHingeJoint: {fileID: 5673245659708777394}
   rightRigidbody: {fileID: 2411889353096987781}
+  rightDoorMesh: {fileID: 1406595717726558373}
   leftOpenThreshold: 10
   rightOpenThreshold: 3
 --- !u!59 &5673245659708777394
@@ -1185,6 +1261,24 @@ HingeJoint:
   m_EnablePreprocessing: 1
   m_MassScale: 1
   m_ConnectedMassScale: 1
+--- !u!114 &5663393100300354707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1406595717726558373}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 1
+  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineWidth: 2
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!4 &1787625547314823711 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: fdb7a1a3f540c35448e9e54ea14949a3, type: 3}

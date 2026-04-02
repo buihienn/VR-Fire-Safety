@@ -35,6 +35,11 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     // Rigidbody của cửa — dùng để bật/tắt physics (isKinematic)
     public Rigidbody doorRigidbody;
 
+    // Mesh cửa — dùng để bật outline khi cửa được phép mở
+    public GameObject doorMesh;
+
+    private Outline _doorOutline;
+
     // Vị trí tay thật trong world space (nhận từ HandleController mỗi frame)
     private Vector3 _handPosition;
 
@@ -106,6 +111,9 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         _doorAngle = closedAngle;
         ApplyDoorRotation(_doorAngle);
         SetHingeJointEnabled(false);
+
+        if (doorMesh != null)
+            _doorOutline = doorMesh.GetComponent<Outline>();
     }
 
     /// <summary>
@@ -113,6 +121,11 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     /// </summary>
     void Update()
     {
+        if (debugLogs && Time.frameCount % 15 == 0 && doorHingeJoint != null && doorHingePivot != null)
+        {
+            Debug.Log($"scriptAngle={_doorAngle:F1}, hingeAngle={doorHingeJoint.angle:F1}, localY={doorHingePivot.localEulerAngles.y:F1}");
+        }
+
         // Không grab → không làm gì
         if (!_isGrabbed) return;
         
@@ -204,6 +217,9 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         bool shouldBeKinematic = !enabled;
         if (rb.isKinematic == shouldBeKinematic) return;
         rb.isKinematic = shouldBeKinematic;
+
+        if (_doorOutline != null)
+            _doorOutline.enabled = enabled;
     }
 
     /// <summary>

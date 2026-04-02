@@ -281,20 +281,8 @@ MonoBehaviour:
   _whenSelect:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: FanRotator, Assembly-CSharp
-        m_MethodName: Toggle
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: FanButton, Assembly-CSharp
+      - m_Target: {fileID: 4068452154092103804}
+        m_TargetAssemblyTypeName: LightSwitch, Assembly-CSharp
         m_MethodName: PressButton
         m_Mode: 1
         m_Arguments:
@@ -434,7 +422,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3790459774550244529}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -0.1814813, y: 1.3430262, z: -9.9671}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -10337,6 +10325,7 @@ GameObject:
   - component: {fileID: 8825561269597917549}
   - component: {fileID: 6033839286712606619}
   - component: {fileID: 8904178504215397898}
+  - component: {fileID: 7122613862316215402}
   - component: {fileID: 4068452154092103804}
   m_Layer: 0
   m_Name: LightSwitch
@@ -10415,6 +10404,24 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &7122613862316215402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728918119116995539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 0
+  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineWidth: 2
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!114 &4068452154092103804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10427,11 +10434,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7340e8fd89be4d4a920143d8b4d475e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  offAngle: 98
+  onAngle: 82
+  sparksFx: {fileID: 7661531405414288543}
+  igniteDelay: 0.05
+  nodesToIgnite: []
+  triggerOnlyWhenTurningOn: 1
+  igniteOnlyOnce: 1
   elements:
   - diffuseRenderer: {fileID: 0}
     pointLight: {fileID: 0}
     diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
-  startOn: 1
+  - diffuseRenderer: {fileID: 0}
+    pointLight: {fileID: 0}
+    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
+  - diffuseRenderer: {fileID: 0}
+    pointLight: {fileID: 0}
+    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
+  - diffuseRenderer: {fileID: 0}
+    pointLight: {fileID: 0}
+    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
+  - diffuseRenderer: {fileID: 0}
+    pointLight: {fileID: 0}
+    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
+  - diffuseRenderer: {fileID: 0}
+    pointLight: {fileID: 0}
+    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &7686068756178013233
 GameObject:
   m_ObjectHideFlags: 0
