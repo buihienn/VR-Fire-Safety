@@ -28,6 +28,11 @@ public class DoorRightOpen : MonoBehaviour
     // Rigidbody của cửa phải — dùng để bật/tắt physics (isKinematic)
     public Rigidbody rightRigidbody;
 
+    // Mesh cửa phải — dùng để bật outline khi cửa được phép mở
+    public GameObject rightDoorMesh;
+
+    private Outline _rightDoorOutline;
+
     [Header("Settings")]
     // Góc tối thiểu (độ) cửa trái phải mở để unlock cửa phải
     // Ví dụ: 10° = cửa trái mở hé ít nhất 10° thì cửa phải mới grab được
@@ -42,6 +47,9 @@ public class DoorRightOpen : MonoBehaviour
     void Start()
     {
         rightGrabbable.enabled = false;
+
+        if (rightDoorMesh != null)
+            _rightDoorOutline = rightDoorMesh.GetComponent<Outline>();
     }
 
     /// <summary>
@@ -74,6 +82,9 @@ public class DoorRightOpen : MonoBehaviour
         bool shouldBeKinematic = !enabled;
         if (rb.isKinematic == shouldBeKinematic) return;
         rb.isKinematic = shouldBeKinematic;
+
+        if (_rightDoorOutline != null)
+            _rightDoorOutline.enabled = enabled;
     }
 
     /// <summary>
