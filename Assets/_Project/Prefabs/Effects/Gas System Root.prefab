@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4980315869637912255}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Fire_SpreadPoints
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,7 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7803578771894569161}
   - component: {fileID: 1388893088952792348}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: GasSystem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77,7 +77,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gas01: 0.5
+  hoseLeak: 0
+  stoveKnobs: []
+  mainValveOpen01: 1
+  mainValveOpenThreshold: 0.01
+  knobLeak: 0
+  leakPresent: 0
+  mainSupplyOpen: 0
   leakActive: 1
+  leakStrength01: 0
   fillSecondsPerLevel: 10
   drainSecondsPerLevelPerOpening: 10
   vents:
@@ -93,7 +101,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6206085718605303378}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Gas System Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -130,7 +138,7 @@ GameObject:
   - component: {fileID: 6004699314154707654}
   - component: {fileID: 3917440981875120284}
   - component: {fileID: 4415954013081324674}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: GasFogPS
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4982,7 +4990,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1606667685097116072}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Fire_NozzlePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5014,7 +5022,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9176499504312786188}
   - component: {fileID: 7662535837134974415}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: GasZone_Kitchen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
