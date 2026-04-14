@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8714209717714564259}
   - component: {fileID: 2181656448163157964}
   - component: {fileID: 7996871827633900852}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Flame_Node
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -54,8 +54,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.2, y: 0.2, z: 0.2}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  m_Size: {x: 0.23948833, y: 0.2594987, z: 0.2}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2181656448163157964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,12 +72,168 @@ MonoBehaviour:
   fireLights: []
   autoFindEffects: 1
   igniteOnStart: 0
+  extinguishCollider: {fileID: 0}
+  autoFindCollider: 1
   neighbors: []
   canSpread: 1
   spreadDelayMin: 1.2
   spreadDelayMax: 2.5
   neighborIgniteDelayMin: 0.05
   neighborIgniteDelayMax: 0.35
+  growSpeed: 0.05
+  shrinkSpeed: 0.5
+  burn01: 0
+  igniteStartBurn01: 0.08
+  sizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.08
+      value: 0.16
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.25
+      value: 0.42
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.6
+      value: 0.82
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  speedCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.35
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  emissionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.1
+      value: 0.08
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.35
+      value: 0.4
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  lightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.15
+      value: 0.1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &7996871827633900852
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92,9 +248,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flameNode: {fileID: 2181656448163157964}
   extinguisherTag: ExtinguisherSpray
-  extinguishNeeded: 12
-  extinguishPerHit: 1
-  recoveryPerSecond: 0
+  extinguishNeeded: 120
+  extinguishPerHit: 0.1
+  maxHitsPerFrame: 3
+  recoveryPerSecond: 4
+  recoveryDelayAfterSpray: 0.25
+  visualShrinkStart01: 0.2
+  minVisualWhileBurning: 0.12
 --- !u!1 &1429407813846059089
 GameObject:
   m_ObjectHideFlags: 0
@@ -106,7 +266,7 @@ GameObject:
   - component: {fileID: 3222342451435704047}
   - component: {fileID: 3151817820412342397}
   - component: {fileID: 2469025673673852053}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Particles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -145,7 +305,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 1
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:
@@ -4939,7 +5099,7 @@ GameObject:
   - component: {fileID: 951050762453753640}
   - component: {fileID: 1883748577467975814}
   - component: {fileID: 6734244994817822333}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: Flame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4979,7 +5139,7 @@ ParticleSystem:
   emitterVelocityMode: 1
   looping: 1
   prewarm: 0
-  playOnAwake: 1
+  playOnAwake: 0
   useUnscaledTime: 0
   autoRandomSeed: 1
   startDelay:

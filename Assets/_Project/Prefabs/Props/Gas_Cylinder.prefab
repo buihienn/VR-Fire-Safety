@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2528144148577398248}
   - component: {fileID: 3495788894880296931}
   - component: {fileID: 8371405662389782808}
+  - component: {fileID: 5567871345296430269}
   m_Layer: 0
   m_Name: ISDK_HandGrabInteraction
   m_TagString: Untagged
@@ -118,7 +119,78 @@ MonoBehaviour:
       Value: -45
     MaxAngle:
       Constrain: 1
-      Value: 90
+      Value: 135
+--- !u!114 &5567871345296430269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5320869406093094617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 643af80657c7cd6488be9761b2ccb754, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  valveHandle: {fileID: 4197978687385977534}
+  gasSystem: {fileID: 0}
+  localAxis: 1
+  closedAngle: -45
+  fullyOpenAngle: 135
+  closedDeadZoneDeg: 5
+  leakCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.15
+      value: 0.02
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.4
+      value: 0.18
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.7
+      value: 0.55
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  valveOpen01: 0
+  leak01: 0
 --- !u!1001 &363468955036572963
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -129,15 +201,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.346
+      value: -3.351
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.747
+      value: 0.565
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -9.963
+      value: -14.732
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
       propertyPath: m_LocalRotation.w
@@ -182,6 +254,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 575656209980982080}
     - targetCorrespondingSourceObject: {fileID: -4663061483408908387, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1882170654003034667}
@@ -202,6 +277,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 8714328060336281644}
   m_SourcePrefab: {fileID: 100100000, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
+--- !u!4 &180694203715238600 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
+  m_PrefabInstance: {fileID: 363468955036572963}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &671360274685837512 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 890142118404890091, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
@@ -226,8 +306,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.44337782, y: 0.6811533, z: 0.44060338}
-  m_Center: {x: 0.00017343466, y: 0.062416196, z: 0.0013374168}
+  m_Size: {x: 0.40847477, y: 0.56560564, z: 0.44060338}
+  m_Center: {x: 0.005774498, y: 0.0046423674, z: 0.0013374239}
 --- !u!1 &3210324837174736729 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2992097112478427770, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
@@ -329,4 +409,74 @@ MeshCollider:
 Transform:
   m_CorrespondingSourceObject: {fileID: -4663061483408908387, guid: 3db54e758525d094fb681458fe092cf7, type: 3}
   m_PrefabInstance: {fileID: 363468955036572963}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7019169519722573802
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 180694203715238600}
+    m_Modifications:
+    - target: {fileID: 6004245677639112613, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: valveHandle
+      value: 
+      objectReference: {fileID: 4197978687385977534}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.023
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7741551745734201915, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: m_Name
+      value: FireNode_GasValve
+      objectReference: {fileID: 0}
+    - target: {fileID: 8120607169524895223, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+      propertyPath: igniteOnStart
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+--- !u!4 &575656209980982080 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7391600202739231914, guid: b90f65d9d9d7ea54f980c1f2717c3b57, type: 3}
+  m_PrefabInstance: {fileID: 7019169519722573802}
   m_PrefabAsset: {fileID: 0}

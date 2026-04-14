@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 9154030313785372312}
   - component: {fileID: 2186414482617498643}
   - component: {fileID: 8837296299923747467}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: FireSmoke_Particle System
   m_TagString: ExtinguisherSpray
   m_Icon: {fileID: 0}
