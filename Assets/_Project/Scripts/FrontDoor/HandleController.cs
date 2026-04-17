@@ -127,6 +127,9 @@ public class HandleController : MonoBehaviour
 
                 // Đánh dấu đang grab
                 _isGrabbed = true;
+
+                // Sound effect
+                AudioManager.Instance.PlayOneShot("HandleIn");
                 
                 // Truyền vị trí tay THẬT (grab point từ SDK) cho door controller
                 // GrabPoints[0].position = vị trí tay tracked, KHÔNG bị snap bởi HandGrabPose
@@ -140,6 +143,9 @@ public class HandleController : MonoBehaviour
             case PointerEventType.Unselect:
                 // Đánh dấu không còn grab
                 _isGrabbed = false;
+
+                // Sound effect
+                AudioManager.Instance.PlayOneShot("HandleOut");
                 
                 // Thông báo cho door controller rằng handle đã được thả
                 doorController.OnHandleReleased();
