@@ -1,40 +1,37 @@
+using System.Collections;
 using UnityEngine;
 
 public class GasCylinderFlameShutdown : MonoBehaviour
 {
-    public enum Axis { X, Y, Z }
-
-    [Header("Refs")]
+    [Header("References")]
     [SerializeField] private FlameNode flameNode;
-    [SerializeField] private Transform valveHandle;
     [SerializeField] private GasSystem gasSystem;
-    [SerializeField] private Transform reigniteOrigin;
+    [SerializeField] private Transform valveHandle;
 
-    [Header("Valve Read")]
-    [SerializeField] private Axis localAxis = Axis.Y;
+    [Header("Valve Closed Detection")]
     [SerializeField] private float closedAngle = -45f;
     [SerializeField] private float shutoffToleranceDeg = 8f;
 
-    [Header("Behavior")]
-    [SerializeField] private float extinguishDelay = 0.2f;
+    [Header("Shutdown")]
+    [SerializeField] private float extinguishDelay = 0.25f;
     [SerializeField] private bool stopLeakToo = true;
-    [SerializeField] private bool disableSpreadToo = true;
+    [SerializeField] private bool disableSpreadWhenClosed = false;
 
-    [Header("Reignite")]
-    [SerializeField] private bool allowReignite = true;
-    [SerializeField] private float reigniteDelay = 1.5f;
-    [SerializeField] private float ignitionRadius = 2f;
-    [SerializeField] private float minNeighborBurn01 = 0.1f;
+    [Header("Re-Ignite")]
+    [SerializeField] private float ignitionRadius = 4f;
+    [SerializeField] private float reigniteDelay = 2f;
+    [SerializeField] private float checkInterval = 0.25f;
+    [SerializeField] private float minNeighborBurn01 = 0.05f;
 
-    [Header("Debug / Read Only")]
+    [Header("Debug Read Only")]
     [SerializeField] private bool debugValveClosed;
-    [SerializeField] private bool debugLeakActive;
-    [SerializeField] private bool debugHasNearbyBurningFlame;
-    [SerializeField] private float debugNearestBurningFlameDistance = -1f;
+    [SerializeField] private bool debugGasStillLeaking;
+    [SerializeField] private bool debugNearbyFireFound;
     [SerializeField] private float debugReigniteTimer;
 
-    private float shutoffTimer;
-    private float reigniteTimer;
+    private Coroutine extinguishRoutine;
+    private float reigniteTimer = 0f;
+    private float nextCheckTime = 0f;
 
     private void Awake()
     {
@@ -42,167 +39,138 @@ public class GasCylinderFlameShutdown : MonoBehaviour
             flameNode = GetComponent<FlameNode>();
 
         if (!gasSystem)
-            gasSystem = FindFirstObjectByType<GasSystem>();
-
-        if (!reigniteOrigin)
-            reigniteOrigin = transform;
+            gasSystem = GasSystem.Instance;
     }
 
     private void Update()
     {
-        if (flameNode == null || valveHandle == null) return;
-
-        bool valveClosed = IsValveClosedEnough();
-        debugValveClosed = valveClosed;
-
-        if (disableSpreadToo)
-            flameNode.SetCanSpread(!valveClosed);
-
-        HandleValveShutoff(valveClosed);
-        HandleReignite(valveClosed);
-    }
-
-    private void HandleValveShutoff(bool valveClosed)
-    {
-        if (!flameNode.IsBurning)
-        {
-            shutoffTimer = 0f;
+        if (!flameNode)
             return;
-        }
+
+        if (Time.time < nextCheckTime)
+            return;
+
+        nextCheckTime = Time.time + checkInterval;
+
+        bool valveClosed = IsValveClosed();
+        debugValveClosed = valveClosed;
 
         if (valveClosed)
         {
-            shutoffTimer += Time.deltaTime;
+            reigniteTimer = 0f;
+            debugReigniteTimer = 0f;
+            debugGasStillLeaking = false;
+            debugNearbyFireFound = false;
 
             if (stopLeakToo && gasSystem != null)
                 gasSystem.SetMainValveOpen01(0f);
 
-            if (shutoffTimer >= extinguishDelay)
-                flameNode.Extinguish();
-        }
-        else
-        {
-            shutoffTimer = 0f;
-        }
-    }
+            if (disableSpreadWhenClosed)
+                flameNode.SetCanSpread(false);
 
-    private void HandleReignite(bool valveClosed)
-    {
-        if (!allowReignite || flameNode == null || gasSystem == null)
-        {
-            ResetReigniteDebug();
+            if (flameNode.IsBurning && extinguishRoutine == null)
+                extinguishRoutine = StartCoroutine(ExtinguishAfterDelay());
+
             return;
         }
 
-        debugLeakActive = gasSystem.leakActive;
+        if (disableSpreadWhenClosed)
+            flameNode.SetCanSpread(true);
 
-        if (valveClosed)
+        if (extinguishRoutine != null)
         {
-            ResetReigniteDebug();
-            return;
+            StopCoroutine(extinguishRoutine);
+            extinguishRoutine = null;
         }
+
+        bool gasStillLeaking = gasSystem != null && gasSystem.CanSustainNozzleFire();
+        bool nearbyFireFound = HasNearbyBurningNode();
+
+        debugGasStillLeaking = gasStillLeaking;
+        debugNearbyFireFound = nearbyFireFound;
 
         if (flameNode.IsBurning)
         {
-            ResetReigniteDebug();
-            return;
-        }
-
-        if (!gasSystem.leakActive)
-        {
-            ResetReigniteDebug();
-            return;
-        }
-
-        bool hasNearbyFlame = HasNearbyBurningFlame(out float nearestDist);
-        debugHasNearbyBurningFlame = hasNearbyFlame;
-        debugNearestBurningFlameDistance = nearestDist;
-
-        if (!hasNearbyFlame)
-        {
             reigniteTimer = 0f;
             debugReigniteTimer = 0f;
             return;
         }
 
-        reigniteTimer += Time.deltaTime;
-        debugReigniteTimer = reigniteTimer;
-
-        if (reigniteTimer >= reigniteDelay)
+        if (gasStillLeaking && nearbyFireFound)
         {
-            flameNode.Ignite();
+            reigniteTimer += checkInterval;
+            debugReigniteTimer = reigniteTimer;
+
+            if (reigniteTimer >= reigniteDelay)
+            {
+                flameNode.ForceIgnite();
+                reigniteTimer = 0f;
+                debugReigniteTimer = 0f;
+            }
+        }
+        else
+        {
             reigniteTimer = 0f;
             debugReigniteTimer = 0f;
         }
     }
 
-    private bool HasNearbyBurningFlame(out float nearestDistance)
+    private IEnumerator ExtinguishAfterDelay()
     {
-        nearestDistance = -1f;
+        if (extinguishDelay > 0f)
+            yield return new WaitForSeconds(extinguishDelay);
 
-        Vector3 center = reigniteOrigin ? reigniteOrigin.position : transform.position;
-        float radiusSqr = ignitionRadius * ignitionRadius;
-        bool found = false;
+        if (flameNode != null)
+            flameNode.Extinguish();
 
-        for (int i = 0; i < FlameNode.All.Count; i++)
+        extinguishRoutine = null;
+    }
+
+    private bool IsValveClosed()
+    {
+        if (valveHandle == null)
         {
-            FlameNode other = FlameNode.All[i];
-            if (other == null) continue;
-            if (other == flameNode) continue;
-            if (!other.IsBurning) continue;
-            if (other.Burn01 < minNeighborBurn01) continue;
-
-            float sqrDist = (other.transform.position - center).sqrMagnitude;
-            float dist = Mathf.Sqrt(sqrDist);
-
-            if (nearestDistance < 0f || dist < nearestDistance)
-                nearestDistance = dist;
-
-            if (sqrDist <= radiusSqr)
-                found = true;
+            return gasSystem != null && !gasSystem.MainSupplyOpen;
         }
 
-        return found;
-    }
-
-    private void ResetReigniteDebug()
-    {
-        reigniteTimer = 0f;
-        debugLeakActive = gasSystem != null && gasSystem.leakActive;
-        debugHasNearbyBurningFlame = false;
-        debugNearestBurningFlameDistance = -1f;
-        debugReigniteTimer = 0f;
-    }
-
-    private bool IsValveClosedEnough()
-    {
-        float current = GetAxisAngle(valveHandle.localEulerAngles);
-        float delta = Mathf.Abs(Mathf.DeltaAngle(current, closedAngle));
+        float currentAngle = Normalize180(valveHandle.localEulerAngles.y);
+        float delta = Mathf.Abs(Mathf.DeltaAngle(currentAngle, closedAngle));
         return delta <= shutoffToleranceDeg;
     }
 
-    private float GetAxisAngle(Vector3 euler)
+    private bool HasNearbyBurningNode()
     {
-        float angle = localAxis switch
+        if (flameNode == null)
+            return false;
+
+        float radiusSqr = ignitionRadius * ignitionRadius;
+        Vector3 myPos = flameNode.transform.position;
+
+        foreach (FlameNode node in FlameNode.All)
         {
-            Axis.X => euler.x,
-            Axis.Y => euler.y,
-            _ => euler.z
-        };
+            if (node == null) continue;
+            if (node == flameNode) continue;
+            if (!node.IsBurning) continue;
+            if (node.Burn01 < minNeighborBurn01) continue;
 
-        if (angle > 180f)
-            angle -= 360f;
+            Vector3 delta = node.transform.position - myPos;
+            if (delta.sqrMagnitude <= radiusSqr)
+                return true;
+        }
 
+        return false;
+    }
+
+    private float Normalize180(float angle)
+    {
+        while (angle > 180f) angle -= 360f;
+        while (angle < -180f) angle += 360f;
         return angle;
     }
 
-    private void OnValidate()
+    private void OnDrawGizmosSelected()
     {
-        if (extinguishDelay < 0f) extinguishDelay = 0f;
-        if (reigniteDelay < 0f) reigniteDelay = 0f;
-        if (ignitionRadius < 0.05f) ignitionRadius = 0.05f;
-        if (minNeighborBurn01 < 0f) minNeighborBurn01 = 0f;
-        if (minNeighborBurn01 > 1f) minNeighborBurn01 = 1f;
-        if (shutoffToleranceDeg < 0f) shutoffToleranceDeg = 0f;
+        Gizmos.color = new Color(1f, 0.3f, 0f, 0.25f);
+        Gizmos.DrawWireSphere(transform.position, ignitionRadius);
     }
 }
