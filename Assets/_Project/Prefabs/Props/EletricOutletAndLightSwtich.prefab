@@ -320,7 +320,7 @@ GameObject:
   - component: {fileID: 7875078541912044045}
   - component: {fileID: 185956816271720909}
   m_Layer: 0
-  m_Name: FanButtonPart
+  m_Name: ButtonPart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -549,7 +549,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &630946977613638559
 Transform:
   m_ObjectHideFlags: 0
@@ -10477,7 +10477,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &9207334395939394986
 Transform:
   m_ObjectHideFlags: 0

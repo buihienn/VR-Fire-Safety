@@ -76,10 +76,15 @@ MonoBehaviour:
   autoFindCollider: 1
   neighbors: []
   canSpread: 1
-  spreadDelayMin: 1.2
-  spreadDelayMax: 2.5
-  neighborIgniteDelayMin: 0.05
-  neighborIgniteDelayMax: 0.35
+  spreadDelayMin: 9
+  spreadDelayMax: 12
+  neighborIgniteDelayMin: 0.2
+  neighborIgniteDelayMax: 1
+  autoFindNeighborsByDistance: 1
+  rebuildNeighborsOnStart: 1
+  clearNeighborsBeforeAutoFind: 1
+  linkBidirectional: 0
+  neighborRadius: 2.5
   growSpeed: 0.05
   shrinkSpeed: 0.5
   burn01: 0

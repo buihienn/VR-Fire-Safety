@@ -16,11 +16,28 @@ public class FlameNode : MonoBehaviour
 
     [Header("Spread")]
     [SerializeField] private List<FlameNode> neighbors = new List<FlameNode>();
+
+    [Tooltip("Node nay co duoc lan tiep sang node khac hay khong")]
     [SerializeField] private bool canSpread = true;
+
+    [Tooltip("Node nay co duoc bi lay chay tu spread cua node khac hay khong")]
+    [SerializeField] private bool allowIgniteFromSpread = true;
+
     [SerializeField] private float spreadDelayMin = 1.2f;
     [SerializeField] private float spreadDelayMax = 2.5f;
     [SerializeField] private float neighborIgniteDelayMin = 0.05f;
     [SerializeField] private float neighborIgniteDelayMax = 0.35f;
+
+    [Header("Re-Ignite Cooldown")]
+    [SerializeField] private bool useSpreadReigniteCooldown = true;
+    [SerializeField] private float spreadReigniteCooldown = 10f;
+
+    [Header("Auto Find Neighbors")]
+    [SerializeField] private bool autoFindNeighborsByDistance = true;
+    [SerializeField] private bool rebuildNeighborsOnStart = true;
+    [SerializeField] private bool clearNeighborsBeforeAutoFind = true;
+    [SerializeField] private bool linkBidirectional = false;
+    [SerializeField] private float neighborRadius = 1.5f;
 
     [Header("Growth / Fade")]
     [SerializeField] private float growSpeed = 0.35f;
@@ -59,6 +76,7 @@ public class FlameNode : MonoBehaviour
     private bool isBurning;
     private Coroutine igniteRoutine;
     private Coroutine spreadRoutine;
+    private float lastExtinguishTime = -999f;
 
     private readonly Dictionary<ParticleSystem, float> baseSize = new();
     private readonly Dictionary<ParticleSystem, float> baseSpeed = new();
@@ -68,6 +86,10 @@ public class FlameNode : MonoBehaviour
 
     public bool IsBurning => isBurning;
     public float Burn01 => burn01;
+    public bool CanSpread => canSpread;
+    public bool AllowIgniteFromSpread => allowIgniteFromSpread;
+    public bool SpreadReigniteLocked =>
+        useSpreadReigniteCooldown && (Time.time < lastExtinguishTime + spreadReigniteCooldown);
 
     public static readonly List<FlameNode> All = new();
 
@@ -105,7 +127,7 @@ public class FlameNode : MonoBehaviour
         {
             burn01 = 0f;
             visualDamp01 = 1f;
-            Ignite();
+            ForceIgnite();
         }
         else
         {
@@ -114,6 +136,12 @@ public class FlameNode : MonoBehaviour
             visualDamp01 = 1f;
             ApplyVisual(0f, true);
         }
+    }
+
+    private void Start()
+    {
+        if (autoFindNeighborsByDistance && rebuildNeighborsOnStart)
+            RebuildNeighborsByDistance();
     }
 
     private void Update()
@@ -242,10 +270,25 @@ public class FlameNode : MonoBehaviour
 
     public void Ignite()
     {
-        Ignite(0f);
+        ForceIgnite(0f);
     }
 
     public void Ignite(float delay)
+    {
+        ForceIgnite(delay);
+    }
+
+    public bool TryIgniteFromSpread(float delay = 0f)
+    {
+        if (!allowIgniteFromSpread) return false;
+        if (isBurning) return false;
+        if (SpreadReigniteLocked) return false;
+
+        ForceIgnite(delay);
+        return true;
+    }
+
+    public void ForceIgnite(float delay = 0f)
     {
         if (isBurning) return;
 
@@ -290,7 +333,7 @@ public class FlameNode : MonoBehaviour
             if (node.IsBurning) continue;
 
             float igniteDelay = Random.Range(neighborIgniteDelayMin, neighborIgniteDelayMax);
-            node.Ignite(igniteDelay);
+            node.TryIgniteFromSpread(igniteDelay);
         }
 
         spreadRoutine = null;
@@ -314,6 +357,7 @@ public class FlameNode : MonoBehaviour
 
         isBurning = false;
         visualDamp01 = 1f;
+        lastExtinguishTime = Time.time;
     }
 
     public void SetVisualDamp01(float value)
@@ -324,6 +368,11 @@ public class FlameNode : MonoBehaviour
     public void SetCanSpread(bool value)
     {
         canSpread = value;
+    }
+
+    public void SetAllowIgniteFromSpread(bool value)
+    {
+        allowIgniteFromSpread = value;
     }
 
     public void AddNeighbor(FlameNode node)
@@ -340,10 +389,50 @@ public class FlameNode : MonoBehaviour
         neighbors.Remove(node);
     }
 
+    public void ClearNeighbors()
+    {
+        neighbors.Clear();
+    }
+
+    public void RebuildNeighborsByDistance()
+    {
+        if (clearNeighborsBeforeAutoFind)
+            neighbors.Clear();
+
+        Vector3 myPos = transform.position;
+        float radiusSqr = neighborRadius * neighborRadius;
+
+        foreach (FlameNode node in All)
+        {
+            if (node == null) continue;
+            if (node == this) continue;
+
+            Vector3 delta = node.transform.position - myPos;
+            if (delta.sqrMagnitude > radiusSqr) continue;
+
+            AddNeighbor(node);
+
+            if (linkBidirectional)
+                node.AddNeighbor(this);
+        }
+    }
+
+    [ContextMenu("Rebuild Neighbors By Distance")]
+    private void RebuildNeighborsByDistanceContextMenu()
+    {
+        RebuildNeighborsByDistance();
+    }
+
+    [ContextMenu("Clear Neighbors")]
+    private void ClearNeighborsContextMenu()
+    {
+        ClearNeighbors();
+    }
+
     [ContextMenu("Test Ignite")]
     private void TestIgnite()
     {
-        Ignite();
+        ForceIgnite();
     }
 
     [ContextMenu("Test Extinguish")]
@@ -354,6 +443,12 @@ public class FlameNode : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if (autoFindNeighborsByDistance)
+        {
+            Gizmos.color = new Color(1f, 0.6f, 0f, 0.25f);
+            Gizmos.DrawWireSphere(transform.position, neighborRadius);
+        }
+
         Gizmos.color = Color.red;
 
         if (neighbors == null) return;
@@ -375,8 +470,12 @@ public class FlameNode : MonoBehaviour
         if (neighborIgniteDelayMax < neighborIgniteDelayMin)
             neighborIgniteDelayMax = neighborIgniteDelayMin;
 
+        if (neighborRadius < 0.01f) neighborRadius = 0.01f;
+
         if (growSpeed < 0.01f) growSpeed = 0.01f;
         if (shrinkSpeed < 0.01f) shrinkSpeed = 0.01f;
+
+        if (spreadReigniteCooldown < 0f) spreadReigniteCooldown = 0f;
 
         igniteStartBurn01 = Mathf.Clamp01(igniteStartBurn01);
 
