@@ -18,10 +18,14 @@ public class FanSwitch : MonoBehaviour
 	[SerializeField] private FanRotator fanRotator; // Đối tượng điều khiển tốc độ quạt.
 	[SerializeField] private float[] stepSpeeds = new float[] { 0f, 100f, 200f, 300f, 400f, 500f }; // Tốc độ theo từng nấc.
 
+	[Header("Ignition")]
+    [SerializeField] private SparkIgnitionTrigger sparkIgnitionTrigger;
+
 	private Grabbable _grabbable; // Nguồn sự kiện grab.
 	private Quaternion _initialLocalRotation; // Góc local gốc để làm mốc.
 	private bool _isGrabbed; // Trạng thái đang grab.
 	private int _currentStepIndex = -1; // Nấc hiện tại.
+	
 
 	private void Awake()
 	{
@@ -101,10 +105,21 @@ public class FanSwitch : MonoBehaviour
 		if (fanRotator == null) return; // Không có quạt để điều khiển.
 		if (stepIndex == _currentStepIndex) return; // Không đổi nếu cùng nấc.
 
+		int previousStep = _currentStepIndex;
 		_currentStepIndex = stepIndex;
+
 		float speed = GetStepSpeed(stepIndex); 
 		fanRotator.speed = speed; 
 		fanRotator.SetOn(speed > 0f); 
+
+		bool wasOff = previousStep <= 0;
+        bool isNowOn = stepIndex > 0;
+
+        if (sparkIgnitionTrigger != null)
+        {
+			sparkIgnitionTrigger.TriggerSpark();
+
+        }
 	}
 
 	private float GetStepSpeed(int stepIndex)
