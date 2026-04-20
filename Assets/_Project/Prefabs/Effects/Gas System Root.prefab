@@ -81,17 +81,21 @@ MonoBehaviour:
   stoveKnobs: []
   mainValveOpen01: 1
   mainValveOpenThreshold: 0.01
+  vents:
+  - {fileID: 0}
+  level1Threshold: 0.1
+  level2Threshold: 0.35
+  level3Threshold: 0.7
+  secondsToFullAtMaxLeak: 300
+  secondsToClearWithFullVent: 180
+  secondsToClearNaturally: 600
   knobLeak: 0
   leakPresent: 0
   mainSupplyOpen: 0
-  leakActive: 1
-  leakStrength01: 0
-  fillSecondsPerLevel: 10
-  drainSecondsPerLevelPerOpening: 10
-  vents:
-  - {fileID: 0}
   activeOpenings: 0
   vent01: 0
+  leakStrength01: 0
+  leakActive: 1
 --- !u!1 &1922030629938260290
 GameObject:
   m_ObjectHideFlags: 0

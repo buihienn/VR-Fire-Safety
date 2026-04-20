@@ -19,7 +19,7 @@ public class SparkIgnitionTrigger : MonoBehaviour
     [SerializeField] private bool playSparkEvenIfCannotIgnite = true;
     [SerializeField] private bool debugLog = false;
 
-    public void OnButtonPressed()
+    public void TriggerSpark()
     {
         if (playSparkEvenIfCannotIgnite)
             PlaySparkFx();
