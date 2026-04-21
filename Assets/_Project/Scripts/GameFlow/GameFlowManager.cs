@@ -11,6 +11,7 @@ public class GameFlowManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private GameObject hubGas;
+    [SerializeField] private GameObject timeLabel;
     [SerializeField] private GameObject endPanel;
     [SerializeField] private TMP_Text endTitleText;
     [SerializeField] private TMP_Text endBodyText;
@@ -37,6 +38,8 @@ public class GameFlowManager : MonoBehaviour
 
     private void Awake()
     {
+        ApplySetting();
+
         if (gasSystem == null)
             gasSystem = FindFirstObjectByType<GasSystem>();
 
@@ -78,6 +81,17 @@ public class GameFlowManager : MonoBehaviour
             else
                 EndAsTimeUp();
         }
+    }
+
+    public void ApplySetting()
+    {
+        if (timeLabel != null)
+            timeLabel.SetActive(true);
+
+        if (hubGas != null)
+            hubGas.SetActive(GameSettings.ShowGasLevel);
+
+        Debug.Log($"Applied GameSettings: ShowGasLevel={GameSettings.ShowGasLevel}");
     }
 
     private void UpdateTimerUI()
