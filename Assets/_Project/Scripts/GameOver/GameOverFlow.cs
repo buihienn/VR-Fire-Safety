@@ -1,57 +1,58 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
 
 public class GameOverFlow : MonoBehaviour
 {
     [Header("UI")]
-    public GameObject panelRoot;
-    public TMP_Text titleText;
-    public TMP_Text messageText;
-    public TMP_Text countdownText;
+    [SerializeField] private GameObject hubGas;
+    [SerializeField] private GameObject gameOverPanel;
 
     [Header("Scene Flow")]
-    [Min(0.1f)] public float delayBeforeLoad = 4f;
-    public string sceneToLoad = "WaitingRoom";
+    [SerializeField] private string startSceneName = "StartScene";
+    [SerializeField] private float returnDelay = 5f;
 
-    private bool started;
+    [Header("Optional - Disable When Game Over")]
+    [SerializeField] private GameObject[] objectsToDisable;
 
-    private void Awake()
+    private bool gameOverStarted;
+
+    private void Start()
     {
-        if (panelRoot != null)
-            panelRoot.SetActive(false);
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
     }
 
-    public void ShowGameOverAndLoadScene()
+    public void HandleGameOver()
     {
-        if (started) return;
-        started = true;
+        if (gameOverStarted) return;
+        gameOverStarted = true;
+
         StartCoroutine(GameOverRoutine());
     }
 
     private IEnumerator GameOverRoutine()
     {
-        if (panelRoot != null)
-            panelRoot.SetActive(true);
+        // Tat HUD gas truoc
+        if (hubGas != null)
+            hubGas.SetActive(false);
 
-        if (titleText != null)
-            titleText.text = "GAME OVER";
-
-        if (messageText != null)
-            messageText.text = "Ban da bat tinh vi hit khi gas.";
-
-        float timeLeft = delayBeforeLoad;
-
-        while (timeLeft > 0f)
+        // Tat them cac object khac neu can
+        if (objectsToDisable != null)
         {
-            if (countdownText != null)
-                countdownText.text = "Quay ve phong cho sau " + Mathf.CeilToInt(timeLeft) + "s";
-
-            timeLeft -= Time.unscaledDeltaTime;
-            yield return null;
+            for (int i = 0; i < objectsToDisable.Length; i++)
+            {
+                if (objectsToDisable[i] != null)
+                    objectsToDisable[i].SetActive(false);
+            }
         }
 
-        SceneManager.LoadScene(sceneToLoad);
+        // Hien panel Game Over
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+
+        yield return new WaitForSeconds(returnDelay);
+
+        SceneManager.LoadScene(startSceneName);
     }
 }

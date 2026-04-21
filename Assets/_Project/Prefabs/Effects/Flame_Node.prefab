@@ -76,10 +76,13 @@ MonoBehaviour:
   autoFindCollider: 1
   neighbors: []
   canSpread: 1
+  allowIgniteFromSpread: 1
   spreadDelayMin: 9
   spreadDelayMax: 12
   neighborIgniteDelayMin: 0.2
   neighborIgniteDelayMax: 1
+  useSpreadReigniteCooldown: 1
+  spreadReigniteCooldown: 10
   autoFindNeighborsByDistance: 1
   rebuildNeighborsOnStart: 1
   clearNeighborsBeforeAutoFind: 1
@@ -253,7 +256,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flameNode: {fileID: 2181656448163157964}
   extinguisherTag: ExtinguisherSpray
-  extinguishNeeded: 120
+  extinguishNeeded: 100
   extinguishPerHit: 0.1
   maxHitsPerFrame: 3
   recoveryPerSecond: 4
