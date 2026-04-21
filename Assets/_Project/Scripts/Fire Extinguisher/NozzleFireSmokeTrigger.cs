@@ -92,6 +92,12 @@ public class NozzleFireSmokeTrigger : MonoBehaviour
         if (fireSmoke != null && !fireSmoke.isPlaying)
             fireSmoke.Play();
 
+        // Sfx
+        if (!AudioManager.Instance.IsPlaying("FESpray"))
+        {
+            AudioManager.Instance.Play("FESpray");
+        }
+
         // Chỉ bắt đầu trừ thời gian từ lúc effect thực sự bắt đầu
         isSpraying = true;
     }
@@ -102,5 +108,8 @@ public class NozzleFireSmokeTrigger : MonoBehaviour
 
         if (fireSmoke != null && fireSmoke.isPlaying)
             fireSmoke.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+        // Sfx
+        AudioManager.Instance.Stop("FESpray");
     }
 }

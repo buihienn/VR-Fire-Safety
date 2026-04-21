@@ -27,6 +27,12 @@ public class HoseBurnSequence : MonoBehaviour
 
     private Coroutine sequenceRoutine;
 
+    [Header("Audio")]
+    [SerializeField] private string gasLeakLoopSound = "GasLeakLoop";
+    [SerializeField] private string gasBurstSound = "GasBurst";
+
+    private bool hasPlayedGasBurst = false;
+
     private void Start()
     {
         if (afterFireNode != null && deactivateAfterNodeOnStart)
@@ -47,6 +53,8 @@ public class HoseBurnSequence : MonoBehaviour
 
     private void Update()
     {
+        UpdateGasAudio();
+
         if (sequenceCompleted) return;
         if (sequenceRunning) return;
         if (hoseFireNode == null) return;
@@ -168,6 +176,8 @@ public class HoseBurnSequence : MonoBehaviour
         timerRemaining = 0f;
         stage = "Idle";
 
+        hasPlayedGasBurst = false;
+
         if (afterFireNode != null)
         {
             afterFireNode.Extinguish();
@@ -182,5 +192,40 @@ public class HoseBurnSequence : MonoBehaviour
 
         if (forceHoseLeakTrue && gasSystem != null)
             gasSystem.hoseLeak = true;
+    }
+
+    private void UpdateGasAudio()
+    {
+        if (AudioManager.Instance == null) return;
+        if (gasSystem == null) return;
+        if (hoseFireNode == null) return;
+
+        bool leakActive = gasSystem.LeakActive;
+        bool hoseBurning = hoseFireNode.gameObject.activeInHierarchy && hoseFireNode.IsBurning;
+
+        // LeakActive == true và chưa có gas fire đang cháy
+        // -> GasLeakLoop ON
+        if (leakActive && !hoseBurning)
+        {
+            if (!AudioManager.Instance.IsPlaying(gasLeakLoopSound))
+                AudioManager.Instance.Play(gasLeakLoopSound);
+        }
+        else
+        {
+            if (AudioManager.Instance.IsPlaying(gasLeakLoopSound))
+                AudioManager.Instance.Stop(gasLeakLoopSound);
+        }
+
+        // hoseFireNode vừa bắt đầu cháy
+        // -> GasLeakLoop OFF
+        // -> GasBurst ONESHOT
+        if (!hasPlayedGasBurst && hoseBurning)
+        {
+            if (AudioManager.Instance.IsPlaying(gasLeakLoopSound))
+                AudioManager.Instance.Stop(gasLeakLoopSound);
+
+            AudioManager.Instance.PlayOneShot(gasBurstSound);
+            hasPlayedGasBurst = true;
+        }
     }
 }
