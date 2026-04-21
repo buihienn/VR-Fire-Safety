@@ -76,7 +76,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d96857b83ed267d4f8d4c33c55336bd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gas01: 0.5
+  gas01: 0
   hoseLeak: 0
   stoveKnobs: []
   mainValveOpen01: 1
@@ -86,9 +86,9 @@ MonoBehaviour:
   level1Threshold: 0.1
   level2Threshold: 0.35
   level3Threshold: 0.7
-  secondsToFullAtMaxLeak: 300
-  secondsToClearWithFullVent: 180
-  secondsToClearNaturally: 600
+  secondsToFullAtMaxLeak: 60
+  secondsToClearWithFullVent: 90
+  secondsToClearNaturally: 480
   knobLeak: 0
   leakPresent: 0
   mainSupplyOpen: 0

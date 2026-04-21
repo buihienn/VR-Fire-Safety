@@ -15,7 +15,7 @@ public class GasVentByAngle : MonoBehaviour
     public float activeAtAngle = 30f;
 
     [Tooltip("Goc nay xem nhu mo het")]
-    public float fullOpenAngle = 170f;
+    public float fullOpenAngle = 100f;
 
     [Tooltip("Neu cua mo theo chieu am, cu de true de lay tri tuyet doi")]
     public bool useAbsoluteDelta = true;

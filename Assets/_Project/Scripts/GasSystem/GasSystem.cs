@@ -34,13 +34,13 @@ public class GasSystem : MonoBehaviour
 
     [Header("Timing")]
     [Tooltip("Van mo max + co leak + khong thong gio: tu gas01 = 0 len 1 mat khoang nay")]
-    public float secondsToFullAtMaxLeak = 300f;
+    public float secondsToFullAtMaxLeak = 60f;
 
-    [Tooltip("Thong gio mo manh: tu gas01 = 1 ve 0 mat khoang nay")]
-    public float secondsToClearWithFullVent = 180f;
+    [Tooltip("Moi 1 vent mo max se hut gas theo toc do nay. Nhieu vent cong don that su")]
+    public float secondsToClearWithFullVent = 90f;
 
     [Tooltip("Khong con leak, khong mo cua: gas tu tan rat cham")]
-    public float secondsToClearNaturally = 600f;
+    public float secondsToClearNaturally = 480f;
 
     [Header("Read Only")]
     [SerializeField] private bool knobLeak = false;
@@ -48,8 +48,8 @@ public class GasSystem : MonoBehaviour
     [SerializeField] private bool mainSupplyOpen = false;
     [SerializeField] private int activeOpenings = 0;
 
-    [Tooltip("Tong muc thong gio, da clamp 0..1")]
-    [Range(0f, 1f)] public float vent01 = 0f;
+    [Tooltip("Tong muc thong gio cong don tu cac vent, co the > 1")]
+    public float vent01 = 0f;
 
     [Tooltip("Do manh leak hien tai, da tinh theo van chinh")]
     [Range(0f, 1f)] public float leakStrength01 = 0f;
@@ -105,7 +105,8 @@ public class GasSystem : MonoBehaviour
             : 0f;
 
         // Vent drain:
-        // vent01 = 1 => clear trong secondsToClearWithFullVent
+        // Moi 1 vent mo max dong gop 1 / secondsToClearWithFullVent
+        // Nhieu vent se cong don that su
         float ventDrainRate01PerSec = vent01 > 0f
             ? vent01 / Mathf.Max(0.01f, secondsToClearWithFullVent)
             : 0f;
@@ -154,9 +155,11 @@ public class GasSystem : MonoBehaviour
                 activeOpenings++;
         }
 
-        // Tong hieu qua thong gio.
-        // 2 cua mo vua vua co the cong don, nhung clamp toi da 1.
-        vent01 = Mathf.Clamp01(ventSum);
+        // Khong clamp ve 1 nua.
+        // 1 vent max = 1
+        // 2 vent max = 2
+        // 3 vent max = 3
+        vent01 = Mathf.Max(0f, ventSum);
     }
 
     public void SetMainValveOpen01(float value)
