@@ -304,7 +304,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &5011458970491827642
 Rigidbody:
@@ -5434,7 +5434,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6441118238055772468
 Rigidbody:
@@ -5673,7 +5673,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &2528713076710081112
 Rigidbody:
@@ -6020,7 +6020,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &5756242720705453880
 Rigidbody:
@@ -6388,7 +6388,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6338284956722142126
 Rigidbody:
@@ -6627,7 +6627,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &2236809254872891637
 Rigidbody:
@@ -6993,7 +6993,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &2073811508634308945
 Rigidbody:
@@ -7233,7 +7233,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &7187945905283195676
 Rigidbody:
@@ -7711,7 +7711,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &5720236933796710312
 Rigidbody:
@@ -7950,7 +7950,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &8995768198852858309
 Rigidbody:
@@ -8311,7 +8311,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startAnchor: {fileID: 2181924047451760116}
   endAnchor: {fileID: 6006711129558447153}
-  maxLength: 0.45
+  maxLength: 0.7
   clampToMaxLength: 1
   disableSeconds: 0.2
 --- !u!114 &8570800274662869580
@@ -8506,6 +8506,7 @@ GameObject:
   - component: {fileID: 2078209141163218672}
   - component: {fileID: 6217244701450534716}
   - component: {fileID: 3035237660691053942}
+  - component: {fileID: 8986470698138690479}
   m_Layer: 12
   m_Name: Nozzle_CO2
   m_TagString: Untagged
@@ -8631,6 +8632,24 @@ MonoBehaviour:
   stopTimer: 0
   isActuallySpraying: 0
   currentStage: 0
+--- !u!114 &8986470698138690479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3967570883243772491}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 2
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1 &4077461006505200072
 GameObject:
   m_ObjectHideFlags: 0
@@ -8770,7 +8789,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6753287859857858787
 Rigidbody:
@@ -9341,7 +9360,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &4584150536253761190
 Rigidbody:
@@ -9580,7 +9599,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &2634181093397932456
 Rigidbody:
@@ -10023,7 +10042,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &5995900027177818957
 Rigidbody:
@@ -10182,7 +10201,7 @@ Transform:
   m_GameObject: {fileID: 6250616481907227815}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.19122884, y: 0.72426784, z: -1.6823139}
+  m_LocalPosition: {x: -0.12218127, y: 0.7119589, z: -1.7412138}
   m_LocalScale: {x: 0.03, y: 0.03, z: 0.03}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10772,7 +10791,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &567074263314448765
 Rigidbody:
@@ -10976,7 +10995,7 @@ MonoBehaviour:
   maxDistanceWithSelectedPos: 0.01
   segmentsSeparation: 0.05
   limitMax: 15
-  segmentsRadius: 0.5
+  segmentsRadius: 0.4
   currentDistanceToStartAnchor: 0
   maxDistanceToStarAnchor: 0.35999998
   segments:
@@ -11009,7 +11028,7 @@ MonoBehaviour:
   segmentNoPhysics: {fileID: 4721452859494924073, guid: 2f6f00131ed85584dbbee855f7fc0bb5, type: 3}
   endAnchorPoint: {fileID: 2306256389110725653, guid: 559da952238d1e64c86a4d71f980a14b, type: 3}
   plugObjt: {fileID: 3749660500698215857, guid: 1b6ad518bf036ee45b651ba015d0f3cf, type: 3}
-  selectPosition: {x: -1.6880983, y: 1.0580599, z: -13.941345}
+  selectPosition: {x: -0.74174047, y: 0.8606248, z: -9.774314}
   mousePossHelper: {fileID: 7262603322637293100}
   presetJoint: {fileID: 2655988077585873504, guid: abc25b6363fdfea44958d0fb6b73e3c5, type: 2}
 --- !u!1 &8128861283684753068
@@ -11322,7 +11341,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &4387338440164599901
 Rigidbody:
@@ -11561,7 +11580,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6639743362122073335
 Rigidbody:
@@ -11886,7 +11905,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
+  m_Radius: 0.4
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &2848301947655410062
 Rigidbody:
@@ -12220,6 +12239,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -4454510673006387153, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4779655021098193905}
+    - targetCorrespondingSourceObject: {fileID: -4454510673006387153, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6182775598438178256}
     - targetCorrespondingSourceObject: {fileID: 5056619870849650320, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5343989137027180858}
@@ -12262,6 +12284,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.123001456, y: 0.472835, z: 0.13641834}
   m_Center: {x: 0.0034151673, y: 0.2364879, z: 0.0050940514}
+--- !u!114 &6182775598438178256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3788085880273148}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 2
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1 &292641486077285955 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5056619870849650320, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
@@ -12356,6 +12396,9 @@ MonoBehaviour:
   droppedParent: {fileID: 0}
   pinRigidbody: {fileID: 5343989137027180858}
   debugLog: 1
+  extinguisherBodyOutline: {fileID: 6182775598438178256}
+  nozzleOutline: {fileID: 8986470698138690479}
+  safetyPinOutline: {fileID: 7781104448110029799}
 --- !u!114 &7781104448110029799
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12368,9 +12411,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outlineMode: 0
+  outlineMode: 1
   outlineColor: {r: 1, g: 1, b: 1, a: 1}
-  outlineWidth: 5
+  outlineWidth: 2
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []

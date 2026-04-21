@@ -101,19 +101,20 @@ public class FanSwitch : MonoBehaviour
 	}
 
 	private void ApplyStep(int stepIndex)
-	{
-		if (fanRotator == null) return; // Không có quạt để điều khiển.
-		if (stepIndex == _currentStepIndex) return; // Không đổi nếu cùng nấc.
+	{	
+		// Cháy nên bỏ qua việc quạt quay
+		// if (fanRotator == null) return; // Không có quạt để điều khiển.
+		// if (stepIndex == _currentStepIndex) return; // Không đổi nếu cùng nấc.
 
-		int previousStep = _currentStepIndex;
-		_currentStepIndex = stepIndex;
+		// int previousStep = _currentStepIndex;
+		// _currentStepIndex = stepIndex;
 
-		float speed = GetStepSpeed(stepIndex); 
-		fanRotator.speed = speed; 
-		fanRotator.SetOn(speed > 0f); 
+		// float speed = GetStepSpeed(stepIndex); 
+		// fanRotator.speed = speed; 
+		// fanRotator.SetOn(speed > 0f); 
 
-		bool wasOff = previousStep <= 0;
-        bool isNowOn = stepIndex > 0;
+		// bool wasOff = previousStep <= 0;
+        // bool isNowOn = stepIndex > 0;
 
         if (sparkIgnitionTrigger != null)
         {

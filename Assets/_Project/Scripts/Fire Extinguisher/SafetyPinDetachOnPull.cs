@@ -30,6 +30,11 @@ public class SafetyPinDetachOnPull : MonoBehaviour
 
     public bool IsRemoved => isRemoved;
 
+    [Header("Outlines")]
+    [SerializeField] private Outline extinguisherBodyOutline;
+    [SerializeField] private Outline nozzleOutline;
+    [SerializeField] private Outline safetyPinOutline;
+
     private void Awake()
     {
         if (pinRigidbody == null)
@@ -103,6 +108,11 @@ public class SafetyPinDetachOnPull : MonoBehaviour
 
         if (debugLog) Debug.Log("[SafetyPin] DETACHED");
 
+        // Update outline
+        updateOutlineVisibility();
+        // Sfx
+        AudioManager.Instance.PlayOneShot("FEPinPull");
+
         if (hideInsteadOfDrop)
         {
             StartCoroutine(HidePin());
@@ -110,6 +120,16 @@ public class SafetyPinDetachOnPull : MonoBehaviour
         }
 
         StartCoroutine(DetachAndDropPhysics());
+    }
+
+    private void updateOutlineVisibility()
+    {
+        if (extinguisherBodyOutline != null)
+            extinguisherBodyOutline.enabled = true;
+        if (nozzleOutline != null)
+            nozzleOutline.enabled = true;
+        if (safetyPinOutline != null)
+            safetyPinOutline.enabled = false;
     }
 
     private IEnumerator HidePin()
