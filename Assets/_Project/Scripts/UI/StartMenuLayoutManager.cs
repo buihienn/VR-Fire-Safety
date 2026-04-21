@@ -6,10 +6,20 @@ public class StartMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject startMenuLayout;
     [SerializeField] private GameObject settingsLayout;
     [SerializeField] private GameObject aboutLayout;
+    [SerializeField] private GameObject hubGas;
+    [SerializeField] private GameObject timeLabel;
 
     private void Start()
     {
         ShowStartMenu();
+    }
+
+    private void Awake()
+    {
+        if (hubGas != null)
+            hubGas.SetActive(false);
+        if (timeLabel != null)
+            timeLabel.SetActive(false);
     }
 
     public void ShowStartMenu()
