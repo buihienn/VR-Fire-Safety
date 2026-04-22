@@ -24,6 +24,9 @@ public class SparkIgnitionTrigger : MonoBehaviour
         if (playSparkEvenIfCannotIgnite)
             PlaySparkFx();
 
+        // Sfx
+        AudioManager.Instance.PlayOneShot("Spark");
+
         TryIgniteFromSpark();
     }
 

@@ -23,7 +23,7 @@ public class FanSwitch : MonoBehaviour
 
 	private Grabbable _grabbable; // Nguồn sự kiện grab.
 	private Quaternion _initialLocalRotation; // Góc local gốc để làm mốc.
-	private bool _isGrabbed; // Trạng thái đang grab.
+	// private bool _isGrabbed; // Trạng thái đang grab.
 	private int _currentStepIndex = -1; // Nấc hiện tại.
 	
 
@@ -55,11 +55,11 @@ public class FanSwitch : MonoBehaviour
 		switch (evt.Type)
 		{
 			case PointerEventType.Select:
-				_isGrabbed = true; // Bắt đầu grab.
+				// _isGrabbed = true; // Bắt đầu grab.
 				break;
 
 			case PointerEventType.Unselect:
-				_isGrabbed = false; // Kết thúc grab.
+				// _isGrabbed = false; // Kết thúc grab.
 				break;
 		}
 	}
@@ -103,24 +103,24 @@ public class FanSwitch : MonoBehaviour
 	private void ApplyStep(int stepIndex)
 	{	
 		// Cháy nên bỏ qua việc quạt quay
-		// if (fanRotator == null) return; // Không có quạt để điều khiển.
-		// if (stepIndex == _currentStepIndex) return; // Không đổi nếu cùng nấc.
+		if (fanRotator == null) return; // Không có quạt để điều khiển.
+		if (stepIndex == _currentStepIndex) return; // Không đổi nếu cùng nấc.
 
-		// int previousStep = _currentStepIndex;
-		// _currentStepIndex = stepIndex;
+		int previousStep = _currentStepIndex;
+		_currentStepIndex = stepIndex;
 
+		// Tắt hoạt động của quạt do cháy
 		// float speed = GetStepSpeed(stepIndex); 
 		// fanRotator.speed = speed; 
 		// fanRotator.SetOn(speed > 0f); 
 
-		// bool wasOff = previousStep <= 0;
-        // bool isNowOn = stepIndex > 0;
+		bool wasOff = previousStep <= 0;
+        bool isNowOn = stepIndex > 0;
 
-        if (sparkIgnitionTrigger != null)
-        {
+		if (wasOff && isNowOn && sparkIgnitionTrigger != null)
+		{
 			sparkIgnitionTrigger.TriggerSpark();
-
-        }
+		}
 	}
 
 	private float GetStepSpeed(int stepIndex)

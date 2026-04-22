@@ -106,12 +106,10 @@ public class SafetyPinDetachOnPull : MonoBehaviour
         isRemoved = true;
         isGrabbed = false;
 
-        if (debugLog) Debug.Log("[SafetyPin] DETACHED");
-
         // Update outline
         updateOutlineVisibility();
         // Sfx
-        AudioManager.Instance.PlayOneShot("FEPinPull");
+        AudioManager.Instance.PlayOneShot("FEPullPin");
 
         if (hideInsteadOfDrop)
         {
