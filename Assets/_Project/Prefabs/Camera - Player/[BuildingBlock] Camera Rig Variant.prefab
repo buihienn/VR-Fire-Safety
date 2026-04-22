@@ -120,7 +120,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6689000444681702509
 RectTransform:
   m_ObjectHideFlags: 0
@@ -255,7 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: 8b26b298-7bf4-490e-b245-a039c0184303
-  instanceId: ab23b922-afe9-4aa1-8940-eb83776fc7d0
+  instanceId: af3a1466-1c7e-4159-bdb8-c8920ccb64d0
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 
@@ -804,7 +804,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: 8b26b298-7bf4-490e-b245-a039c0184303
-  instanceId: 6f865cae-5912-4bc4-b1f7-f1d8120416c7
+  instanceId: cfdbccb5-8612-4159-ad70-a088848afd88
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 
@@ -1116,7 +1116,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5175547256905092467
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1438,7 +1438,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 272461172938781506, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: 09a3ae8a-1439-48b1-a738-f42ca301114e
+      value: df9b0301-a7e3-4bee-8e9e-3ff99351d694
+      objectReference: {fileID: 0}
+    - target: {fileID: 953828722613004361, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.33
       objectReference: {fileID: 0}
     - target: {fileID: 1566026221738899810, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1494,7 +1498,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2770816362181652441, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: 7c8ebf0e-ae8f-4c55-aa96-71bc2319382d
+      value: fb3577ee-b3a9-43ee-b3c2-3b3740d05696
+      objectReference: {fileID: 0}
+    - target: {fileID: 3793362492090380837, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.008051336
+      objectReference: {fileID: 0}
+    - target: {fileID: 3793362492090380837, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.32999998
+      objectReference: {fileID: 0}
+    - target: {fileID: 3793362492090380837, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.9428024
       objectReference: {fileID: 0}
     - target: {fileID: 4322314043583793759, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_Enabled
@@ -1502,15 +1518,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5998145799647866954, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: 2b0a31f5-1f12-4320-81cf-faaed0ac44c4
+      value: 3967653f-8a7c-409d-bbeb-2a1bb1f0fe18
       objectReference: {fileID: 0}
     - target: {fileID: 6005244302783329489, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: a377dd41-c300-44b9-a838-14846b2aa25d
+      value: 2c572388-e54c-43de-b482-7997206acaac
+      objectReference: {fileID: 0}
+    - target: {fileID: 6377138247020500280, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_Height
+      value: 0.9942242
+      objectReference: {fileID: 0}
+    - target: {fileID: 6377138247020500280, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_Center.y
+      value: -0.20288783
       objectReference: {fileID: 0}
     - target: {fileID: 6377138247661692552, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6920875622712793685, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.475
       objectReference: {fileID: 0}
     - target: {fileID: 7728233145061114095, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_IsActive

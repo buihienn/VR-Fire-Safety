@@ -256,7 +256,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flameNode: {fileID: 2181656448163157964}
   extinguisherTag: ExtinguisherSpray
-  extinguishNeeded: 100
+  extinguishNeeded: 10
   extinguishPerHit: 0.1
   maxHitsPerFrame: 3
   recoveryPerSecond: 4

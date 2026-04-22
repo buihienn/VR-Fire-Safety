@@ -41,10 +41,13 @@ public class GasCylinderFlameShutdown : MonoBehaviour
         if (!gasSystem)
             gasSystem = GasSystem.Instance;
     }
-
+    
     private void Update()
     {
-        if (!flameNode)
+        if (flameNode == null)
+            return;
+
+        if (AudioManager.Instance == null)
             return;
 
         if (Time.time < nextCheckTime)
@@ -57,61 +60,107 @@ public class GasCylinderFlameShutdown : MonoBehaviour
 
         if (valveClosed)
         {
-            reigniteTimer = 0f;
-            debugReigniteTimer = 0f;
-            debugGasStillLeaking = false;
-            debugNearbyFireFound = false;
-
-            if (stopLeakToo && gasSystem != null)
-                gasSystem.SetMainValveOpen01(0f);
-
-            if (disableSpreadWhenClosed)
-                flameNode.SetCanSpread(false);
-
-            if (flameNode.IsBurning && extinguishRoutine == null)
-                extinguishRoutine = StartCoroutine(ExtinguishAfterDelay());
-
+            HandleValveClosedState();
             return;
         }
 
+        HandleValveOpenState();
+    }
+
+    private void HandleValveClosedState()
+    {
+        ResetReigniteTimer();
+
+        debugGasStillLeaking = false;
+        debugNearbyFireFound = false;
+
+        if (stopLeakToo && gasSystem != null)
+            gasSystem.SetMainValveOpen01(0f);
+
+        if (disableSpreadWhenClosed)
+            flameNode.SetCanSpread(false);
+
+        SetGasLeakLoop(false);
+
+        if (flameNode.IsBurning && extinguishRoutine == null)
+            extinguishRoutine = StartCoroutine(ExtinguishAfterDelay());
+    }
+
+    private void HandleValveOpenState()
+    {
         if (disableSpreadWhenClosed)
             flameNode.SetCanSpread(true);
 
-        if (extinguishRoutine != null)
-        {
-            StopCoroutine(extinguishRoutine);
-            extinguishRoutine = null;
-        }
+        CancelExtinguishRoutine();
 
         bool gasStillLeaking = gasSystem != null && gasSystem.CanSustainNozzleFire();
         bool nearbyFireFound = HasNearbyBurningNode();
+        bool flameBurning = flameNode.IsBurning;
 
         debugGasStillLeaking = gasStillLeaking;
         debugNearbyFireFound = nearbyFireFound;
 
-        if (flameNode.IsBurning)
+        // Có rò gas và ngọn lửa đầu ống chưa cháy -> phát loop xì gas
+        bool shouldPlayLeakLoop = gasStillLeaking && !flameBurning;
+        SetGasLeakLoop(shouldPlayLeakLoop);
+
+        // Nếu đầu ống đang cháy thì không cần reignite nữa
+        if (flameBurning)
         {
-            reigniteTimer = 0f;
-            debugReigniteTimer = 0f;
+            ResetReigniteTimer();
             return;
         }
 
-        if (gasStillLeaking && nearbyFireFound)
+        // Không có gas hoặc không có lửa gần -> không thể bén lại
+        if (!gasStillLeaking || !nearbyFireFound)
         {
-            reigniteTimer += checkInterval;
-            debugReigniteTimer = reigniteTimer;
+            ResetReigniteTimer();
+            return;
+        }
 
-            if (reigniteTimer >= reigniteDelay)
-            {
-                flameNode.ForceIgnite();
-                reigniteTimer = 0f;
-                debugReigniteTimer = 0f;
-            }
+        reigniteTimer += checkInterval;
+        debugReigniteTimer = reigniteTimer;
+
+        if (reigniteTimer < reigniteDelay)
+            return;
+
+        // Đủ điều kiện bén lại
+        SetGasLeakLoop(false);
+        flameNode.ForceIgnite();
+        AudioManager.Instance.PlayOneShot("GasBurst");
+
+        ResetReigniteTimer();
+    }
+    
+    private void ResetReigniteTimer()
+    {
+        reigniteTimer = 0f;
+        debugReigniteTimer = 0f;
+    }
+
+    private void CancelExtinguishRoutine()
+    {
+        if (extinguishRoutine == null)
+            return;
+
+        StopCoroutine(extinguishRoutine);
+        extinguishRoutine = null;
+    }
+
+    private void SetGasLeakLoop(bool shouldPlay)
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        if (shouldPlay)
+        {
+            if (!AudioManager.Instance.IsPlaying("GasLeakLoop"))
+                AudioManager.Instance.Play("GasLeakLoop");
         }
         else
         {
-            reigniteTimer = 0f;
-            debugReigniteTimer = 0f;
+            if (AudioManager.Instance.IsPlaying("GasLeakLoop"))
+                AudioManager.Instance.Stop("GasLeakLoop");
         }
     }
 
