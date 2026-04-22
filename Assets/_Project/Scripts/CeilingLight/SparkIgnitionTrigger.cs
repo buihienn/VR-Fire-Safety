@@ -19,8 +19,13 @@ public class SparkIgnitionTrigger : MonoBehaviour
     [SerializeField] private bool playSparkEvenIfCannotIgnite = true;
     [SerializeField] private bool debugLog = false;
 
+    private bool isSparkTriggered = false;
+
     public void TriggerSpark()
     {
+        if (isSparkTriggered)
+            return;
+
         if (playSparkEvenIfCannotIgnite)
             PlaySparkFx();
 
@@ -28,6 +33,8 @@ public class SparkIgnitionTrigger : MonoBehaviour
         AudioManager.Instance.PlayOneShot("Spark");
 
         TryIgniteFromSpark();
+
+        isSparkTriggered = true;
     }
 
     private void PlaySparkFx()
