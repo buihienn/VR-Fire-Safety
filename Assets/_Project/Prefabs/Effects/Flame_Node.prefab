@@ -77,12 +77,12 @@ MonoBehaviour:
   neighbors: []
   canSpread: 1
   allowIgniteFromSpread: 1
-  spreadDelayMin: 9
-  spreadDelayMax: 12
+  spreadDelayMin: 25
+  spreadDelayMax: 35
   neighborIgniteDelayMin: 0.2
   neighborIgniteDelayMax: 1
   useSpreadReigniteCooldown: 1
-  spreadReigniteCooldown: 10
+  spreadReigniteCooldown: 50
   autoFindNeighborsByDistance: 1
   rebuildNeighborsOnStart: 1
   clearNeighborsBeforeAutoFind: 1
