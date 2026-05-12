@@ -66,8 +66,6 @@ public class FanSwitch : MonoBehaviour
 
 	private void UpdateStepFromRotation()
 	{
-		if (Steps <= 1) return; // Khong cap nhat neu chi co 1 nac.
-
 		var axis = localAxis.normalized; // Chuẩn hóa trục local.
 		if (axis == Vector3.zero) return; // Trục không hợp lệ.
 

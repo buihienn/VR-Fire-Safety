@@ -138,8 +138,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1062.4999, y: 500.25}
+  m_AnchoredPosition: {x: 0, y: 0.075}
+  m_SizeDelta: {x: 599.8, y: 271.81}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &1662847875207623403
 Canvas:
@@ -255,7 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: 8b26b298-7bf4-490e-b245-a039c0184303
-  instanceId: af3a1466-1c7e-4159-bdb8-c8920ccb64d0
+  instanceId: f0a4c924-df11-4ce8-9d5e-b66c3f4ef7f8
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 
@@ -711,7 +711,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameFlowManager, Assembly-CSharp
-        m_MethodName: HandlePlayerFainted
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -804,7 +804,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: 8b26b298-7bf4-490e-b245-a039c0184303
-  instanceId: cfdbccb5-8612-4159-ad70-a088848afd88
+  instanceId: ebc03c91-f434-42e9-b3bd-193618f5614d
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 
@@ -1131,9 +1131,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5175547256905092467}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 299.9, y: -178.905}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4355212581302014867
@@ -1164,8 +1164,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "GAME OVER\nB\u1EA1n \u0111\xE3 b\u1EA5t t\u1EC9nh v\xEC h\xEDt kh\xED
-    gas\nQuay v\u1EC1 Start M\u1EB9nu sau 4s"
+  m_text: "B\u1EA1n \u0111\xE3 b\u1EA5t t\u1EC9nh v\xEC h\xEDt kh\xED gas\nQuay v\u1EC1
+    Start M\u1EB9nu sau 4s"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1230,7 +1230,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -334.04562, y: -99.92957, z: -362.89252, w: 0}
+  m_margin: {x: -199.40143, y: -77.910675, z: -200.48657, w: -64.71924}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1247,6 +1247,7 @@ GameObject:
   - component: {fileID: 5175547256905092467}
   - component: {fileID: 4008303208920786677}
   - component: {fileID: 5270150028434333957}
+  - component: {fileID: 790527761958113600}
   m_Layer: 5
   m_Name: GameOverPanel
   m_TagString: Untagged
@@ -1313,6 +1314,32 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &790527761958113600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6498544448721251003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 36
+    m_Bottom: 0
+  m_ChildAlignment: 4
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 1
+  m_ChildScaleHeight: 1
+  m_ReverseArrangement: 0
 --- !u!1 &6968475549198667559
 GameObject:
   m_ObjectHideFlags: 0
@@ -1453,9 +1480,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5175547256905092467}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 299.9, y: -128.905}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5417081734934653914
@@ -1486,8 +1513,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "GAME OVER\nB\u1EA1n \u0111\xE3 b\u1EA5t t\u1EC9nh v\xEC h\xEDt kh\xED
-    gas\nQuay v\u1EC1 Start M\u1EB9nu sau 4s"
+  m_text: GAME OVER
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1552,7 +1578,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -334.04562, y: -99.92957, z: -362.89252, w: 0}
+  m_margin: {x: -203.56567, y: -93.73911, z: -201.87473, w: 99.54314}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1576,7 +1602,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 272461172938781506, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: df9b0301-a7e3-4bee-8e9e-3ff99351d694
+      value: b7d1c462-1146-4a28-8bcb-4e0b3654e51b
       objectReference: {fileID: 0}
     - target: {fileID: 833050231923800786, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_ClearFlags
@@ -1640,7 +1666,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2770816362181652441, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: fb3577ee-b3a9-43ee-b3c2-3b3740d05696
+      value: 12c77e46-1e55-4a3d-84cf-7b831d1cdcfd
       objectReference: {fileID: 0}
     - target: {fileID: 3793362492090380837, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1660,11 +1686,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5998145799647866954, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: 3967653f-8a7c-409d-bbeb-2a1bb1f0fe18
+      value: 228f5ac2-1c5e-4651-a97e-e6c720a025d4
       objectReference: {fileID: 0}
     - target: {fileID: 6005244302783329489, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: instanceId
-      value: 2c572388-e54c-43de-b482-7997206acaac
+      value: 50412edc-5335-4a96-b3f9-25df5ad5e62f
       objectReference: {fileID: 0}
     - target: {fileID: 6377138247020500280, guid: 0153db8fe186f5449aecb89f544f0924, type: 3}
       propertyPath: m_Height

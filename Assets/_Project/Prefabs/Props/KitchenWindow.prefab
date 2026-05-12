@@ -44,12 +44,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2617665154689917601}
-  - component: {fileID: 7022066365063243358}
-  - component: {fileID: 5981606110686720219}
-  - component: {fileID: 5138950953353170243}
   - component: {fileID: 3721942976203445587}
   - component: {fileID: 7083733991846020049}
   - component: {fileID: 6732223050977863909}
+  - component: {fileID: 4886690879415307964}
+  - component: {fileID: 7846623446018537124}
+  - component: {fileID: 2089812369799092700}
   m_Layer: 0
   m_Name: RightWindowPivot
   m_TagString: Untagged
@@ -76,99 +76,6 @@ Transform:
   - {fileID: 2617251295364974746}
   m_Father: {fileID: 3785111382953714202}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7022066365063243358
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1089731144539367520}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a07ddae126fa0b44294700862bfb6869, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  doorHingePivot: {fileID: 2617665154689917601}
-  handlePivot: {fileID: 8103480030335890196}
-  doorHingeJoint: {fileID: 5138950953353170243}
-  doorRigidbody: {fileID: 5981606110686720219}
-  doorMesh: {fileID: 4241957543084167217}
-  handleAxis: 2
-  handleDownIsNegative: 0
-  unlockAtDeg: 30
-  hingeAxis: 1
-  closedAngle: 0
-  openAngle: 170
-  invertDoorDirection: 0
-  debugLogs: 1
-  doorSmoothTime: 0.06
-  maxDoorSpeed: 999
---- !u!54 &5981606110686720219
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1089731144539367520}
-  serializedVersion: 5
-  m_Mass: 15
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!59 &5138950953353170243
-HingeJoint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1089731144539367520}
-  serializedVersion: 3
-  m_ConnectedBody: {fileID: 0}
-  m_ConnectedArticulationBody: {fileID: 0}
-  m_Anchor: {x: 0, y: 0, z: 0}
-  m_Axis: {x: 0, y: 1, z: 0}
-  m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: 1.33, y: 0, z: 0}
-  m_UseSpring: 0
-  m_Spring:
-    spring: 0
-    damper: 0
-    targetPosition: 0
-  m_UseMotor: 0
-  m_Motor:
-    targetVelocity: 0
-    force: 0
-    freeSpin: 0
-  m_UseLimits: 1
-  m_ExtendedLimits: 0
-  m_UseAcceleration: 0
-  m_Limits:
-    min: 0
-    max: 170
-    bounciness: 0
-    bounceMinVelocity: 0.2
-    contactDistance: 0
-  m_BreakForce: Infinity
-  m_BreakTorque: Infinity
-  m_EnableCollision: 0
-  m_EnablePreprocessing: 1
-  m_MassScale: 1
-  m_ConnectedMassScale: 1
 --- !u!65 &3721942976203445587
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -206,7 +113,7 @@ MonoBehaviour:
   localAxis: 1
   closedAngle: 0
   activeAtAngle: 30
-  fullOpenAngle: 170
+  fullOpenAngle: 100
   useAbsoluteDelta: 1
 --- !u!114 &6732223050977863909
 MonoBehaviour:
@@ -233,6 +140,99 @@ MonoBehaviour:
   sizeMax: 0.35
   alphaMin: 0
   alphaMax: 0.2
+--- !u!54 &4886690879415307964
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1089731144539367520}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!59 &7846623446018537124
+HingeJoint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1089731144539367520}
+  serializedVersion: 3
+  m_ConnectedBody: {fileID: 0}
+  m_ConnectedArticulationBody: {fileID: 0}
+  m_Anchor: {x: 0, y: 0, z: 0}
+  m_Axis: {x: 0, y: 1, z: 0}
+  m_AutoConfigureConnectedAnchor: 1
+  m_ConnectedAnchor: {x: 0, y: 0, z: 0}
+  m_UseSpring: 0
+  m_Spring:
+    spring: 0
+    damper: 0
+    targetPosition: 0
+  m_UseMotor: 0
+  m_Motor:
+    targetVelocity: 0
+    force: 0
+    freeSpin: 0
+  m_UseLimits: 1
+  m_ExtendedLimits: 0
+  m_UseAcceleration: 0
+  m_Limits:
+    min: 0
+    max: 170
+    bounciness: 0
+    bounceMinVelocity: 0.2
+    contactDistance: 0
+  m_BreakForce: Infinity
+  m_BreakTorque: Infinity
+  m_EnableCollision: 0
+  m_EnablePreprocessing: 1
+  m_MassScale: 1
+  m_ConnectedMassScale: 1
+--- !u!114 &2089812369799092700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1089731144539367520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a07ddae126fa0b44294700862bfb6869, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorHingePivot: {fileID: 2617665154689917601}
+  handlePivot: {fileID: 8103480030335890196}
+  doorHingeJoint: {fileID: 7846623446018537124}
+  doorRigidbody: {fileID: 4886690879415307964}
+  doorMesh: {fileID: 4241957543084167217}
+  handleAxis: 2
+  handleDownIsNegative: 1
+  unlockAtDeg: 30
+  hingeAxis: 1
+  closedAngle: 0
+  openAngle: 170
+  invertDoorDirection: 0
+  debugLogs: 0
+  doorSmoothTime: 0.06
+  maxDoorSpeed: 999
 --- !u!1 &1327593673289452395
 GameObject:
   m_ObjectHideFlags: 0
@@ -5824,7 +5824,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineMode: 1
-  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
   outlineWidth: 2
   precomputeOutline: 0
   bakeKeys: []
@@ -6217,7 +6217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineMode: 1
-  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
   outlineWidth: 2
   precomputeOutline: 0
   bakeKeys: []
@@ -6306,10 +6306,10 @@ PrefabInstance:
       addedObject: {fileID: 4589394039866820796}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7f4c7bbf1fc4dc44190d35059d9cc960, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 9021188035601019116}
+      addedObject: {fileID: 7447586041898136085}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7f4c7bbf1fc4dc44190d35059d9cc960, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5077888514983030685}
+      addedObject: {fileID: 9021188035601019116}
   m_SourcePrefab: {fileID: 100100000, guid: 7f4c7bbf1fc4dc44190d35059d9cc960, type: 3}
 --- !u!4 &8103480030335890196 stripped
 Transform:
@@ -6404,11 +6404,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineMode: 1
-  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
   outlineWidth: 2
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
+--- !u!114 &7447586041898136085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8880685649394674094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bc041ecb7f1761438775e409f91f062, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorController: {fileID: 2089812369799092700}
+  returnSpeed: 10
 --- !u!114 &9021188035601019116
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6430,17 +6444,3 @@ MonoBehaviour:
     MaxAngle:
       Constrain: 1
       Value: 90
---- !u!114 &5077888514983030685
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8880685649394674094}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1bc041ecb7f1761438775e409f91f062, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  doorController: {fileID: 7022066365063243358}
-  returnSpeed: 10
