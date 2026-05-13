@@ -84,7 +84,11 @@ public class SparkIgnitionTrigger : MonoBehaviour
             return;
         }
 
+        bool wasBurning = target.IsBurning;
         target.ForceIgnite();
+
+        if (!wasBurning)
+            AudioManager.Instance.PlayOneShot("VO_FireIgnited");
 
         if (debugLog)
             Debug.Log($"[SparkIgnitionTrigger] Ignited: {target.name}");

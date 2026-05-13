@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -63,6 +64,11 @@ public class GasSystem : MonoBehaviour
     public bool LeakActive => leakActive;
     public bool HasGasInRoom => gas01 > 0.001f;
 
+    public event Action<int> GasLevelChanged;
+    public int CurrentGasLevel => currentGasLevel;
+
+    private int currentGasLevel = -1;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -73,6 +79,8 @@ public class GasSystem : MonoBehaviour
         }
 
         Instance = this;
+
+        currentGasLevel = GasLevel();
     }
 
     private void OnDestroy()
@@ -119,6 +127,8 @@ public class GasSystem : MonoBehaviour
 
         gas01 += (fillRate01PerSec - ventDrainRate01PerSec - naturalDrainRate01PerSec) * Time.deltaTime;
         gas01 = Mathf.Clamp01(gas01);
+
+        RefreshGasLevel();
     }
 
     private void UpdateKnobLeak()
@@ -175,6 +185,7 @@ public class GasSystem : MonoBehaviour
     public void SetGas01(float value)
     {
         gas01 = Mathf.Clamp01(value);
+        RefreshGasLevel();
     }
 
     // Helper neu script van cua ban dang dung goc quay -45 -> 135
@@ -189,6 +200,17 @@ public class GasSystem : MonoBehaviour
         if (gas01 < level2Threshold) return 1;
         if (gas01 < level3Threshold) return 2;
         return 3;
+    }
+
+    private void RefreshGasLevel()
+    {
+        int newLevel = GasLevel();
+        if (newLevel == currentGasLevel) return;
+
+        currentGasLevel = newLevel;
+
+        if (Application.isPlaying)
+            GasLevelChanged?.Invoke(currentGasLevel);
     }
 
     public string GasLevelText()

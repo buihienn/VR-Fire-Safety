@@ -57,7 +57,7 @@ public class RandomDayNight : MonoBehaviour
     public void ApplyRandomDayNight()
     {
         // bool isNight = Random.value > 0.5f;
-        bool isNight = false;
+        bool isNight = true;
 
         if (isNight)
             ApplyRandomSkyboxFromArray(nightSkyboxes, true);
@@ -170,7 +170,7 @@ public class RandomDayNight : MonoBehaviour
     {
         RenderSettings.defaultReflectionMode = reflectionMode;
         if (reflectionMode == DefaultReflectionMode.Custom && customReflection != null)
-            RenderSettings.customReflection = customReflection;
+            RenderSettings.customReflectionTexture = customReflection;
 
         RenderSettings.reflectionIntensity = reflectionIntensity;
         RenderSettings.reflectionBounces = Mathf.Max(1, reflectionBounces);

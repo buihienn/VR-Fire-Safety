@@ -17,6 +17,8 @@ public class GameOverFlow : MonoBehaviour
 
     private bool gameOverStarted;
 
+    [SerializeField] private SceneTransitionManager sceneTransitionManager;
+
     private void Start()
     {
         if (gameOverPanel != null)
@@ -54,5 +56,12 @@ public class GameOverFlow : MonoBehaviour
         yield return new WaitForSeconds(returnDelay);
 
         SceneManager.LoadScene(startSceneName);
+        // if (sceneTransitionManager == null)
+        //     sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
+
+        // if (sceneTransitionManager == null)
+        //     return;
+
+        // sceneTransitionManager.GoToScene(2);
     }
 }

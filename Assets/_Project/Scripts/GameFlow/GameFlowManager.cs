@@ -51,6 +51,8 @@ public class GameFlowManager : MonoBehaviour
     {
         remainingSeconds = matchDurationSeconds;
 
+        AudioManager.Instance.PlayOneShot("VO_StartGame");
+
         if (endPanel != null)
             endPanel.SetActive(false);
 
