@@ -49,15 +49,27 @@ public class RandomDayNight : MonoBehaviour
     [SerializeField] private Color nightFogColor = new Color(0.08f, 0.09f, 0.11f);
     [SerializeField] private float nightFogDensity = 0.01f;
 
+    [Header("Clear Payload On Start")]
+    [SerializeField] private bool clearPayloadOnStart = false;
+
+    private bool currentIsNight = true;
+
+    public bool CurrentIsNight => currentIsNight;
+
     private void Start()
     {
+        if (clearPayloadOnStart)
+            DayNightPayload.Clear();
+
         ApplyRandomDayNight();
     }
 
     public void ApplyRandomDayNight()
     {
-        // bool isNight = Random.value > 0.5f;
-        bool isNight = true;
+        // bool isNight = DayNightPayload.HasValue ? DayNightPayload.IsNight : Random.value > 0.5f;
+        bool isNight = DayNightPayload.HasValue ? DayNightPayload.IsNight : false;
+
+        currentIsNight = isNight;
 
         if (isNight)
             ApplyRandomSkyboxFromArray(nightSkyboxes, true);
