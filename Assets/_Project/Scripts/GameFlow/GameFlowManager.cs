@@ -20,7 +20,6 @@ public class GameFlowManager : MonoBehaviour
     [Header("Match Rules")]
     [SerializeField] private float matchDurationSeconds = 300f;   // 5 phut
     [SerializeField] private float returnDelaySeconds = 5f;
-    [SerializeField] private string returnSceneName = "StartScene";
 
     [Range(0f, 0.2f)]
     [SerializeField] private float gasSafeThreshold01 = 0.01f;
@@ -35,6 +34,8 @@ public class GameFlowManager : MonoBehaviour
     [SerializeField] private bool matchEnded;
     [SerializeField] private bool playerWon;
     [SerializeField] private string endReason;
+
+    [SerializeField] private SceneTransitionManager sceneTransitionManager;
 
     private void Awake()
     {
@@ -114,7 +115,8 @@ public class GameFlowManager : MonoBehaviour
         EndMatch(
             won: false,
             title: "GAME OVER",
-            body: "Ban da hit phai khi gas qua lau va bi ngat xiu."
+            body: "Ban da o trong khu vuc gas qua lau va bi o nhiem khi gas.",
+            timeUp: false
         );
     }
 
@@ -122,8 +124,9 @@ public class GameFlowManager : MonoBehaviour
     {
         EndMatch(
             won: false,
-            title: "GAME OVER",
-            body: "Da het thoi gian 5 phut. Ban chua xu ly xong ro ri khi gas."
+            title: "TIME UP",
+            body: "Thoi gian da het. Ban da khong xu li su co kip thoi.",
+            timeUp: true
         );
     }
 
@@ -132,17 +135,20 @@ public class GameFlowManager : MonoBehaviour
         EndMatch(
             won: true,
             title: "CHIEN THANG",
-            body: "Ban da xu ly an toan: moi truong da het nguy hiem, khong con ro gas va khong con lua."
+            body: "Ban da xu ly an toan: moi truong da het nguy hiem, khong con ro gas va khong con lua.",
+            timeUp: false
         );
     }
 
-    private void EndMatch(bool won, string title, string body)
+    private void EndMatch(bool won, string title, string body, bool timeUp)
     {
         if (matchEnded) return;
 
         matchEnded = true;
         playerWon = won;
         endReason = body;
+
+        GameOverPayload.Set(won, timeUp, title, body);
 
         if (hubGas != null)
             hubGas.SetActive(false);
@@ -156,22 +162,47 @@ public class GameFlowManager : MonoBehaviour
             }
         }
 
-        if (endPanel != null)
-            endPanel.SetActive(true);
+        // if (endPanel != null)
+        //     endPanel.SetActive(true);
 
-        if (endTitleText != null)
-            endTitleText.text = title;
+        // if (endTitleText != null)
+        //     endTitleText.text = title;
 
-        if (endBodyText != null)
-            endBodyText.text = body + "\n\nDang quay ve phong cho...";
+        // if (endBodyText != null)
+        //     endBodyText.text = body + "\n\nDang quay ve phong cho...";
 
-        StartCoroutine(ReturnToStartSceneRoutine());
+        if (won) {
+            AudioManager.Instance.PlayOneShot("VO_GameWin");
+            StartCoroutine(ReturnToStartSceneRoutine());
+        }
+        else {
+            if (timeUp)
+                AudioManager.Instance.PlayOneShot("VO_TimeUp");
+            else
+                AudioManager.Instance.PlayOneShot("VO_GameOver");
+
+            StartCoroutine(ReturnToGameOverSceneRoutine());
+        }
     }
 
     private IEnumerator ReturnToStartSceneRoutine()
     {
         yield return new WaitForSecondsRealtime(returnDelaySeconds);
-        SceneManager.LoadScene(returnSceneName);
+        
+        if (sceneTransitionManager == null)
+            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
+
+        sceneTransitionManager.GoToScene(0);
+    }
+
+    private IEnumerator ReturnToGameOverSceneRoutine()
+    {
+        yield return new WaitForSecondsRealtime(returnDelaySeconds);
+        
+        if (sceneTransitionManager == null)
+            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
+
+        sceneTransitionManager.GoToScene(2);
     }
 
     private bool CheckWinCondition()
