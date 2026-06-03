@@ -7,6 +7,7 @@ public class GameOverMessageUI : MonoBehaviour
     [SerializeField] private TMP_Text bodyText;
     [SerializeField] private string defaultTitle = "GAME OVER";
     [SerializeField] private string defaultBody = "";
+    [SerializeField] private GameObject flameObject;
 
     private void Start()
     {
@@ -15,6 +16,9 @@ public class GameOverMessageUI : MonoBehaviour
             ApplyText(defaultTitle, defaultBody);
             return;
         }
+
+        if (GameOverPayload.PlayerWon && flameObject != null)
+            flameObject.SetActive(false);
 
         ApplyText(GameOverPayload.Title, GameOverPayload.Body);
     }

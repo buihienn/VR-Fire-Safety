@@ -66,6 +66,11 @@ public class DoorLeftOpenByHandle : MonoBehaviour
     // Góc cửa khi mở hoàn toàn (ví dụ: 170° = gần 180° nhưng không chạm tường)
     public float openAngle = 170f;
 
+    [Header("Events")]
+    public bool raiseDoorOpenedEvent = true;
+    public float openEventThresholdDeg = 10f;
+    public string actorId = "Player";
+
     [Header("Optional Tuning")]
     // Đảo chiều mở cửa (nếu cửa mở sai hướng so với mong muốn)
     public bool invertDoorDirection = false;
@@ -102,6 +107,8 @@ public class DoorLeftOpenByHandle : MonoBehaviour
 
     // Coroutine delay cho SyncHingeJointEnabled khi thả handle
     private Coroutine _syncDelayRoutine;
+
+    private bool _wasOpen;
     
     /// <summary>
     /// Khởi tạo: đặt cửa về vị trí đóng.
@@ -111,6 +118,8 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         _doorAngle = closedAngle;
         ApplyDoorRotation(_doorAngle);
         SetHingeJointEnabled(false);
+
+        _wasOpen = Mathf.Abs(Mathf.DeltaAngle(_doorAngle, closedAngle)) >= openEventThresholdDeg;
 
         if (doorMesh != null)
             _doorOutline = doorMesh.GetComponent<Outline>();
@@ -161,6 +170,20 @@ public class DoorLeftOpenByHandle : MonoBehaviour
         
         // Apply góc lên transform của pivot cửa
         ApplyDoorRotation(_doorAngle);
+
+        if (raiseDoorOpenedEvent)
+        {
+            bool isOpen = Mathf.Abs(Mathf.DeltaAngle(_doorAngle, closedAngle)) >= openEventThresholdDeg;
+            if (!_wasOpen && isOpen)
+            {
+                GameplayEventBus.Raise(
+                    GameplayEventType.WindowOpened,
+                    actorId: actorId,
+                    targetId: gameObject.name);
+            }
+
+            _wasOpen = isOpen;
+        }
 
         // Khi đang grab thì luôn tắt hinge joint để tránh physics cản trở
         SetHingeJointEnabled(false);
