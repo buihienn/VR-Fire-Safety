@@ -3,9 +3,20 @@ using UnityEngine.Rendering;
 
 public class RandomDayNight : MonoBehaviour
 {
+    private enum DayNightMode
+    {
+        Random,
+        Day,
+        Night,
+        Payload
+    }
+
     [Header("Skybox")]
     [SerializeField] private Material[] daySkyboxes;
     [SerializeField] private Material[] nightSkyboxes;
+
+    [Header("Day/Night Mode")]
+    [SerializeField] private DayNightMode dayNightMode = DayNightMode.Random;
 
     [Header("Lighting")]
     [SerializeField] private Light directionalLight;
@@ -66,10 +77,30 @@ public class RandomDayNight : MonoBehaviour
 
     public void ApplyRandomDayNight()
     {
-        // bool isNight = DayNightPayload.HasValue ? DayNightPayload.IsNight : Random.value > 0.5f;
-        bool isNight = DayNightPayload.HasValue ? DayNightPayload.IsNight : false;
+        bool isNight;
+        switch (dayNightMode)
+        {
+            case DayNightMode.Payload:
+                if (DayNightPayload.HasValue)
+                    isNight = DayNightPayload.IsNight;
+                else
+                    isNight = Random.value > 0.5f;
+                break;
+            case DayNightMode.Day:
+                isNight = false;
+                DayNightPayload.Set(isNight);
+                break;
+            case DayNightMode.Night:
+                isNight = true;
+                DayNightPayload.Set(isNight);
+                break;
+            default:
+                isNight = Random.value > 0.5f;
+                DayNightPayload.Set(isNight);
+                break;
+        }
 
-        currentIsNight = isNight;
+        currentIsNight = isNight;   
 
         if (isNight)
             ApplyRandomSkyboxFromArray(nightSkyboxes, true);

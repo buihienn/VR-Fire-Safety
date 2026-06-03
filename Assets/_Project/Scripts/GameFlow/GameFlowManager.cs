@@ -134,8 +134,8 @@ public class GameFlowManager : MonoBehaviour
     {
         EndMatch(
             won: true,
-            title: "CHIEN THANG",
-            body: "Ban da xu ly an toan: moi truong da het nguy hiem, khong con ro gas va khong con lua.",
+            title: "YOU WIN",
+            body: "Ban da xu ly an toan. Moi truong da het nguy hiem.",
             timeUp: false
         );
     }
@@ -162,20 +162,13 @@ public class GameFlowManager : MonoBehaviour
             }
         }
 
-        // if (endPanel != null)
-        //     endPanel.SetActive(true);
-
-        // if (endTitleText != null)
-        //     endTitleText.text = title;
-
-        // if (endBodyText != null)
-        //     endBodyText.text = body + "\n\nDang quay ve phong cho...";
-
-        if (won) {
+        if (won)
+        {
             AudioManager.Instance.PlayOneShot("VO_GameWin");
-            StartCoroutine(ReturnToStartSceneRoutine());
+            StartCoroutine(ReturnToGameOverSceneRoutine());
         }
-        else {
+        else
+        {
             if (timeUp)
                 AudioManager.Instance.PlayOneShot("VO_TimeUp");
             else
@@ -183,16 +176,6 @@ public class GameFlowManager : MonoBehaviour
 
             StartCoroutine(ReturnToGameOverSceneRoutine());
         }
-    }
-
-    private IEnumerator ReturnToStartSceneRoutine()
-    {
-        yield return new WaitForSecondsRealtime(returnDelaySeconds);
-        
-        if (sceneTransitionManager == null)
-            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
-
-        sceneTransitionManager.GoToScene(0);
     }
 
     private IEnumerator ReturnToGameOverSceneRoutine()
