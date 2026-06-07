@@ -23,6 +23,13 @@ public class HoseLeakRandomPoint : MonoBehaviour
     [SerializeField] private bool randomizeOnEnable = true;
     [SerializeField] private bool waitOneFrameBeforeRandomize = true;
 
+    [Header("Multiplayer Safe Mode")]
+    [Tooltip("Neu co FireManager, dung index co dinh de Host/Client khong random lech nhau.")]
+    [SerializeField] private bool useFixedIndexWhenFireManagerExists = true;
+
+    [Min(0)]
+    [SerializeField] private int fixedUsableIndex = 0;
+
     [Header("Debug")]
     [SerializeField] private int foundSegmentCount;
     [SerializeField] private int usableSegmentCount;
@@ -72,7 +79,15 @@ public class HoseLeakRandomPoint : MonoBehaviour
             return;
         }
 
-        chosenIndex = Random.Range(0, segments.Count);
+        bool shouldUseFixedIndex =
+            useFixedIndexWhenFireManagerExists &&
+            FireManager.Instance != null;
+
+        if (shouldUseFixedIndex)
+            chosenIndex = Mathf.Clamp(fixedUsableIndex, 0, segments.Count - 1);
+        else
+            chosenIndex = Random.Range(0, segments.Count);
+
         Transform chosenSegment = segments[chosenIndex];
         chosenSegmentName = chosenSegment.name;
 
@@ -83,12 +98,14 @@ public class HoseLeakRandomPoint : MonoBehaviour
     {
         List<Transform> allSegments = new List<Transform>();
 
+        string filter = segmentNameContains.ToLower();
+
         for (int i = 0; i < hoseRoot.childCount; i++)
         {
             Transform child = hoseRoot.GetChild(i);
 
             if (child == null) continue;
-            if (!child.name.ToLower().Contains(segmentNameContains.ToLower())) continue;
+            if (!child.name.ToLower().Contains(filter)) continue;
 
             allSegments.Add(child);
         }
@@ -107,13 +124,14 @@ public class HoseLeakRandomPoint : MonoBehaviour
     private int CountAllMatchingSegments()
     {
         int count = 0;
+        string filter = segmentNameContains.ToLower();
 
         for (int i = 0; i < hoseRoot.childCount; i++)
         {
             Transform child = hoseRoot.GetChild(i);
             if (child == null) continue;
 
-            if (child.name.ToLower().Contains(segmentNameContains.ToLower()))
+            if (child.name.ToLower().Contains(filter))
                 count++;
         }
 

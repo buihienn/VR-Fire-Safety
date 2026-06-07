@@ -8,6 +8,7 @@ public enum GameplayEventType
     FireExtinguished,
     GasLeakStarted,
     GasLeakStopped,
+    GasLevelChanged,
     PlayerEnteredDangerZone,
     PlayerExitedDangerZone,
     PlayerFainted,

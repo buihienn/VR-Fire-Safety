@@ -35,6 +35,9 @@ public class SafetyPinDetachOnPull : MonoBehaviour
     [SerializeField] private Outline nozzleOutline;
     [SerializeField] private Outline safetyPinOutline;
 
+    [Header("Fire Extinguisher")]
+    [SerializeField] private FireExtinguisherSmokeUse smokeUse;
+
     private void Awake()
     {
         if (pinRigidbody == null)
@@ -105,6 +108,9 @@ public class SafetyPinDetachOnPull : MonoBehaviour
 
         isRemoved = true;
         isGrabbed = false;
+
+        if (smokeUse != null)
+        smokeUse.AllowSpray();
 
         // Update outline
         updateOutlineVisibility();

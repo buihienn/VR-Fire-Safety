@@ -23,6 +23,10 @@ public class GasCylinderFlameShutdown : MonoBehaviour
     [SerializeField] private float checkInterval = 0.25f;
     [SerializeField] private float minNeighborBurn01 = 0.05f;
 
+    [Header("Audio")]
+    [SerializeField] private string gasLeakLoopSound = "GasLeakLoop";
+    [SerializeField] private string gasBurstSound = "GasBurst";
+
     [Header("Debug Read Only")]
     [SerializeField] private bool debugValveClosed;
     [SerializeField] private bool debugGasStillLeaking;
@@ -33,6 +37,8 @@ public class GasCylinderFlameShutdown : MonoBehaviour
     private float reigniteTimer = 0f;
     private float nextCheckTime = 0f;
 
+    private const float ForceExtinguishAmount = 999999f;
+
     private void Awake()
     {
         if (!flameNode)
@@ -41,13 +47,13 @@ public class GasCylinderFlameShutdown : MonoBehaviour
         if (!gasSystem)
             gasSystem = GasSystem.Instance;
     }
-    
+
     private void Update()
     {
         if (flameNode == null)
             return;
-
-        if (AudioManager.Instance == null)
+        
+        if (FireManager.Instance != null && !FireManager.Instance.HasFireAuthority)
             return;
 
         if (Time.time < nextCheckTime)
@@ -82,7 +88,7 @@ public class GasCylinderFlameShutdown : MonoBehaviour
 
         SetGasLeakLoop(false);
 
-        if (flameNode.IsBurning && extinguishRoutine == null)
+        if (IsNodeBurning(flameNode) && extinguishRoutine == null)
             extinguishRoutine = StartCoroutine(ExtinguishAfterDelay());
     }
 
@@ -95,23 +101,20 @@ public class GasCylinderFlameShutdown : MonoBehaviour
 
         bool gasStillLeaking = gasSystem != null && gasSystem.CanSustainNozzleFire();
         bool nearbyFireFound = HasNearbyBurningNode();
-        bool flameBurning = flameNode.IsBurning;
+        bool flameBurning = IsNodeBurning(flameNode);
 
         debugGasStillLeaking = gasStillLeaking;
         debugNearbyFireFound = nearbyFireFound;
 
-        // Có rò gas và ngọn lửa đầu ống chưa cháy -> phát loop xì gas
         bool shouldPlayLeakLoop = gasStillLeaking && !flameBurning;
         SetGasLeakLoop(shouldPlayLeakLoop);
 
-        // Nếu đầu ống đang cháy thì không cần reignite nữa
         if (flameBurning)
         {
             ResetReigniteTimer();
             return;
         }
 
-        // Không có gas hoặc không có lửa gần -> không thể bén lại
         if (!gasStillLeaking || !nearbyFireFound)
         {
             ResetReigniteTimer();
@@ -124,14 +127,45 @@ public class GasCylinderFlameShutdown : MonoBehaviour
         if (reigniteTimer < reigniteDelay)
             return;
 
-        // Đủ điều kiện bén lại
         SetGasLeakLoop(false);
-        flameNode.ForceIgnite();
-        AudioManager.Instance.PlayOneShot("GasBurst");
+        IgniteNode(flameNode);
+        PlayOneShot(gasBurstSound);
 
         ResetReigniteTimer();
     }
-    
+
+    private void IgniteNode(FlameNode node)
+    {
+        if (node == null) return;
+
+        node.gameObject.SetActive(true);
+
+        if (FireManager.Instance != null)
+            FireManager.Instance.RequestIgnite(node);
+        else
+            node.Ignite();
+    }
+
+    private void ExtinguishNode(FlameNode node)
+    {
+        if (node == null) return;
+
+        if (FireManager.Instance != null)
+            FireManager.Instance.RequestExtinguish(node, ForceExtinguishAmount);
+        else
+            node.Extinguish();
+    }
+
+    private bool IsNodeBurning(FlameNode node)
+    {
+        if (node == null) return false;
+
+        if (FireManager.Instance != null)
+            return FireManager.Instance.IsNodeBurning(node);
+
+        return node.IsBurning;
+    }
+
     private void ResetReigniteTimer()
     {
         reigniteTimer = 0f;
@@ -154,14 +188,22 @@ public class GasCylinderFlameShutdown : MonoBehaviour
 
         if (shouldPlay)
         {
-            if (!AudioManager.Instance.IsPlaying("GasLeakLoop"))
-                AudioManager.Instance.Play("GasLeakLoop");
+            if (!AudioManager.Instance.IsPlaying(gasLeakLoopSound))
+                AudioManager.Instance.Play(gasLeakLoopSound);
         }
         else
         {
-            if (AudioManager.Instance.IsPlaying("GasLeakLoop"))
-                AudioManager.Instance.Stop("GasLeakLoop");
+            if (AudioManager.Instance.IsPlaying(gasLeakLoopSound))
+                AudioManager.Instance.Stop(gasLeakLoopSound);
         }
+    }
+
+    private void PlayOneShot(string soundName)
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        AudioManager.Instance.PlayOneShot(soundName);
     }
 
     private IEnumerator ExtinguishAfterDelay()
@@ -169,8 +211,7 @@ public class GasCylinderFlameShutdown : MonoBehaviour
         if (extinguishDelay > 0f)
             yield return new WaitForSeconds(extinguishDelay);
 
-        if (flameNode != null)
-            flameNode.Extinguish();
+        ExtinguishNode(flameNode);
 
         extinguishRoutine = null;
     }
@@ -178,9 +219,7 @@ public class GasCylinderFlameShutdown : MonoBehaviour
     private bool IsValveClosed()
     {
         if (valveHandle == null)
-        {
             return gasSystem != null && !gasSystem.MainSupplyOpen;
-        }
 
         float currentAngle = Normalize180(valveHandle.localEulerAngles.y);
         float delta = Mathf.Abs(Mathf.DeltaAngle(currentAngle, closedAngle));
@@ -199,7 +238,7 @@ public class GasCylinderFlameShutdown : MonoBehaviour
         {
             if (node == null) continue;
             if (node == flameNode) continue;
-            if (!node.IsBurning) continue;
+            if (!IsNodeBurning(node)) continue;
             if (node.Burn01 < minNeighborBurn01) continue;
 
             Vector3 delta = node.transform.position - myPos;
