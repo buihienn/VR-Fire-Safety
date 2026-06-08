@@ -94,13 +94,18 @@ public class FireManager : NetworkBehaviour
         if (!autoFindFlameNodesInSceneIfListEmpty) return;
         if (flameNodes != null && flameNodes.Count > 0) return;
 
-        FlameNode[] found = FindObjectsOfType<FlameNode>(true);
+        FlameNode[] found = UnityEngine.Object.FindObjectsByType<FlameNode>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None
+        );
+
         flameNodes = new List<FlameNode>();
 
         foreach (FlameNode node in found)
         {
             if (node == null) continue;
             if (!node.gameObject.scene.IsValid()) continue;
+
             flameNodes.Add(node);
         }
 

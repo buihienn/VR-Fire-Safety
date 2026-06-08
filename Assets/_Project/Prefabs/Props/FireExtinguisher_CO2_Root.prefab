@@ -8333,6 +8333,12 @@ MonoBehaviour:
   safetyPin: {fileID: 7685408592343881508}
   maxSpraySeconds: 999
   remainingSpraySeconds: 60
+  collisionOnlyForLocalSprayer: 1
+  enableSmokeObjectWhileSpraying: 1
+  sprayLoopSound: FESpray
+  fusionSpawned: 0
+  isSpraying: 0
+  localSmokeCanDamageFire: 0
 --- !u!82 &1630562572245291108
 AudioSource:
   m_ObjectHideFlags: 0
@@ -12431,6 +12437,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 153105587599639376}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6319131209074573397}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7594215951916011514}
     - targetCorrespondingSourceObject: {fileID: -4454510673006387153, guid: 7b54d26814edfb64baa356ccf84030dc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4779655021098193905}
@@ -12486,7 +12498,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3788085880273148}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
   m_Name: 
@@ -12594,6 +12606,7 @@ MonoBehaviour:
   extinguisherBodyOutline: {fileID: 6182775598438178256}
   nozzleOutline: {fileID: 8986470698138690479}
   safetyPinOutline: {fileID: 7781104448110029799}
+  smokeUse: {fileID: 0}
 --- !u!114 &7781104448110029799
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12697,3 +12710,40 @@ MonoBehaviour:
   _rigidbody: {fileID: 1849664829138141237}
   _kinematicWhileSelected: 1
   _throwWhenUnselected: 1
+--- !u!114 &6319131209074573397
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5684240693234247042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0
+--- !u!114 &7594215951916011514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5684240693234247042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 869794344
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 6319131209074573397}
+  - {fileID: 8570800274662869580}
+  ForceRemoteRenderTimeframe: 0
