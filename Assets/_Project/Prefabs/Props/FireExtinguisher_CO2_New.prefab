@@ -355,6 +355,8 @@ GameObject:
   - component: {fileID: 6097875054720744126}
   - component: {fileID: 3181959756335968460}
   - component: {fileID: 8143270188165741571}
+  - component: {fileID: 16332436835915123}
+  - component: {fileID: 1644543145363170688}
   m_Layer: 0
   m_Name: FireExtinguisher_CO2_New
   m_TagString: Untagged
@@ -497,8 +499,16 @@ MonoBehaviour:
     m_RotationOrder: 4
   smokeFX: {fileID: 1710521705572967744}
   enableSmokeObjectWhileSpraying: 1
+  collisionOnlyForLocalSprayer: 1
+  requirePinRemoved: 1
+  safetyPin: {fileID: 8597454900626273323}
+  maxSpraySeconds: 60
+  remainingSpraySeconds: 60
+  delayBeforeSpray: 1
   requireCanSpray: 0
   canSpray: 1
+  useAudio: 1
+  sprayLoopSound: FESpray
   OnSprayStart:
     m_PersistentCalls:
       m_Calls: []
@@ -508,6 +518,49 @@ MonoBehaviour:
   OnUseProgressChanged:
     m_PersistentCalls:
       m_Calls: []
+  fusionSpawned: 0
+  isSprayingLocal: 0
+  localSmokeCanDamageFire: 0
+  waitingForDelay: 0
+  wantsToSpray: 0
+  currentUseProgress: 0
+--- !u!114 &16332436835915123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654166493758443201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 2498287051
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 8143270188165741571}
+  - {fileID: 1644543145363170688}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &1644543145363170688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654166493758443201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0
 --- !u!1 &1227785828543762549
 GameObject:
   m_ObjectHideFlags: 0
@@ -13221,6 +13274,7 @@ MonoBehaviour:
   extinguisherBodyOutline: {fileID: 3714987277769295919}
   nozzleOutline: {fileID: 7146853535451710925}
   safetyPinOutline: {fileID: 2187457206651454073}
+  smokeUse: {fileID: 0}
 --- !u!4 &3148914899901909889 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1123009855700476023, guid: 5b4dabee42c0c0149ae27762ebe971cf, type: 3}

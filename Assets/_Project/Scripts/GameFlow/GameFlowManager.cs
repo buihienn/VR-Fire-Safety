@@ -1,10 +1,19 @@
 using System.Collections;
+using Fusion;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class GameFlowManager : MonoBehaviour
+public class GameFlowManager : NetworkBehaviour
 {
+    public static GameFlowManager Instance { get; private set; }
+
+    private enum EndReason
+    {
+        Win = 0,
+        TimeUp = 1,
+        PlayerFainted = 2
+    }
+
     [Header("Core References")]
     [SerializeField] private GasSystem gasSystem;
     [SerializeField] private PlayerGasExposure playerGasExposure;
@@ -18,7 +27,7 @@ public class GameFlowManager : MonoBehaviour
     [SerializeField] private TMP_Text timerText;
 
     [Header("Match Rules")]
-    [SerializeField] private float matchDurationSeconds = 300f;   // 5 phut
+    [SerializeField] private float matchDurationSeconds = 300f;
     [SerializeField] private float returnDelaySeconds = 5f;
 
     [Range(0f, 0.2f)]
@@ -27,18 +36,38 @@ public class GameFlowManager : MonoBehaviour
     [SerializeField] private bool requireLeakStopped = true;
 
     [Header("Disable Scripts When End")]
-    [SerializeField] private Behaviour[] behavioursToDisableOnEnd;
+    [SerializeField] private UnityEngine.Behaviour[] behavioursToDisableOnEnd;
+
+    [Header("Scene")]
+    [SerializeField] private SceneTransitionManager sceneTransitionManager;
+    [SerializeField] private int gameOverSceneIndex = 2;
 
     [Header("Debug")]
     [SerializeField] private float remainingSeconds;
     [SerializeField] private bool matchEnded;
     [SerializeField] private bool playerWon;
     [SerializeField] private string endReason;
+    [SerializeField] private bool fusionSpawned;
+    [SerializeField] private bool localEndApplied;
 
-    [SerializeField] private SceneTransitionManager sceneTransitionManager;
+    [Networked] private float RemainingSecondsNet { get; set; }
+    [Networked] private bool MatchEndedNet { get; set; }
+    [Networked] private bool PlayerWonNet { get; set; }
+    [Networked] private int EndReasonNet { get; set; }
+
+    private Coroutine returnRoutine;
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("More than one GameFlowManager found. Destroying duplicate.", this);
+            Destroy(this);
+            return;
+        }
+
+        Instance = this;
+
         ApplySetting();
 
         if (gasSystem == null)
@@ -52,7 +81,8 @@ public class GameFlowManager : MonoBehaviour
     {
         remainingSeconds = matchDurationSeconds;
 
-        AudioManager.Instance.PlayOneShot("VO_StartGame");
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayOneShot("VO_StartGame");
 
         if (endPanel != null)
             endPanel.SetActive(false);
@@ -60,20 +90,63 @@ public class GameFlowManager : MonoBehaviour
         UpdateTimerUI();
     }
 
+    public override void Spawned()
+    {
+        fusionSpawned = true;
+
+        if (Object.HasStateAuthority)
+        {
+            RemainingSecondsNet = matchDurationSeconds;
+            MatchEndedNet = false;
+            PlayerWonNet = false;
+            EndReasonNet = -1;
+        }
+
+        remainingSeconds = RemainingSecondsNet;
+        UpdateTimerUI();
+    }
+
     private void Update()
     {
-        if (matchEnded)
+        if (!fusionSpawned)
+        {
+            // Single-player fallback: chạy giống code cũ.
+            if (matchEnded) return;
+            ProcessMatch(Time.deltaTime);
             return;
+        }
 
+        if (Object.HasStateAuthority)
+        {
+            if (MatchEndedNet) return;
+
+            ProcessMatch(Runner != null ? Runner.DeltaTime : Time.deltaTime);
+        }
+        else
+        {
+            // Client chỉ nhận timer từ Host.
+            remainingSeconds = RemainingSecondsNet;
+            matchEnded = MatchEndedNet;
+            playerWon = PlayerWonNet;
+            UpdateTimerUI();
+        }
+    }
+
+    private void ProcessMatch(float deltaTime)
+    {
         if (CheckWinCondition())
         {
             EndAsWin();
             return;
         }
 
-        remainingSeconds -= Time.deltaTime;
+        remainingSeconds -= deltaTime;
+
         if (remainingSeconds < 0f)
             remainingSeconds = 0f;
+
+        if (fusionSpawned && Object.HasStateAuthority)
+            RemainingSecondsNet = remainingSeconds;
 
         UpdateTimerUI();
 
@@ -110,41 +183,86 @@ public class GameFlowManager : MonoBehaviour
 
     public void HandlePlayerFainted()
     {
-        if (matchEnded) return;
+        ReportPlayerFainted();
+    }
 
-        EndMatch(
-            won: false,
-            title: "GAME OVER",
-            body: "Ban da o trong khu vuc gas qua lau va bi o nhiem khi gas.",
-            timeUp: false
-        );
+    public void ReportPlayerFainted()
+    {
+        if (!fusionSpawned)
+        {
+            EndAsPlayerFainted();
+            return;
+        }
+
+        if (Object.HasStateAuthority)
+        {
+            EndAsPlayerFainted();
+        }
+        else
+        {
+            RPC_RequestPlayerFainted();
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestPlayerFainted(RpcInfo info = default)
+    {
+        EndAsPlayerFainted();
     }
 
     private void EndAsTimeUp()
     {
-        EndMatch(
-            won: false,
-            title: "TIME UP",
-            body: "Thoi gian da het. Ban da khong xu li su co kip thoi.",
-            timeUp: true
-        );
+        EndMatch(EndReason.TimeUp);
     }
 
     private void EndAsWin()
     {
-        EndMatch(
-            won: true,
-            title: "YOU WIN",
-            body: "Ban da xu ly an toan. Moi truong da het nguy hiem.",
-            timeUp: false
-        );
+        EndMatch(EndReason.Win);
     }
 
-    private void EndMatch(bool won, string title, string body, bool timeUp)
+    private void EndAsPlayerFainted()
     {
-        if (matchEnded) return;
+        EndMatch(EndReason.PlayerFainted);
+    }
 
+    private void EndMatch(EndReason reason)
+    {
+        if (!fusionSpawned)
+        {
+            ApplyEndLocal(reason);
+            return;
+        }
+
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (MatchEndedNet)
+            return;
+
+        MatchEndedNet = true;
+        PlayerWonNet = reason == EndReason.Win;
+        EndReasonNet = (int)reason;
+
+        RPC_ApplyEndMatch((int)reason);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ApplyEndMatch(int reasonValue)
+    {
+        EndReason reason = (EndReason)reasonValue;
+        ApplyEndLocal(reason);
+    }
+
+    private void ApplyEndLocal(EndReason reason)
+    {
+        if (localEndApplied)
+            return;
+
+        localEndApplied = true;
         matchEnded = true;
+
+        GetEndMessage(reason, out bool won, out bool timeUp, out string title, out string body);
+
         playerWon = won;
         endReason = body;
 
@@ -152,6 +270,15 @@ public class GameFlowManager : MonoBehaviour
 
         if (hubGas != null)
             hubGas.SetActive(false);
+
+        if (endPanel != null)
+            endPanel.SetActive(true);
+
+        if (endTitleText != null)
+            endTitleText.text = title;
+
+        if (endBodyText != null)
+            endBodyText.text = body;
 
         if (behavioursToDisableOnEnd != null)
         {
@@ -162,30 +289,81 @@ public class GameFlowManager : MonoBehaviour
             }
         }
 
-        if (won)
-        {
-            AudioManager.Instance.PlayOneShot("VO_GameWin");
-            StartCoroutine(ReturnToGameOverSceneRoutine());
-        }
-        else
-        {
-            if (timeUp)
-                AudioManager.Instance.PlayOneShot("VO_TimeUp");
-            else
-                AudioManager.Instance.PlayOneShot("VO_GameOver");
+        PlayEndAudio(reason);
 
-            StartCoroutine(ReturnToGameOverSceneRoutine());
+        if (returnRoutine != null)
+            StopCoroutine(returnRoutine);
+
+        returnRoutine = StartCoroutine(ReturnToGameOverSceneRoutine());
+    }
+
+    private void GetEndMessage(
+        EndReason reason,
+        out bool won,
+        out bool timeUp,
+        out string title,
+        out string body)
+    {
+        won = false;
+        timeUp = false;
+        title = "GAME OVER";
+        body = "";
+
+        switch (reason)
+        {
+            case EndReason.Win:
+                won = true;
+                timeUp = false;
+                title = "YOU WIN";
+                body = "Ban da xu ly an toan. Moi truong da het nguy hiem.";
+                break;
+
+            case EndReason.TimeUp:
+                won = false;
+                timeUp = true;
+                title = "TIME UP";
+                body = "Thoi gian da het. Ban da khong xu li su co kip thoi.";
+                break;
+
+            case EndReason.PlayerFainted:
+                won = false;
+                timeUp = false;
+                title = "GAME OVER";
+                body = "Ban da o trong khu vuc gas qua lau va bi o nhiem khi gas.";
+                break;
+        }
+    }
+
+    private void PlayEndAudio(EndReason reason)
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        switch (reason)
+        {
+            case EndReason.Win:
+                AudioManager.Instance.PlayOneShot("VO_GameWin");
+                break;
+
+            case EndReason.TimeUp:
+                AudioManager.Instance.PlayOneShot("VO_TimeUp");
+                break;
+
+            case EndReason.PlayerFainted:
+                AudioManager.Instance.PlayOneShot("VO_GameOver");
+                break;
         }
     }
 
     private IEnumerator ReturnToGameOverSceneRoutine()
     {
         yield return new WaitForSecondsRealtime(returnDelaySeconds);
-        
+
         if (sceneTransitionManager == null)
             sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
 
-        sceneTransitionManager.GoToScene(2);
+        if (sceneTransitionManager != null)
+            sceneTransitionManager.GoToScene(gameOverSceneIndex);
     }
 
     private bool CheckWinCondition()
@@ -247,6 +425,6 @@ public class GameFlowManager : MonoBehaviour
     private void ForceFaintLose()
     {
         if (!matchEnded)
-            HandlePlayerFainted();
+            EndAsPlayerFainted();
     }
 }

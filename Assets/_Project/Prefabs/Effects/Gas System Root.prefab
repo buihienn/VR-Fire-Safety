@@ -76,12 +76,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d96857b83ed267d4f8d4c33c55336bd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gas01: 0
+  gas01: 0.1
   hoseLeak: 0
   stoveKnobs: []
   mainValveOpen01: 1
   mainValveOpenThreshold: 0.01
   vents:
+  - {fileID: 0}
   - {fileID: 0}
   level1Threshold: 0.1
   level2Threshold: 0.35
@@ -105,6 +106,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6206085718605303378}
+  - component: {fileID: 773492605514128215}
   m_Layer: 15
   m_Name: Gas System Root
   m_TagString: Untagged
@@ -130,6 +132,25 @@ Transform:
   - {fileID: 4980315869637912255}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &773492605514128215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922030629938260290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 4012268534
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1388893088952792348}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &5729123036876373773
 GameObject:
   m_ObjectHideFlags: 0
@@ -158,7 +179,7 @@ Transform:
   m_GameObject: {fileID: 5729123036876373773}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -2.145}
+  m_LocalPosition: {x: 0.57, y: -1.881, z: -2.145}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
