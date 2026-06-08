@@ -15,9 +15,13 @@ public class HoseBurnSequence : MonoBehaviour
     [Min(0f)] [SerializeField] private float afterBurnSeconds = 4.5f;
 
     [Header("Start State")]
-    [SerializeField] private bool deactivateAfterNodeOnStart = true;
-    [SerializeField] private bool deactivateValveNodeOnStart = true;
+    [SerializeField] private bool extinguishAfterNodeOnStart = true;
+    [SerializeField] private bool extinguishValveNodeOnStart = true;
     [SerializeField] private bool forceHoseLeakTrue = true;
+
+    [Header("Hose Visual")]
+    [Tooltip("Khi dây cháy xong thì ẩn model dây gas. Nếu FlameNode nằm trong hoseRoot thì nó cũng bị inactive.")]
+    [SerializeField] private bool hideHoseRootWhenBurned = true;
 
     [Header("Audio - Hose")]
     [SerializeField] private bool manageHoseAudio = true;
@@ -33,36 +37,50 @@ public class HoseBurnSequence : MonoBehaviour
     private Coroutine sequenceRoutine;
     private bool previousHoseBurning;
 
+    private const float ForceExtinguishAmount = 999999f;
+
+    private void Awake()
+    {
+        if (!gasSystem)
+            gasSystem = GasSystem.Instance;
+    }
+
     private void Start()
     {
-        if (afterFireNode != null && deactivateAfterNodeOnStart)
+        // Không SetActive(false) FlameNode nữa.
+        // FlameNode nên luôn active để FireManager có thể sync state.
+        if (afterFireNode != null)
         {
-            afterFireNode.Extinguish();
-            afterFireNode.gameObject.SetActive(false);
+            afterFireNode.gameObject.SetActive(true);
+
+            if (extinguishAfterNodeOnStart)
+                ExtinguishNodeLocalOnly(afterFireNode);
         }
 
-        if (valveFireNode != null && deactivateValveNodeOnStart)
+        if (valveFireNode != null)
         {
-            valveFireNode.Extinguish();
-            valveFireNode.gameObject.SetActive(false);
+            valveFireNode.gameObject.SetActive(true);
+
+            if (extinguishValveNodeOnStart)
+                ExtinguishNodeLocalOnly(valveFireNode);
         }
 
         if (forceHoseLeakTrue && gasSystem != null)
-            gasSystem.hoseLeak = true;
+            gasSystem.SetHoseLeak(true);
 
-        // Sync state ban đầu để không phát burst ngay lúc vào scene
         previousHoseBurning = IsNodeBurning(hoseFireNode);
     }
 
     private void Update()
     {
+        if (FireManager.Instance != null && !FireManager.Instance.HasFireAuthority)
+            return;
         UpdateHoseAudio();
 
         if (sequenceCompleted) return;
         if (sequenceRunning) return;
         if (hoseFireNode == null) return;
 
-        // Khi hose node bắt đầu cháy thì sequence bắt đầu
         if (IsNodeBurning(hoseFireNode))
         {
             sequenceRoutine = StartCoroutine(RunSequence());
@@ -99,14 +117,13 @@ public class HoseBurnSequence : MonoBehaviour
             yield break;
         }
 
+        afterFireNode.gameObject.SetActive(true);
         afterFireNode.transform.position = hoseFireNode.transform.position;
         afterFireNode.transform.rotation = hoseFireNode.transform.rotation;
-        afterFireNode.gameObject.SetActive(true);
         afterFireNode.SetVisualDamp01(1f);
-        afterFireNode.Ignite();
 
-        hoseFireNode.Extinguish();
-        hoseFireNode.gameObject.SetActive(false);
+        IgniteNode(afterFireNode);
+        ExtinguishNode(hoseFireNode);
 
         stage = "AfterNodeBurning";
         timerRemaining = afterBurnSeconds;
@@ -123,25 +140,22 @@ public class HoseBurnSequence : MonoBehaviour
             yield return null;
         }
 
-        if (afterFireNode != null)
-        {
-            afterFireNode.Extinguish();
-            afterFireNode.gameObject.SetActive(false);
-        }
+        ExtinguishNode(afterFireNode);
 
         stage = "DestroyHose";
-        if (hoseRoot != null)
+
+        if (hideHoseRootWhenBurned && hoseRoot != null)
             hoseRoot.SetActive(false);
 
-        // Hose không còn là nguồn phát SFX leak nữa
         SetHoseLeakLoop(false);
 
         stage = "ValveFire";
+
         if (valveFireNode != null)
         {
             valveFireNode.gameObject.SetActive(true);
             valveFireNode.SetVisualDamp01(1f);
-            valveFireNode.Ignite();
+            IgniteNode(valveFireNode);
         }
 
         sequenceCompleted = true;
@@ -151,15 +165,51 @@ public class HoseBurnSequence : MonoBehaviour
         sequenceRoutine = null;
     }
 
+    private void IgniteNode(FlameNode node)
+    {
+        if (node == null) return;
+
+        node.gameObject.SetActive(true);
+
+        if (FireManager.Instance != null)
+        {
+            FireManager.Instance.RequestIgnite(node);
+        }
+        else
+        {
+            node.Ignite();
+        }
+    }
+
+    private void ExtinguishNode(FlameNode node)
+    {
+        if (node == null) return;
+
+        if (FireManager.Instance != null)
+        {
+            FireManager.Instance.RequestExtinguish(node, ForceExtinguishAmount);
+        }
+        else
+        {
+            node.Extinguish();
+        }
+    }
+
+    private void ExtinguishNodeLocalOnly(FlameNode node)
+    {
+        if (node == null) return;
+
+        node.Extinguish();
+        node.SetVisualDamp01(1f);
+    }
+
     private void UpdateHoseAudio()
     {
         if (!manageHoseAudio) return;
-        if (AudioManager.Instance == null) return;
 
         bool hoseBurning = IsNodeBurning(hoseFireNode);
         bool hoseLeakActive = IsHoseLeakActive();
 
-        // Chỉ phát loop khi: còn hose, đang rò, chưa cháy, chưa hoàn tất sequence
         bool shouldPlayLeakLoop =
             hoseLeakActive &&
             !hoseBurning &&
@@ -169,12 +219,13 @@ public class HoseBurnSequence : MonoBehaviour
 
         SetHoseLeakLoop(shouldPlayLeakLoop);
 
-        // Chỉ phát burst khi hose vừa mới bắt đầu cháy
         bool justStartedBurning = !previousHoseBurning && hoseBurning;
         if (justStartedBurning)
         {
             SetHoseLeakLoop(false);
-            AudioManager.Instance.PlayOneShot(hoseBurstSound);
+
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlayOneShot(hoseBurstSound);
         }
 
         previousHoseBurning = hoseBurning;
@@ -185,20 +236,22 @@ public class HoseBurnSequence : MonoBehaviour
         if (gasSystem == null) return false;
         if (!IsHosePresent()) return false;
 
-        // Dùng logic tổng của GasSystem để tôn trọng trạng thái van chính
         return gasSystem.CanSustainNozzleFire();
     }
 
     private bool IsHosePresent()
     {
-        return hoseRoot != null && hoseRoot.activeInHierarchy;
+        return hoseRoot == null || hoseRoot.activeInHierarchy;
     }
 
     private bool IsNodeBurning(FlameNode node)
     {
-        return node != null &&
-               node.gameObject.activeInHierarchy &&
-               node.IsBurning;
+        if (node == null) return false;
+
+        if (FireManager.Instance != null)
+            return FireManager.Instance.IsNodeBurning(node);
+
+        return node.IsBurning;
     }
 
     private void SetHoseLeakLoop(bool shouldPlay)
@@ -224,7 +277,6 @@ public class HoseBurnSequence : MonoBehaviour
         stage = reason;
         sequenceRoutine = null;
 
-        // Abort thì hose leak có thể quay lại, UpdateHoseAudio() frame sau sẽ tự xử lý
         SetHoseLeakLoop(false);
     }
 
@@ -242,18 +294,18 @@ public class HoseBurnSequence : MonoBehaviour
 
         if (afterFireNode != null)
         {
-            afterFireNode.Extinguish();
-            afterFireNode.gameObject.SetActive(false);
+            afterFireNode.gameObject.SetActive(true);
+            ExtinguishNode(afterFireNode);
         }
 
-        if (valveFireNode != null && deactivateValveNodeOnStart)
+        if (valveFireNode != null && extinguishValveNodeOnStart)
         {
-            valveFireNode.Extinguish();
-            valveFireNode.gameObject.SetActive(false);
+            valveFireNode.gameObject.SetActive(true);
+            ExtinguishNode(valveFireNode);
         }
 
         if (forceHoseLeakTrue && gasSystem != null)
-            gasSystem.hoseLeak = true;
+            gasSystem.SetHoseLeak(true);
 
         SetHoseLeakLoop(false);
         previousHoseBurning = IsNodeBurning(hoseFireNode);
