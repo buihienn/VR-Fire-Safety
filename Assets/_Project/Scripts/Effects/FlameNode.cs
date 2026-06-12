@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class FlameNode : MonoBehaviour
 {
+    [Header("Identity")]
+    [Tooltip("Nếu để trống, FlameId sẽ tự lấy theo đường dẫn hierarchy của object để giảm nguy cơ trùng tên.")]
+    [SerializeField] private string flameId;
+
+    [Header("Health")]
+    [SerializeField] private float maxHealth = 30f;
+    [SerializeField] private float currentHealth = 30f;
+
     [Header("Visual")]
     [SerializeField] private ParticleSystem[] fireEffects;
     [SerializeField] private Light[] fireLights;
@@ -17,10 +25,10 @@ public class FlameNode : MonoBehaviour
     [Header("Spread")]
     [SerializeField] private List<FlameNode> neighbors = new List<FlameNode>();
 
-    [Tooltip("Node nay co duoc lan tiep sang node khac hay khong")]
+    [Tooltip("Node này khi cháy có được lan sang node khác không.")]
     [SerializeField] private bool canSpread = true;
 
-    [Tooltip("Node nay co duoc bi lay chay tu spread cua node khac hay khong")]
+    [Tooltip("Node này có được phép bị node khác lan lửa vào không.")]
     [SerializeField] private bool allowIgniteFromSpread = true;
 
     [SerializeField] private float spreadDelayMin = 1.2f;
@@ -84,12 +92,16 @@ public class FlameNode : MonoBehaviour
     private readonly Dictionary<Light, float> baseLightIntensity = new();
     private readonly Dictionary<Light, float> baseLightRange = new();
 
+    public string FlameId => string.IsNullOrWhiteSpace(flameId) ? GetHierarchyPath(transform) : flameId;
     public bool IsBurning => isBurning;
     public float Burn01 => burn01;
+    public float Health01 => maxHealth > 0.001f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
     public bool CanSpread => canSpread;
     public bool AllowIgniteFromSpread => allowIgniteFromSpread;
+    public IReadOnlyList<FlameNode> Neighbors => neighbors;
+
     public bool SpreadReigniteLocked =>
-        useSpreadReigniteCooldown && (Time.time < lastExtinguishTime + spreadReigniteCooldown);
+        useSpreadReigniteCooldown && Time.time < lastExtinguishTime + spreadReigniteCooldown;
 
     public static readonly List<FlameNode> All = new();
 
@@ -120,6 +132,9 @@ public class FlameNode : MonoBehaviour
         if (autoFindCollider && extinguishCollider == null)
             extinguishCollider = GetComponent<Collider>();
 
+        maxHealth = Mathf.Max(0.01f, maxHealth);
+        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+
         CacheBaseVisuals();
         ForceParticlesPlayOnAwakeOff();
 
@@ -127,13 +142,15 @@ public class FlameNode : MonoBehaviour
         {
             burn01 = 0f;
             visualDamp01 = 1f;
-            ForceIgnite();
+            ResetHealthFromFireManager();
+            ForceIgniteLocal(0f, CanRunSpreadHere());
         }
         else
         {
             isBurning = false;
             burn01 = 0f;
             visualDamp01 = 1f;
+            currentHealth = 0f;
             ApplyVisual(0f, true);
         }
     }
@@ -156,6 +173,14 @@ public class FlameNode : MonoBehaviour
 
         if (extinguishCollider != null)
             extinguishCollider.enabled = finalVisual01 > 0.02f;
+    }
+
+    private bool CanRunSpreadHere()
+    {
+        if (FireManager.Instance == null)
+            return true;
+
+        return FireManager.Instance.HasFireAuthority;
     }
 
     private void CacheBaseVisuals()
@@ -270,12 +295,19 @@ public class FlameNode : MonoBehaviour
 
     public void Ignite()
     {
-        ForceIgnite(0f);
+        Ignite(0f);
     }
 
     public void Ignite(float delay)
     {
-        ForceIgnite(delay);
+        if (FireManager.Instance != null)
+        {
+            FireManager.Instance.RequestIgnite(this, delay);
+            return;
+        }
+
+        ResetHealthFromFireManager();
+        ForceIgniteLocal(delay, true);
     }
 
     public bool TryIgniteFromSpread(float delay = 0f)
@@ -284,21 +316,39 @@ public class FlameNode : MonoBehaviour
         if (isBurning) return false;
         if (SpreadReigniteLocked) return false;
 
-        ForceIgnite(delay);
+        if (FireManager.Instance != null)
+        {
+            FireManager.Instance.RequestIgnite(this, delay);
+            return true;
+        }
+
+        ResetHealthFromFireManager();
+        ForceIgniteLocal(delay, true);
         return true;
     }
 
     public void ForceIgnite(float delay = 0f)
     {
-        if (isBurning) return;
+        Ignite(delay);
+    }
+
+    private void ForceIgniteLocal(float delay, bool allowLocalSpread)
+    {
+        if (isBurning)
+        {
+            if (allowLocalSpread && canSpread && spreadRoutine == null)
+                spreadRoutine = StartCoroutine(SpreadRoutine());
+
+            return;
+        }
 
         if (igniteRoutine != null)
             StopCoroutine(igniteRoutine);
 
-        igniteRoutine = StartCoroutine(IgniteRoutine(delay));
+        igniteRoutine = StartCoroutine(IgniteRoutine(delay, allowLocalSpread));
     }
 
-    private IEnumerator IgniteRoutine(float delay)
+    private IEnumerator IgniteRoutine(float delay, bool allowLocalSpread)
     {
         if (delay > 0f)
             yield return new WaitForSeconds(delay);
@@ -306,12 +356,15 @@ public class FlameNode : MonoBehaviour
         if (isBurning) yield break;
 
         isBurning = true;
-        visualDamp01 = 1f;
+        visualDamp01 = Mathf.Clamp01(Health01);
+
+        if (currentHealth <= 0f)
+            ResetHealthFromFireManager();
 
         if (burn01 < igniteStartBurn01)
             burn01 = igniteStartBurn01;
 
-        if (canSpread)
+        if (canSpread && allowLocalSpread)
         {
             if (spreadRoutine != null)
                 StopCoroutine(spreadRoutine);
@@ -327,13 +380,35 @@ public class FlameNode : MonoBehaviour
         float delay = Random.Range(spreadDelayMin, spreadDelayMax);
         yield return new WaitForSeconds(delay);
 
+        if (!isBurning || !canSpread)
+        {
+            spreadRoutine = null;
+            yield break;
+        }
+
+        if (FireManager.Instance != null && !FireManager.Instance.HasFireAuthority)
+        {
+            spreadRoutine = null;
+            yield break;
+        }
+
         foreach (FlameNode node in neighbors)
         {
             if (node == null) continue;
             if (node.IsBurning) continue;
+            if (!node.AllowIgniteFromSpread) continue;
+            if (node.SpreadReigniteLocked) continue;
 
             float igniteDelay = Random.Range(neighborIgniteDelayMin, neighborIgniteDelayMax);
-            node.TryIgniteFromSpread(igniteDelay);
+
+            if (FireManager.Instance != null)
+            {
+                FireManager.Instance.RequestSpreadIgnite(this, node, igniteDelay);
+            }
+            else
+            {
+                node.TryIgniteFromSpread(igniteDelay);
+            }
         }
 
         spreadRoutine = null;
@@ -356,8 +431,59 @@ public class FlameNode : MonoBehaviour
         }
 
         isBurning = false;
+        currentHealth = 0f;
         visualDamp01 = 1f;
         lastExtinguishTime = Time.time;
+    }
+
+    public void ResetHealthFromFireManager()
+    {
+        maxHealth = Mathf.Max(0.01f, maxHealth);
+        currentHealth = maxHealth;
+        visualDamp01 = 1f;
+    }
+
+    public bool ApplyExtinguishFromFireManager(float amount)
+    {
+        if (!isBurning) return false;
+
+        amount = Mathf.Abs(amount);
+        if (amount <= 0f) return false;
+
+        currentHealth -= amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+        visualDamp01 = Health01;
+
+        if (currentHealth <= 0f)
+        {
+            Extinguish();
+            return true;
+        }
+
+        return false;
+    }
+
+    public void SetHealth01FromFireManager(float health01)
+    {
+        maxHealth = Mathf.Max(0.01f, maxHealth);
+        health01 = Mathf.Clamp01(health01);
+        currentHealth = maxHealth * health01;
+        visualDamp01 = health01;
+    }
+
+    public void SetBurningFromFireManager(bool burning, bool allowSpreadOnThisMachine)
+    {
+        if (burning)
+        {
+            if (currentHealth <= 0f)
+                ResetHealthFromFireManager();
+
+            ForceIgniteLocal(0f, allowSpreadOnThisMachine);
+        }
+        else
+        {
+            Extinguish();
+        }
     }
 
     public void SetVisualDamp01(float value)
@@ -379,6 +505,7 @@ public class FlameNode : MonoBehaviour
     {
         if (node == null) return;
         if (node == this) return;
+
         if (!neighbors.Contains(node))
             neighbors.Add(node);
     }
@@ -432,7 +559,7 @@ public class FlameNode : MonoBehaviour
     [ContextMenu("Test Ignite")]
     private void TestIgnite()
     {
-        ForceIgnite();
+        Ignite();
     }
 
     [ContextMenu("Test Extinguish")]
@@ -456,6 +583,7 @@ public class FlameNode : MonoBehaviour
         foreach (FlameNode node in neighbors)
         {
             if (node == null) continue;
+
             Gizmos.DrawLine(transform.position, node.transform.position);
             Gizmos.DrawSphere(node.transform.position, 0.05f);
         }
@@ -463,6 +591,9 @@ public class FlameNode : MonoBehaviour
 
     private void OnValidate()
     {
+        if (maxHealth < 0.01f) maxHealth = 0.01f;
+        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+
         if (spreadDelayMin < 0f) spreadDelayMin = 0f;
         if (spreadDelayMax < spreadDelayMin) spreadDelayMax = spreadDelayMin;
 
@@ -521,5 +652,21 @@ public class FlameNode : MonoBehaviour
                 new Keyframe(1f, 1f)
             );
         }
+    }
+
+    private static string GetHierarchyPath(Transform t)
+    {
+        if (t == null) return "NullFlameNode";
+
+        string path = t.name;
+        Transform parent = t.parent;
+
+        while (parent != null)
+        {
+            path = parent.name + "/" + path;
+            parent = parent.parent;
+        }
+
+        return path;
     }
 }

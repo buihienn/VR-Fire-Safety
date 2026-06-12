@@ -9,112 +9,93 @@ public class FlameExtinguishable : MonoBehaviour
 
     [Header("Filter")]
     [SerializeField] private string extinguisherTag = "ExtinguisherSpray";
+    [SerializeField] private bool requireParticleSystem = true;
 
-    [Header("Extinguish")]
-    [SerializeField] private float extinguishNeeded = 30f;
+    [Header("Extinguish Damage")]
     [SerializeField] private float extinguishPerHit = 0.25f;
     [SerializeField] private int maxHitsPerFrame = 3;
-    [SerializeField] private float recoveryPerSecond = 5f;
-    [SerializeField] private float recoveryDelayAfterSpray = 0.25f;
 
-    [Header("Visual Damp")]
-    [Range(0f, 1f)] [SerializeField] private float visualShrinkStart01 = 0.15f;
-    [Range(0f, 1f)] [SerializeField] private float minVisualWhileBurning = 0.12f;
+    [Header("Network Request")]
+    [Tooltip("Tranh spam RPC len Host khi particle hit qua nhieu.")]
+    [SerializeField] private float sendRequestInterval = 0.1f;
 
-    private float extinguishProgress;
-    private float lastHitTime = -999f;
+    private float pendingExtinguishAmount;
+    private float nextSendRequestTime;
     private readonly List<ParticleCollisionEvent> collisionEvents = new();
 
     private void Awake()
     {
         if (!flameNode)
             flameNode = GetComponent<FlameNode>();
+
+        if (!flameNode)
+            flameNode = GetComponentInParent<FlameNode>();
     }
 
     private void Update()
+    {
+        if (pendingExtinguishAmount > 0f && Time.time >= nextSendRequestTime)
+            SendPendingExtinguishRequest();
+    }
+
+    private void OnParticleCollision(GameObject other)
+    {
+        if (flameNode == null) return;
+        if (!flameNode.IsBurning) return;
+        if (!other.CompareTag(extinguisherTag)) return;
+
+        ParticleSystem ps = other.GetComponent<ParticleSystem>();
+        if (requireParticleSystem && ps == null) return;
+
+        int hitCount = 1;
+
+        if (ps != null)
+        {
+            hitCount = ps.GetCollisionEvents(gameObject, collisionEvents);
+            if (hitCount <= 0)
+                hitCount = 1;
+        }
+
+        hitCount = Mathf.Clamp(hitCount, 1, maxHitsPerFrame);
+        pendingExtinguishAmount += hitCount * extinguishPerHit;
+
+        if (Time.time >= nextSendRequestTime)
+            SendPendingExtinguishRequest();
+    }
+
+    private void SendPendingExtinguishRequest()
     {
         if (flameNode == null) return;
 
         if (!flameNode.IsBurning)
         {
-            extinguishProgress = 0f;
-            flameNode.SetVisualDamp01(1f);
+            pendingExtinguishAmount = 0f;
             return;
         }
 
-        bool canRecover = Time.time >= lastHitTime + recoveryDelayAfterSpray;
+        if (pendingExtinguishAmount <= 0f) return;
 
-        if (canRecover && extinguishProgress > 0f)
+        float amount = pendingExtinguishAmount;
+        pendingExtinguishAmount = 0f;
+        nextSendRequestTime = Time.time + sendRequestInterval;
+
+        if (FireManager.Instance != null)
         {
-            extinguishProgress -= recoveryPerSecond * Time.deltaTime;
-
-            if (extinguishProgress < 0f)
-                extinguishProgress = 0f;
+            // Multiplayer path: Client/Host request goes through FireManager.
+            // Host will decide whether the flame is extinguished and sync it.
+            FireManager.Instance.RequestExtinguish(flameNode, amount);
         }
-
-        UpdateFlameVisual();
-    }
-
-    private void OnParticleCollision(GameObject other)
-    {
-        if (flameNode == null || !flameNode.IsBurning) return;
-        if (!other.CompareTag(extinguisherTag)) return;
-
-        ParticleSystem ps = other.GetComponent<ParticleSystem>();
-        if (ps == null) return;
-
-        int hitCount = ps.GetCollisionEvents(gameObject, collisionEvents);
-        if (hitCount <= 0) hitCount = 1;
-
-        hitCount = Mathf.Clamp(hitCount, 1, maxHitsPerFrame);
-        lastHitTime = Time.time;
-
-        extinguishProgress += hitCount * extinguishPerHit;
-        if (extinguishProgress > extinguishNeeded)
-            extinguishProgress = extinguishNeeded;
-
-        UpdateFlameVisual();
-
-        if (extinguishProgress >= extinguishNeeded)
+        else
         {
-            flameNode.Extinguish();
-            extinguishProgress = 0f;
-            flameNode.SetVisualDamp01(1f);
+            // Single-player fallback if FireManager is not in the scene.
+            flameNode.ApplyExtinguishFromFireManager(amount);
         }
-    }
-
-    private void UpdateFlameVisual()
-    {
-        if (flameNode == null) return;
-        if (!flameNode.IsBurning) return;
-
-        float progress01 = extinguishNeeded > 0.001f
-            ? Mathf.Clamp01(extinguishProgress / extinguishNeeded)
-            : 0f;
-
-        float start = Mathf.Clamp01(visualShrinkStart01);
-
-        if (progress01 < start)
-        {
-            flameNode.SetVisualDamp01(1f);
-            return;
-        }
-
-        float t = Mathf.InverseLerp(start, 1f, progress01);
-        float damp = Mathf.Lerp(1f, minVisualWhileBurning, t);
-
-        flameNode.SetVisualDamp01(damp);
     }
 
     private void OnValidate()
     {
-        if (extinguishNeeded < 0.01f) extinguishNeeded = 0.01f;
         if (extinguishPerHit < 0.001f) extinguishPerHit = 0.001f;
         if (maxHitsPerFrame < 1) maxHitsPerFrame = 1;
-        if (recoveryPerSecond < 0f) recoveryPerSecond = 0f;
-        if (recoveryDelayAfterSpray < 0f) recoveryDelayAfterSpray = 0f;
-
-        visualShrinkStart01 = Mathf.Clamp01(visualShrinkStart01);
-        minVisualWhileBurning = Mathf.Clamp01(minVisualWhileBurning);
+        if (sendRequestInterval < 0.02f) sendRequestInterval = 0.02f;
     }
 }
