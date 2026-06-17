@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: d4536cb2145610640b01b2faa489a678
+guid: e46367ec16df3084ea759f0b08bd2e05
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -8,7 +8,17 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Material
-    second: {fileID: 2100000, guid: 4bee6343f0276164eb7e2bb8c51f972a, type: 2}
+    second: {fileID: 2100000, guid: 4f9a8cc0f873a0741b6177dfd145e24a, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: CardboardBox_Base
+    second: {fileID: 2800000, guid: 7849871c14fc02c46b753ad56c11fc34, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: CardboardBox_Normal
+    second: {fileID: 2800000, guid: 83512cfb17eb0a547a2eda604f4c4858, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
