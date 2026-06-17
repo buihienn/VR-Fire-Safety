@@ -28,10 +28,10 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     [Header("Smoke / CO2 FX")]
     [SerializeField] private ParticleSystem smokeFX;
 
-    [Tooltip("Bật nếu object ParticleSystem đang bị SetActive(false) lúc đầu.")]
+    [Tooltip("Bật GameObject của ParticleSystem khi xịt. Chỉ áp dụng cho smoke child, không phải object chứa script này.")]
     [SerializeField] private bool enableSmokeObjectWhileSpraying = true;
 
-    [Tooltip("Chỉ người đang xịt mới bật Particle Collision để dập lửa. Client khác chỉ thấy smoke visual.")]
+    [Tooltip("Chỉ người đang xịt mới bật Particle Collision để dập lửa. Người khác chỉ thấy smoke visual.")]
     [SerializeField] private bool collisionOnlyForLocalSprayer = true;
 
     [Header("Safety Pin Requirement")]
@@ -39,20 +39,17 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     [SerializeField] private SafetyPinDetachOnPull safetyPin;
 
     [Header("Spray Limit")]
-    [Tooltip("Tổng thời gian được phép xịt cho cả bình.")]
+    [Tooltip("Tổng thời gian CO2 của bình. Ví dụ 60 nghĩa là bình chỉ xịt được tổng cộng 60 giây.")]
     [SerializeField] private float maxSpraySeconds = 60f;
 
-    [SerializeField, Tooltip("Runtime read-only. Thời gian xịt còn lại.")]
+    [SerializeField, Tooltip("Runtime read-only. Trong multiplayer, giá trị thật nằm ở RemainingSpraySecondsNet.")]
     private float remainingSpraySeconds = 60f;
 
     [Header("Start Delay")]
-    [Tooltip("Giống NozzleFireSmokeTrigger: bóp cò xong chờ một chút rồi mới phun.")]
-    [SerializeField] private float delayBeforeSpray = 1f;
+    [SerializeField] private float delayBeforeSpray = 0.5f;
 
     [Header("Optional Logic")]
     [SerializeField] private bool requireCanSpray = false;
-
-    [Tooltip("Nếu requireCanSpray = true, chỉ phun khi biến này true. Có thể gọi AllowSpray() sau khi rút chốt.")]
     [SerializeField] private bool canSpray = true;
 
     [Header("Audio")]
@@ -62,15 +59,27 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     [Header("Events")]
     public UnityEvent OnSprayStart;
     public UnityEvent OnSprayStop;
+    public UnityEvent OnSprayEmpty;
     public UnityEvent<float> OnUseProgressChanged;
 
     [Header("Debug")]
     [SerializeField] private bool fusionSpawned;
     [SerializeField] private bool isSprayingLocal;
-    [SerializeField] private bool localSmokeCanDamageFire;
     [SerializeField] private bool waitingForDelay;
     [SerializeField] private bool wantsToSpray;
+    [SerializeField] private bool localSmokeCanDamageFire;
     [SerializeField] private float currentUseProgress;
+
+    [Header("Spray Time Debug")]
+    [SerializeField] private float currentHoldSpraySeconds;
+    [SerializeField] private float totalUsedSpraySeconds;
+    [SerializeField] private float lastConsumeDeltaDebug;
+
+    [Header("Network Debug")]
+    [SerializeField] private bool hasStateAuthority;
+    [SerializeField] private bool isSprayingNetDebug;
+    [SerializeField] private float remainingNetDebug;
+    [SerializeField] private string spraySourceDebug;
 
     [Networked] private bool IsSprayingNet { get; set; }
     [Networked] private bool CanSprayNet { get; set; }
@@ -83,25 +92,30 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     private Vector3 releasedLocalPosition;
     private Vector3 pressedLocalPosition;
 
-    private float dampedUseStrength = 0f;
+    private float dampedUseStrength;
     private float lastUseTime;
 
     private Coroutine startRoutine;
+
     private bool originalSmokeCollisionEnabled;
     private bool hasCachedSmokeCollision;
 
     private bool lastObservedSprayingNet;
     private PlayerRef lastObservedSpraySourceNet;
 
-    public float RemainingSpraySeconds => remainingSpraySeconds;
-    public bool IsEmpty => remainingSpraySeconds <= 0f;
+    private bool emptyEventInvoked;
+
+    public float RemainingSpraySeconds => fusionSpawned ? RemainingSpraySecondsNet : remainingSpraySeconds;
+    public float MaxSpraySeconds => maxSpraySeconds;
+    public float TotalUsedSpraySeconds => totalUsedSpraySeconds;
+    public bool IsEmpty => RemainingSpraySeconds <= 0f;
     public bool IsSpraying => isSprayingLocal;
-    public bool CanSpray => canSpray;
+    public bool CanSpray => fusionSpawned ? CanSprayNet : canSpray;
     public ParticleSystem SmokeFX => smokeFX;
 
     private void Awake()
     {
-        remainingSpraySeconds = maxSpraySeconds;
+        remainingSpraySeconds = Mathf.Clamp(maxSpraySeconds, 0f, maxSpraySeconds);
 
         if (triggerLever != null)
         {
@@ -123,54 +137,53 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
         if (Object.HasStateAuthority)
         {
-            RemainingSpraySecondsNet = Mathf.Clamp(remainingSpraySeconds, 0f, maxSpraySeconds);
+            RemainingSpraySecondsNet = Mathf.Clamp(maxSpraySeconds, 0f, maxSpraySeconds);
             CanSprayNet = canSpray;
             IsSprayingNet = false;
             SpraySourcePlayerNet = PlayerRef.None;
         }
-        else
-        {
-            remainingSpraySeconds = RemainingSpraySecondsNet;
-            canSpray = CanSprayNet;
-        }
+
+        remainingSpraySeconds = RemainingSpraySecondsNet;
+        canSpray = CanSprayNet;
 
         lastObservedSprayingNet = IsSprayingNet;
         lastObservedSpraySourceNet = SpraySourcePlayerNet;
 
-        if (IsSprayingNet)
+        StopSprayVisual();
+        RefreshDebugValues();
+    }
+
+    private void Update()
+    {
+        // Single player fallback. Khi có Fusion thì KHÔNG trừ timer trong Update.
+        if (!fusionSpawned && isSprayingLocal)
         {
-            bool isLocalSource = IsLocalPlayer(SpraySourcePlayerNet);
-            StartSprayVisual(isLocalSource);
+            ConsumeSprayTimeLocal(Time.unscaledDeltaTime);
         }
-        else
-        {
-            StopSprayVisual();
-        }
+
+        RefreshDebugValues();
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (!Object.HasStateAuthority) return;
-
-        if (!IsSprayingNet) return;
-
-        float remaining = RemainingSpraySecondsNet;
-        remaining -= Runner.DeltaTime;
-
-        if (remaining <= 0f)
-        {
-            remaining = 0f;
-            RemainingSpraySecondsNet = remaining;
-            ApplySprayStateOnHost(false, SpraySourcePlayerNet);
+        if (!fusionSpawned)
             return;
-        }
 
-        RemainingSpraySecondsNet = remaining;
+        // Hướng 1: Host / StateAuthority là nơi duy nhất trừ CO2.
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!IsSprayingNet)
+            return;
+
+        float deltaTime = Runner != null ? Runner.DeltaTime : Time.fixedDeltaTime;
+        ConsumeSprayTimeAuthority(deltaTime);
     }
 
     public override void Render()
     {
-        if (!fusionSpawned) return;
+        if (!fusionSpawned)
+            return;
 
         remainingSpraySeconds = RemainingSpraySecondsNet;
         canSpray = CanSprayNet;
@@ -193,21 +206,118 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
                 StopSprayVisual();
             }
         }
+
+        RefreshDebugValues();
     }
 
-    private void Update()
+    private void ConsumeSprayTimeLocal(float deltaTime)
     {
-        // Single-player fallback khi chưa chạy Fusion.
-        if (fusionSpawned) return;
-
-        if (!isSprayingLocal) return;
-
-        remainingSpraySeconds -= Time.deltaTime;
+        if (deltaTime <= 0f)
+            return;
 
         if (remainingSpraySeconds <= 0f)
         {
-            remainingSpraySeconds = 0f;
-            StopSprayVisual();
+            ForceStopBecauseEmptyLocal();
+            return;
+        }
+
+        lastConsumeDeltaDebug = deltaTime;
+        currentHoldSpraySeconds += deltaTime;
+        totalUsedSpraySeconds += deltaTime;
+
+        remainingSpraySeconds = Mathf.Clamp(
+            remainingSpraySeconds - deltaTime,
+            0f,
+            maxSpraySeconds
+        );
+
+        if (remainingSpraySeconds <= 0f)
+            ForceStopBecauseEmptyLocal();
+    }
+
+    private void ConsumeSprayTimeAuthority(float deltaTime)
+    {
+        if (deltaTime <= 0f)
+            return;
+
+        if (RemainingSpraySecondsNet <= 0f)
+        {
+            ForceStopBecauseEmptyAuthority();
+            return;
+        }
+
+        lastConsumeDeltaDebug = deltaTime;
+        currentHoldSpraySeconds += deltaTime;
+        totalUsedSpraySeconds += deltaTime;
+
+        RemainingSpraySecondsNet = Mathf.Clamp(
+            RemainingSpraySecondsNet - deltaTime,
+            0f,
+            maxSpraySeconds
+        );
+
+        remainingSpraySeconds = RemainingSpraySecondsNet;
+
+        if (RemainingSpraySecondsNet <= 0f)
+            ForceStopBecauseEmptyAuthority();
+    }
+
+    private void ForceStopBecauseEmptyLocal()
+    {
+        remainingSpraySeconds = 0f;
+        wantsToSpray = false;
+
+        CancelStartDelay();
+        StopSprayVisual();
+        InvokeEmptyEventOnce();
+    }
+
+    private void ForceStopBecauseEmptyAuthority()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        RemainingSpraySecondsNet = 0f;
+        remainingSpraySeconds = 0f;
+
+        IsSprayingNet = false;
+        SpraySourcePlayerNet = PlayerRef.None;
+
+        RPC_ApplySprayState(false, PlayerRef.None, RemainingSpraySecondsNet);
+
+        wantsToSpray = false;
+
+        CancelStartDelay();
+        StopSprayVisual();
+        InvokeEmptyEventOnce();
+    }
+
+    private void InvokeEmptyEventOnce()
+    {
+        if (emptyEventInvoked)
+            return;
+
+        emptyEventInvoked = true;
+        OnSprayEmpty?.Invoke();
+    }
+
+    private void RefreshDebugValues()
+    {
+        hasStateAuthority = fusionSpawned && Object != null && Object.HasStateAuthority;
+        isSprayingNetDebug = fusionSpawned && IsSprayingNet;
+        remainingNetDebug = fusionSpawned ? RemainingSpraySecondsNet : remainingSpraySeconds;
+
+        if (!fusionSpawned)
+        {
+            spraySourceDebug = "No Fusion";
+        }
+        else if (SpraySourcePlayerNet == PlayerRef.None)
+        {
+            spraySourceDebug = "None";
+        }
+        else
+        {
+            spraySourceDebug = $"Player_{SpraySourcePlayerNet.PlayerId}";
         }
     }
 
@@ -215,10 +325,8 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     {
         CancelStartDelay();
 
-        if (fusionSpawned && IsSpraying)
-        {
+        if (fusionSpawned && isSprayingLocal)
             RequestStopSpray();
-        }
 
         StopSprayVisual();
         UpdateLever(0f);
@@ -273,7 +381,8 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
     private void UpdateLever(float progress)
     {
-        if (triggerLever == null) return;
+        if (triggerLever == null)
+            return;
 
         triggerLever.localRotation = Quaternion.Lerp(
             releasedLocalRotation,
@@ -293,7 +402,7 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
     private void UpdateSprayByProgress(float progress)
     {
-        if (!CanAttemptSpray())
+        if (!CanAttemptSprayLocal())
         {
             wantsToSpray = false;
             CancelStartDelay();
@@ -339,9 +448,14 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         waitingForDelay = false;
         startRoutine = null;
 
-        if (!wantsToSpray) yield break;
-        if (!CanAttemptSpray()) yield break;
-        if (currentUseProgress < sprayThreshold) yield break;
+        if (!wantsToSpray)
+            yield break;
+
+        if (!CanAttemptSprayLocal())
+            yield break;
+
+        if (currentUseProgress < sprayThreshold)
+            yield break;
 
         RequestStartSpray();
     }
@@ -357,12 +471,12 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         }
     }
 
-    private bool CanAttemptSpray()
+    private bool CanAttemptSprayLocal()
     {
-        if (IsEmpty)
+        if (RemainingSpraySeconds <= 0f)
             return false;
 
-        if (requireCanSpray && !canSpray)
+        if (requireCanSpray && !CanSpray)
             return false;
 
         if (requirePinRemoved)
@@ -380,24 +494,57 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         return true;
     }
 
+    private bool CanAttemptSprayAuthority(bool requestingClientSaysPinRemoved)
+    {
+        if (RemainingSpraySecondsNet <= 0f)
+            return false;
+
+        if (requireCanSpray && !CanSprayNet)
+            return false;
+
+        if (requirePinRemoved)
+        {
+            bool authorityKnowsPinRemoved = safetyPin != null && safetyPin.IsRemoved;
+
+            if (!authorityKnowsPinRemoved && !requestingClientSaysPinRemoved)
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool IsPinRemovedLocal()
+    {
+        if (!requirePinRemoved)
+            return true;
+
+        return safetyPin != null && safetyPin.IsRemoved;
+    }
+
     private void RequestStartSpray()
     {
-        if (!CanAttemptSpray()) return;
+        if (!CanAttemptSprayLocal())
+            return;
 
-        // Local responsive visual.
-        StartSprayVisual(true);
+        currentHoldSpraySeconds = 0f;
 
         if (!fusionSpawned)
+        {
+            StartSprayVisual(true);
             return;
+        }
+
+        bool pinRemovedLocal = IsPinRemovedLocal();
 
         if (Object.HasStateAuthority)
         {
             PlayerRef source = Runner != null ? Runner.LocalPlayer : PlayerRef.None;
-            ApplySprayStateOnHost(true, source);
+            ApplySprayStateOnAuthority(true, source, pinRemovedLocal);
         }
         else
         {
-            RPC_RequestStartSpray();
+            // Client chỉ gửi request. Không tự bật smoke trước khi Host xác nhận.
+            RPC_RequestStartSpray(pinRemovedLocal);
         }
     }
 
@@ -405,52 +552,49 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     {
         CancelStartDelay();
 
-        // Local responsive stop.
-        StopSprayVisual();
-
         if (!fusionSpawned)
+        {
+            StopSprayVisual();
             return;
+        }
 
         if (Object.HasStateAuthority)
         {
             PlayerRef source = Runner != null ? Runner.LocalPlayer : PlayerRef.None;
-            ApplySprayStateOnHost(false, source);
+            ApplySprayStateOnAuthority(false, source, true);
         }
         else
         {
             RPC_RequestStopSpray();
+            StopSprayVisual();
         }
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestStartSpray(RpcInfo info = default)
+    private void RPC_RequestStartSpray(bool requestingClientSaysPinRemoved, RpcInfo info = default)
     {
-        ApplySprayStateOnHost(true, info.Source);
+        ApplySprayStateOnAuthority(true, info.Source, requestingClientSaysPinRemoved);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestStopSpray(RpcInfo info = default)
     {
-        ApplySprayStateOnHost(false, info.Source);
+        ApplySprayStateOnAuthority(false, info.Source, true);
     }
 
-    private void ApplySprayStateOnHost(bool spraying, PlayerRef source)
+    private void ApplySprayStateOnAuthority(bool spraying, PlayerRef source, bool requestingClientSaysPinRemoved)
     {
-        if (!Object.HasStateAuthority) return;
+        if (fusionSpawned && !Object.HasStateAuthority)
+            return;
 
         if (spraying)
         {
-            if (RemainingSpraySecondsNet <= 0f)
+            if (!CanAttemptSprayAuthority(requestingClientSaysPinRemoved))
             {
                 IsSprayingNet = false;
+                SpraySourcePlayerNet = PlayerRef.None;
                 RPC_ApplySprayState(false, source, RemainingSpraySecondsNet);
-                return;
-            }
-
-            if (requireCanSpray && !CanSprayNet)
-            {
-                IsSprayingNet = false;
-                RPC_ApplySprayState(false, source, RemainingSpraySecondsNet);
+                RefreshDebugValues();
                 return;
             }
 
@@ -461,8 +605,11 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         else
         {
             IsSprayingNet = false;
+            SpraySourcePlayerNet = PlayerRef.None;
             RPC_ApplySprayState(false, source, RemainingSpraySecondsNet);
         }
+
+        RefreshDebugValues();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
@@ -470,7 +617,7 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     {
         remainingSpraySeconds = Mathf.Clamp(remaining, 0f, maxSpraySeconds);
 
-        if (spraying)
+        if (spraying && remainingSpraySeconds > 0f)
         {
             bool isLocalSource = IsLocalPlayer(source);
             StartSprayVisual(isLocalSource);
@@ -479,10 +626,18 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         {
             StopSprayVisual();
         }
+
+        RefreshDebugValues();
     }
 
     private void StartSprayVisual(bool canDamageFire)
     {
+        if (RemainingSpraySeconds <= 0f)
+        {
+            StopSprayVisual();
+            return;
+        }
+
         bool wasSpraying = isSprayingLocal;
 
         isSprayingLocal = true;
@@ -511,9 +666,6 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
     private void StopSprayVisual()
     {
-        if (!isSprayingLocal && smokeFX == null)
-            return;
-
         bool wasSpraying = isSprayingLocal;
 
         isSprayingLocal = false;
@@ -539,10 +691,10 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         isSprayingLocal = false;
         localSmokeCanDamageFire = false;
 
-        if (smokeFX == null) return;
+        if (smokeFX == null)
+            return;
 
         SetSmokeCollisionEnabled(false);
-
         smokeFX.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
         if (enableSmokeObjectWhileSpraying)
@@ -551,22 +703,26 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
     private void CacheSmokeCollisionState()
     {
-        if (smokeFX == null) return;
+        if (smokeFX == null)
+            return;
 
-        var collision = smokeFX.collision;
+        ParticleSystem.CollisionModule collision = smokeFX.collision;
         originalSmokeCollisionEnabled = collision.enabled;
         hasCachedSmokeCollision = true;
     }
 
     private void SetSmokeCollisionEnabled(bool enabledForDamage)
     {
-        if (smokeFX == null) return;
-        if (!collisionOnlyForLocalSprayer) return;
+        if (smokeFX == null)
+            return;
+
+        if (!collisionOnlyForLocalSprayer)
+            return;
 
         if (!hasCachedSmokeCollision)
             CacheSmokeCollisionState();
 
-        var collision = smokeFX.collision;
+        ParticleSystem.CollisionModule collision = smokeFX.collision;
         collision.enabled = enabledForDamage && originalSmokeCollisionEnabled;
     }
 
@@ -584,7 +740,7 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
         if (Object.HasStateAuthority)
         {
-            ApplyCanSprayOnHost(value);
+            ApplyCanSprayOnAuthority(value);
         }
         else
         {
@@ -595,12 +751,13 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestSetCanSpray(bool value)
     {
-        ApplyCanSprayOnHost(value);
+        ApplyCanSprayOnAuthority(value);
     }
 
-    private void ApplyCanSprayOnHost(bool value)
+    private void ApplyCanSprayOnAuthority(bool value)
     {
-        if (!Object.HasStateAuthority) return;
+        if (!Object.HasStateAuthority)
+            return;
 
         CanSprayNet = value;
         canSpray = value;
@@ -608,7 +765,9 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         RPC_ApplyCanSpray(value);
 
         if (!value)
-            ApplySprayStateOnHost(false, SpraySourcePlayerNet);
+            ApplySprayStateOnAuthority(false, SpraySourcePlayerNet, true);
+
+        RefreshDebugValues();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
@@ -618,6 +777,8 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
         if (!canSpray)
             StopSprayVisual();
+
+        RefreshDebugValues();
     }
 
     public void AllowSpray()
@@ -632,9 +793,14 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
 
     public void Refill()
     {
+        emptyEventInvoked = false;
+
         if (!fusionSpawned)
         {
             remainingSpraySeconds = maxSpraySeconds;
+            totalUsedSpraySeconds = 0f;
+            currentHoldSpraySeconds = 0f;
+            StopSprayVisual();
             return;
         }
 
@@ -642,6 +808,15 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         {
             RemainingSpraySecondsNet = maxSpraySeconds;
             remainingSpraySeconds = maxSpraySeconds;
+
+            totalUsedSpraySeconds = 0f;
+            currentHoldSpraySeconds = 0f;
+
+            IsSprayingNet = false;
+            SpraySourcePlayerNet = PlayerRef.None;
+
+            RPC_ApplySprayState(false, PlayerRef.None, RemainingSpraySecondsNet);
+            RefreshDebugValues();
         }
         else
         {
@@ -652,8 +827,22 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestRefill()
     {
+        if (!Object.HasStateAuthority)
+            return;
+
+        emptyEventInvoked = false;
+
         RemainingSpraySecondsNet = maxSpraySeconds;
         remainingSpraySeconds = maxSpraySeconds;
+
+        totalUsedSpraySeconds = 0f;
+        currentHoldSpraySeconds = 0f;
+
+        IsSprayingNet = false;
+        SpraySourcePlayerNet = PlayerRef.None;
+
+        RPC_ApplySprayState(false, PlayerRef.None, RemainingSpraySecondsNet);
+        RefreshDebugValues();
     }
 
     private bool IsLocalPlayer(PlayerRef player)
@@ -662,7 +851,7 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
             return true;
 
         if (player == PlayerRef.None)
-            return Object.HasStateAuthority;
+            return Object != null && Object.HasStateAuthority;
 
         return player == Runner.LocalPlayer;
     }

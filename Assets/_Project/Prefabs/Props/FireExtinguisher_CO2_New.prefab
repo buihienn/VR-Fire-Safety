@@ -351,12 +351,15 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 557195193584299027}
+  - component: {fileID: 5711975661341779121}
   - component: {fileID: 4116172800630246910}
   - component: {fileID: 6097875054720744126}
   - component: {fileID: 3181959756335968460}
   - component: {fileID: 8143270188165741571}
-  - component: {fileID: 16332436835915123}
-  - component: {fileID: 1644543145363170688}
+  - component: {fileID: 3366035153686279268}
+  - component: {fileID: 237611785178269660}
+  - component: {fileID: 8874909688060893634}
+  - component: {fileID: 7525984820781633572}
   m_Layer: 0
   m_Name: FireExtinguisher_CO2_New
   m_TagString: Untagged
@@ -384,6 +387,28 @@ Transform:
   - {fileID: 3427617031455908433}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!114 &5711975661341779121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654166493758443201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b023183069df224080314a560e6e1ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blockId: e9b4b64f-1c7e-4dff-8f3c-ce409bdc3951
+  instanceId: 784d54b9-904b-4c68-913a-d494d5f1d5cf
+  version: 1
+  installationRoutineCheckpoint:
+    _installationRoutineId: 54548176-30f4-4a4a-8057-340a383c6102
+    _installationVariants:
+    - _memberName: _useGravity
+      _value: '{}'
+    - _memberName: installMatchmaking
+      _value: '{"value__":0}'
 --- !u!54 &4116172800630246910
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -461,7 +486,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 654166493758443201}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9e0ea06833e0c744cbb30028fc85f339, type: 3}
   m_Name: 
@@ -502,9 +527,9 @@ MonoBehaviour:
   collisionOnlyForLocalSprayer: 1
   requirePinRemoved: 1
   safetyPin: {fileID: 8597454900626273323}
-  maxSpraySeconds: 60
-  remainingSpraySeconds: 60
-  delayBeforeSpray: 1
+  maxSpraySeconds: 10
+  remainingSpraySeconds: 10
+  delayBeforeSpray: 0.5
   requireCanSpray: 0
   canSpray: 1
   useAudio: 1
@@ -515,16 +540,39 @@ MonoBehaviour:
   OnSprayStop:
     m_PersistentCalls:
       m_Calls: []
+  OnSprayEmpty:
+    m_PersistentCalls:
+      m_Calls: []
   OnUseProgressChanged:
     m_PersistentCalls:
       m_Calls: []
   fusionSpawned: 0
   isSprayingLocal: 0
-  localSmokeCanDamageFire: 0
   waitingForDelay: 0
   wantsToSpray: 0
+  localSmokeCanDamageFire: 0
   currentUseProgress: 0
---- !u!114 &16332436835915123
+  currentHoldSpraySeconds: 0
+  totalUsedSpraySeconds: 0
+  lastConsumeDeltaDebug: 0
+  hasStateAuthority: 0
+  isSprayingNetDebug: 0
+  remainingNetDebug: 0
+  spraySourceDebug: 
+--- !u!114 &3366035153686279268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654166493758443201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 413bd4e9cbbc96b46ac5a1d62a4105d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UseGravity: 1
+--- !u!114 &237611785178269660
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -536,15 +584,28 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 2498287051
+  SortKey: 65073802
   ObjectInterest: 1
-  Flags: 262145
+  Flags: 1
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 8143270188165741571}
-  - {fileID: 1644543145363170688}
+  - {fileID: 8874909688060893634}
+  - {fileID: 7525984820781633572}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &1644543145363170688
+--- !u!114 &8874909688060893634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654166493758443201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b72e9ba2c21430c818f53e1079c2a93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7525984820781633572
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -560,7 +621,7 @@ MonoBehaviour:
   SyncScale: 0
   SyncParent: 0
   _autoAOIOverride: 1
-  DisableSharedModeInterpolation: 0
+  DisableSharedModeInterpolation: 1
 --- !u!1 &1227785828543762549
 GameObject:
   m_ObjectHideFlags: 0
@@ -8159,7 +8220,7 @@ MonoBehaviour:
     _ringRequirement: 2
     _pinkyRequirement: 2
     _unselectMode: 0
-  _strengthDeadzone: 0.2
+  _strengthDeadzone: 0.3
   _relaxedHandGrabPoses:
   - {fileID: 4206248475100650199}
   _tightHandGrabPoses:
@@ -9438,7 +9499,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startAnchor: {fileID: 2638648115628424701}
   endAnchor: {fileID: 345685583595000569}
-  maxLength: 0.5
+  maxLength: 0.6
   clampToMaxLength: 1
   disableSeconds: 0.2
 --- !u!1 &4636169001368457305
@@ -11631,7 +11692,7 @@ MonoBehaviour:
     _ringRequirement: 2
     _pinkyRequirement: 2
     _unselectMode: 0
-  _strengthDeadzone: 0.2
+  _strengthDeadzone: 0.3
   _relaxedHandGrabPoses:
   - {fileID: 1634115906435559130}
   _tightHandGrabPoses:
