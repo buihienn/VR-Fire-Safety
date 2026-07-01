@@ -40,7 +40,7 @@ public class GameFlowManager : NetworkBehaviour
 
     [Header("Scene")]
     [SerializeField] private SceneTransitionManager sceneTransitionManager;
-    [SerializeField] private int gameOverSceneIndex = 2;
+    [SerializeField] private int endGameSceneIndex = 2;
 
     [Header("Debug")]
     [SerializeField] private float remainingSeconds;
@@ -294,7 +294,7 @@ public class GameFlowManager : NetworkBehaviour
         if (returnRoutine != null)
             StopCoroutine(returnRoutine);
 
-        returnRoutine = StartCoroutine(ReturnToGameOverSceneRoutine());
+        returnRoutine = StartCoroutine(ReturnToEndGameSceneRoutine());
     }
 
     private void GetEndMessage(
@@ -355,7 +355,7 @@ public class GameFlowManager : NetworkBehaviour
         }
     }
 
-    private IEnumerator ReturnToGameOverSceneRoutine()
+    private IEnumerator ReturnToEndGameSceneRoutine()
     {
         yield return new WaitForSecondsRealtime(returnDelaySeconds);
 
@@ -363,7 +363,7 @@ public class GameFlowManager : NetworkBehaviour
             sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
 
         if (sceneTransitionManager != null)
-            sceneTransitionManager.GoToScene(gameOverSceneIndex);
+            sceneTransitionManager.GoToScene(endGameSceneIndex);
     }
 
     private bool CheckWinCondition()
