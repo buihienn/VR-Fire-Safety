@@ -812,14 +812,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4271810290513517703}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.14650221, y: -0.6770745, z: -0.0033438958, w: 0.7211768}
+  m_LocalPosition: {x: 0.029, y: -0.0033, z: -0.0258}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3072307605810052654}
   m_Father: {fileID: 7962352979081468411}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -12.465, y: -87.64, z: 11.434}
 --- !u!114 &3011691556061057689
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1057,13 +1057,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4667070512766777882}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.5807761, y: 0.60328823, z: -0.41065845, w: 0.36069673}
-  m_LocalPosition: {x: -0.1165, y: 0.0032, z: 0.003}
+  m_LocalRotation: {x: -0.5523881, y: 0.5372878, z: -0.2597795, w: 0.58198273}
+  m_LocalPosition: {x: -0.0855, y: -0.0345, z: -0.0311}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1569647138265533342}
-  m_LocalEulerAnglesHint: {x: 4.389, y: -246.19, z: -90.683}
+  m_LocalEulerAnglesHint: {x: -21.334, y: -258.38, z: -74.127}
 --- !u!114 &396438208436616691
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1104,26 +1104,26 @@ MonoBehaviour:
     - {x: 0.1151107, y: 0.04873112, z: -0.001109484, w: 0.992156}
   _targetHandPose:
     _handedness: 1
-    _fingersFreedom: 0200000002000000010000000100000000000000
+    _fingersFreedom: 0200000002000000020000000200000002000000
     _jointRotations:
-    - {x: 0.13749273, y: -0.4297662, z: 0.7185201, w: 0.52926904}
-    - {x: 0.36588198, y: 0.037105158, z: -0.08833702, w: 0.92571604}
+    - {x: 0.18750966, y: -0.5471504, z: 0.6437478, w: 0.5010543}
+    - {x: 0.102022134, y: 0.05960296, z: -0.075018086, w: 0.99015725}
     - {x: 0.16024499, y: -0.046799608, z: 0.08149572, w: 0.9825934}
     - {x: 0, y: 0, z: 0, w: 1}
-    - {x: 0.21014687, y: -0.160137, z: 0.0370515, w: 0.96375394}
-    - {x: 0.13075913, y: 0.003759919, z: -0.026288586, w: 0.99105847}
+    - {x: 0.53885657, y: -0.13810462, z: -0.116401926, w: 0.822807}
+    - {x: 0.0001286864, y: 0.007162964, z: -0.02557187, w: 0.9996473}
     - {x: 0.13933256, y: 0.023472248, z: -0.019977983, w: 0.9897658}
     - {x: 0, y: 0, z: 0, w: 1}
-    - {x: 0.27360073, y: -0.050429877, z: -0.017068144, w: 0.9603688}
+    - {x: 0.4560417, y: -0.05645048, z: -0.13129738, w: 0.8784078}
     - {x: 0.20427474, y: 0.0019674823, z: -0.0123084, w: 0.9788343}
-    - {x: 0.1656981, y: -0.006091512, z: -0.040038712, w: 0.9853446}
+    - {x: -0.07475953, y: 0.0036606612, z: -0.040333774, w: 0.9963789}
     - {x: 0, y: 0, z: 0, w: 1}
-    - {x: 0.18699703, y: 0.07966947, z: -0.06479001, w: 0.9769786}
-    - {x: 0.3017412, y: -0.007293772, z: -0.039555248, w: 0.95254105}
+    - {x: 0.46428722, y: 0.05737038, z: -0.12134971, w: 0.8754543}
+    - {x: 0.19332978, y: -0.0028248057, z: -0.040122844, w: 0.980309}
     - {x: 0.09428783, y: -0.029594442, z: -0.008889826, w: 0.99506533}
     - {x: 0.018333547, y: 0.14033662, z: -0.2070356, w: 0.96804225}
-    - {x: -0.062676735, y: 0.051014837, z: 0.09903724, w: 0.99179673}
-    - {x: 0.36025816, y: 0.025496999, z: -0.06776038, w: 0.930039}
+    - {x: 0.4015117, y: 0.14131601, z: 0.084618025, w: 0.90092057}
+    - {x: 0.18046832, y: 0.037687868, z: -0.061815634, w: 0.9809127}
     - {x: 0.11511071, y: -0.04873112, z: 0.0011094844, w: 0.992156}
   _ghostProvider: {fileID: 0}
   _handGhostProvider: {fileID: 11400000, guid: 9b9df4f150839de48af887d742aabf53, type: 2}
@@ -1153,13 +1153,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5103387400996273477}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5971618, y: 0.5698084, z: -0.3751343, w: -0.4218891}
-  m_LocalPosition: {x: 0.1136, y: -0.0131, z: 0.0006}
+  m_LocalRotation: {x: 0.54354763, y: 0.3652239, z: -0.37714055, w: -0.65492946}
+  m_LocalPosition: {x: 0.0897, y: -0.0459, z: -0.0407}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9213129183408604567}
-  m_LocalEulerAnglesHint: {x: -4.38, y: 248.677, z: 89.693}
+  m_LocalEulerAnglesHint: {x: -25.88, y: 279.102, z: 82.037}
 --- !u!114 &1005832091933021723
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1200,26 +1200,26 @@ MonoBehaviour:
     - {x: 0.1151107, y: 0.04873112, z: -0.001109484, w: 0.992156}
   _targetHandPose:
     _handedness: 0
-    _fingersFreedom: 0200000002000000010000000100000000000000
+    _fingersFreedom: 0200000002000000020000000200000002000000
     _jointRotations:
-    - {x: 0.13749275, y: 0.42976618, z: -0.71852005, w: 0.5292691}
-    - {x: 0.36588192, y: -0.037105154, z: 0.08833701, w: 0.9257161}
+    - {x: 0.36797488, y: 0.41204292, z: -0.68183273, w: 0.47949895}
+    - {x: -0.046432365, y: -0.07010102, z: 0.065315075, w: 0.99431574}
     - {x: 0.16024499, y: 0.0467996, z: -0.08149571, w: 0.9825934}
     - {x: 0, y: 0, z: 0, w: 1}
-    - {x: 0.21014684, y: 0.16013698, z: -0.037051495, w: 0.96375394}
+    - {x: 0.4490023, y: 0.1606831, z: 0.097107515, w: 0.8735835}
     - {x: 0.1307591, y: -0.003759917, z: 0.02628858, w: 0.9910585}
     - {x: 0.13933255, y: -0.023472248, z: 0.019977985, w: 0.9897658}
     - {x: 0, y: 0, z: 0, w: 1}
-    - {x: 0.27360067, y: 0.050429873, z: 0.017068146, w: 0.96036875}
-    - {x: 0.2042747, y: -0.001967482, z: 0.0123084, w: 0.9788343}
+    - {x: 0.4855352, y: 0.072850384, z: 0.05593482, w: 0.8693789}
+    - {x: 0.16145207, y: -0.0025018153, z: 0.01221119, w: 0.9868019}
     - {x: 0.16569808, y: 0.006091511, z: 0.04003871, w: 0.98534465}
     - {x: 0, y: 0, z: 0, w: 1}
-    - {x: 0.18699703, y: -0.07966947, z: 0.06479001, w: 0.97697854}
-    - {x: 0.3017412, y: 0.007293773, z: 0.03955524, w: 0.9525411}
-    - {x: 0.09428782, y: 0.029594442, z: 0.008889826, w: 0.9950654}
+    - {x: 0.46752372, y: -0.09276167, z: 0.04391791, w: 0.8780024}
+    - {x: 0.27734205, y: 0.006282306, z: 0.039728444, w: 0.95992893}
+    - {x: -0.046827685, y: 0.028046973, z: 0.012970185, w: 0.9984249}
     - {x: 0.01833355, y: -0.1403366, z: 0.2070356, w: 0.9680423}
-    - {x: -0.06267674, y: -0.05101484, z: -0.09903724, w: 0.9917967}
-    - {x: 0.3602582, y: -0.025497, z: 0.06776039, w: 0.930039}
+    - {x: 0.39968255, y: -0.22795655, z: -0.17496122, w: 0.87044716}
+    - {x: 0.23299077, y: -0.034307115, z: 0.063754156, w: 0.96978027}
     - {x: 0.1151107, y: 0.04873112, z: -0.001109484, w: 0.992156}
   _ghostProvider: {fileID: 0}
   _handGhostProvider: {fileID: 11400000, guid: 9b9df4f150839de48af887d742aabf53, type: 2}
@@ -1380,7 +1380,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: e9b4b64f-1c7e-4dff-8f3c-ce409bdc3951
-  instanceId: 7ced323b-464e-4af4-a8e3-fb15d3366758
+  instanceId: 66907ce8-6a5c-4459-af9f-a04a004daf01
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 54548176-30f4-4a4a-8057-340a383c6102
@@ -1464,8 +1464,8 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1506,7 +1506,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1737,14 +1737,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9003561822867057922}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.046005648, y: 0.37984407, z: 0.06533925, w: 0.92159253}
+  m_LocalPosition: {x: -0.0085, y: -0.0014, z: -0.0048}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7932913627277644312}
   m_Father: {fileID: 7962352979081468411}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -7.726, y: 44.465, z: 4.949}
 --- !u!114 &7426388624936246917
 MonoBehaviour:
   m_ObjectHideFlags: 0
