@@ -11,8 +11,20 @@ public class GasSystem : NetworkBehaviour
     [Tooltip("Local cached gas value. Safe for other scripts to read anytime.")]
     [Range(0f, 1f)] public float gas01 = 0f;
 
-    [Networked, OnChangedRender(nameof(OnGas01NetChanged))]
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
     private float Gas01Net { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private float MainValveOpen01Net { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private bool HoseLeakNet { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private float LeakStrength01Net { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private bool LeakActiveNet { get; set; }
 
     [Header("Leak Causes")]
     public bool hoseLeak = false;
@@ -68,6 +80,7 @@ public class GasSystem : NetworkBehaviour
     public bool MainSupplyOpen => mainSupplyOpen;
     public bool LeakActive => leakActive;
     public bool HasGasInRoom => gas01 > 0.001f;
+    public float AcceptedMainValveOpen01 => mainValveOpen01;
 
     public event Action<int> GasLevelChanged;
     public int CurrentGasLevel => currentGasLevel;
@@ -101,13 +114,18 @@ public class GasSystem : NetworkBehaviour
 
         if (Object.HasStateAuthority)
         {
-            // Host uses the inspector/local value as the initial network value.
-            Gas01Net = Mathf.Clamp01(gas01);
+            // Authority uses inspector/local values as the initial network truth.
+            gas01 = Mathf.Clamp01(gas01);
+            mainValveOpen01 = Mathf.Clamp01(mainValveOpen01);
+            UpdateKnobLeak();
+            UpdateVentilation();
+            UpdateDerivedLeakState();
+            WriteNetworkGasState();
         }
         else
         {
-            // Client reads the network value once Fusion is ready.
-            gas01 = Mathf.Clamp01(Gas01Net);
+            // Clients cache the accepted replicated values. They do not simulate gas.
+            ApplyNetworkGasStateToCache();
         }
 
         currentGasLevel = GasLevel();
@@ -132,13 +150,10 @@ public class GasSystem : NetworkBehaviour
             return;
         }
 
-        // In multiplayer, non-host clients do not change gas01.
-        // But they may still update derived read-only values for UI/debug.
+        // In multiplayer, non-authority clients only mirror accepted replicated state.
         if (!Object.HasStateAuthority)
         {
-            UpdateKnobLeak();
-            UpdateVentilation();
-            UpdateDerivedLeakState();
+            ApplyNetworkGasStateToCache();
         }
     }
 
@@ -172,7 +187,7 @@ public class GasSystem : NetworkBehaviour
         gas01 = Mathf.Clamp01(gas01);
 
         if (writeToNetwork)
-            Gas01Net = gas01;
+            WriteNetworkGasState();
 
         RefreshGasLevel();
     }
@@ -189,12 +204,34 @@ public class GasSystem : NetworkBehaviour
         leakActive = leakStrength01 > 0.0001f;
     }
 
-    private void OnGas01NetChanged()
+    private void WriteNetworkGasState()
     {
-        // This is called on clients when Host changes Gas01Net.
-        // Keep gas01 as the safe value other scripts can read.
+        if (!fusionSpawned || !Object.HasStateAuthority)
+            return;
+
+        Gas01Net = Mathf.Clamp01(gas01);
+        MainValveOpen01Net = Mathf.Clamp01(mainValveOpen01);
+        HoseLeakNet = hoseLeak;
+        LeakStrength01Net = Mathf.Clamp01(leakStrength01);
+        LeakActiveNet = leakActive;
+    }
+
+    private void ApplyNetworkGasStateToCache()
+    {
         gas01 = Mathf.Clamp01(Gas01Net);
+        mainValveOpen01 = Mathf.Clamp01(MainValveOpen01Net);
+        hoseLeak = HoseLeakNet;
+        leakStrength01 = Mathf.Clamp01(LeakStrength01Net);
+        leakActive = LeakActiveNet;
+        leakPresent = hoseLeak || leakActive;
+        mainSupplyOpen = mainValveOpen01 > mainValveOpenThreshold;
         RefreshGasLevel();
+    }
+
+    private void OnGasStateNetChanged()
+    {
+        // Keep public cached fields safe for local UI, visuals, and old scripts.
+        ApplyNetworkGasStateToCache();
     }
 
     private void UpdateKnobLeak()
@@ -264,7 +301,7 @@ public class GasSystem : NetworkBehaviour
 
         if (Object.HasStateAuthority)
         {
-            mainValveOpen01 = value;
+            ApplyMainValveOpen01(value);
         }
         else
         {
@@ -273,9 +310,17 @@ public class GasSystem : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestSetMainValveOpen01(float value)
+    private void RPC_RequestSetMainValveOpen01(float value, RpcInfo info = default)
+    {
+        ApplyMainValveOpen01(value);
+    }
+
+    private void ApplyMainValveOpen01(float value)
     {
         mainValveOpen01 = Mathf.Clamp01(value);
+        UpdateDerivedLeakState();
+        CheckLeakEvent();
+        WriteNetworkGasState();
     }
 
     public void SetHoseLeak(bool value)
@@ -288,7 +333,7 @@ public class GasSystem : NetworkBehaviour
 
         if (Object.HasStateAuthority)
         {
-            hoseLeak = value;
+            ApplyHoseLeak(value);
         }
         else
         {
@@ -299,7 +344,15 @@ public class GasSystem : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestSetHoseLeak(bool value)
     {
+        ApplyHoseLeak(value);
+    }
+
+    private void ApplyHoseLeak(bool value)
+    {
         hoseLeak = value;
+        UpdateDerivedLeakState();
+        CheckLeakEvent();
+        WriteNetworkGasState();
     }
 
     public void SetGas01(float value)
@@ -316,21 +369,13 @@ public class GasSystem : NetworkBehaviour
         if (Object.HasStateAuthority)
         {
             gas01 = value;
-            Gas01Net = value;
             RefreshGasLevel();
+            WriteNetworkGasState();
         }
         else
         {
-            RPC_RequestSetGas01(value);
+            Debug.LogWarning("Non-authority clients cannot set authoritative gas concentration.", this);
         }
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestSetGas01(float value)
-    {
-        gas01 = Mathf.Clamp01(value);
-        Gas01Net = gas01;
-        RefreshGasLevel();
     }
 
     // Helper neu script van cua ban dang dung goc quay -45 -> 135
