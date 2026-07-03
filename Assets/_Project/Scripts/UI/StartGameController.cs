@@ -1,13 +1,29 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class StartButton : MonoBehaviour
 {
+    [SerializeField] private int networkGameSceneBuildIndex = 4;
     [SerializeField] private GameObject startMenuLayout;
     [SerializeField] private GameObject loadingLayout;
     [SerializeField] private SceneTransitionManager sceneTransitionManager;
 
     public void StartGame()
     {
+        if (SceneManager.GetActiveScene().name == "StartScene")
+        {
+            LobbyNetworkSceneStart lobbySceneStart = FindFirstObjectByType<LobbyNetworkSceneStart>();
+            if (lobbySceneStart == null)
+            {
+                GameObject starter = new GameObject(nameof(LobbyNetworkSceneStart));
+                lobbySceneStart = starter.AddComponent<LobbyNetworkSceneStart>();
+            }
+
+            lobbySceneStart.ConfigureGameScene(networkGameSceneBuildIndex);
+            lobbySceneStart.StartGameForRoom();
+            return;
+        }
+
         if (startMenuLayout != null)
         {
             startMenuLayout.SetActive(false);
