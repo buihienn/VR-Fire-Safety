@@ -32,38 +32,6 @@ public class StartSceneLobbyUI : MonoBehaviour
         ResolveMissingReferences();
     }
 
-    private void OnEnable()
-    {
-        if (customMatchmaking == null)
-        {
-            return;
-        }
-
-        customMatchmaking.onRoomCreationFinished.AddListener(OnRoomOperationFinished);
-        customMatchmaking.onRoomJoinFinished.AddListener(OnRoomOperationFinished);
-
-        if (createButton != null) createButton.onClick.AddListener(CreateRoom);
-        if (joinButton != null) joinButton.onClick.AddListener(JoinRoom);
-        if (copyButton != null) copyButton.onClick.AddListener(CopyRoomId);
-        if (startButton != null) startButton.onClick.AddListener(StartGame);
-    }
-
-    private void OnDisable()
-    {
-        if (customMatchmaking == null)
-        {
-            return;
-        }
-
-        customMatchmaking.onRoomCreationFinished.RemoveListener(OnRoomOperationFinished);
-        customMatchmaking.onRoomJoinFinished.RemoveListener(OnRoomOperationFinished);
-
-        if (createButton != null) createButton.onClick.RemoveListener(CreateRoom);
-        if (joinButton != null) joinButton.onClick.RemoveListener(JoinRoom);
-        if (copyButton != null) copyButton.onClick.RemoveListener(CopyRoomId);
-        if (startButton != null) startButton.onClick.RemoveListener(StartGame);
-    }
-
     private void Update()
     {
         UpdateStatus();
@@ -76,9 +44,17 @@ public class StartSceneLobbyUI : MonoBehaviour
             return;
         }
 
-        SetBusy(true, "Creating room...");
-        CustomMatchmaking.RoomOperationResult result = await customMatchmaking.CreateRoom();
-        HandleOperationResult(result, "Room created.");
+        try
+        {
+            SetBusy(true, "Creating room...");
+            CustomMatchmaking.RoomOperationResult result = await customMatchmaking.CreateRoom();
+            HandleOperationResult(result, "Room created.");
+        }
+        catch (System.Exception exception)
+        {
+            SetBusy(false, $"Create room failed: {exception.Message}");
+            Debug.LogException(exception);
+        }
     }
 
     public async void JoinRoom()
@@ -95,9 +71,17 @@ public class StartSceneLobbyUI : MonoBehaviour
             return;
         }
 
-        SetBusy(true, $"Joining {roomId}...");
-        CustomMatchmaking.RoomOperationResult result = await customMatchmaking.JoinRoom(roomId, null);
-        HandleOperationResult(result, "Joined room.");
+        try
+        {
+            SetBusy(true, $"Joining {roomId}...");
+            CustomMatchmaking.RoomOperationResult result = await customMatchmaking.JoinRoom(roomId, null);
+            HandleOperationResult(result, "Joined room.");
+        }
+        catch (System.Exception exception)
+        {
+            SetBusy(false, $"Join room failed: {exception.Message}");
+            Debug.LogException(exception);
+        }
     }
 
     public void CopyRoomId()
@@ -143,11 +127,6 @@ public class StartSceneLobbyUI : MonoBehaviour
 
         SetStatus("Custom Matchmaking block was not found in StartScene.");
         return false;
-    }
-
-    private void OnRoomOperationFinished(CustomMatchmaking.RoomOperationResult result)
-    {
-        HandleOperationResult(result, result.IsSuccess ? "Connected." : "Connection failed.");
     }
 
     private void HandleOperationResult(CustomMatchmaking.RoomOperationResult result, string successMessage)
@@ -278,7 +257,34 @@ public class StartSceneLobbyUI : MonoBehaviour
             lobbySceneStart = gameObject.AddComponent<LobbyNetworkSceneStart>();
         }
 
+        if (createButton == null)
+        {
+            createButton = FindButtonByName("CreatRoomButton", "CreateRoomButton");
+        }
+
+        if (joinButton == null)
+        {
+            joinButton = FindButtonByName("JoinButton");
+        }
+
         SetStatus("Create a room or join with Room ID.");
         UpdateStatus();
+    }
+
+    private static Button FindButtonByName(params string[] names)
+    {
+        Button[] buttons = FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (Button button in buttons)
+        {
+            foreach (string buttonName in names)
+            {
+                if (button.name == buttonName)
+                {
+                    return button;
+                }
+            }
+        }
+
+        return null;
     }
 }
