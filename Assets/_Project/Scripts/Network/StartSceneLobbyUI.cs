@@ -26,14 +26,27 @@ public class StartSceneLobbyUI : MonoBehaviour
     private string currentRoomId = string.Empty;
     private bool busy;
     private bool roomCreated;
+    private TouchScreenKeyboard roomIdKeyboard;
 
     private void Awake()
     {
         ResolveMissingReferences();
+        RegisterRoomIdInputKeyboard();
+    }
+
+    private void OnDestroy()
+    {
+        if (joinRoomInput == null)
+        {
+            return;
+        }
+
+        joinRoomInput.onSelect.RemoveListener(OpenRoomIdKeyboard);
     }
 
     private void Update()
     {
+        SyncRoomIdKeyboard();
         UpdateStatus();
     }
 
@@ -151,6 +164,11 @@ public class StartSceneLobbyUI : MonoBehaviour
             createButton.interactable = false;
         }
 
+        if (joinButton != null)
+        {
+            joinButton.interactable = false;
+        }
+
         UpdateStatus();
     }
 
@@ -164,7 +182,7 @@ public class StartSceneLobbyUI : MonoBehaviour
     private void SetButtonsInteractable(bool interactable)
     {
         if (createButton != null) createButton.interactable = interactable && !roomCreated;
-        if (joinButton != null) joinButton.interactable = interactable;
+        if (joinButton != null) joinButton.interactable = interactable && !roomCreated;
         if (copyButton != null) copyButton.interactable = interactable;
         if (startButton != null) startButton.interactable = interactable;
     }
@@ -204,6 +222,10 @@ public class StartSceneLobbyUI : MonoBehaviour
         if (createButton != null)
         {
             createButton.interactable = !busy && !roomCreated;
+        }
+        if (joinButton != null)
+        {
+            joinButton.interactable = !busy && !roomCreated;
         }
     }
 
@@ -267,8 +289,89 @@ public class StartSceneLobbyUI : MonoBehaviour
             joinButton = FindButtonByName("JoinButton");
         }
 
+        if (joinRoomInput == null)
+        {
+            joinRoomInput = FindInputByName("Room ID", "Join Room ID");
+        }
+
         SetStatus("Create a room or join with Room ID.");
         UpdateStatus();
+    }
+
+    private void RegisterRoomIdInputKeyboard()
+    {
+        if (joinRoomInput == null)
+        {
+            return;
+        }
+
+        joinRoomInput.onSelect.RemoveListener(OpenRoomIdKeyboard);
+        joinRoomInput.onSelect.AddListener(OpenRoomIdKeyboard);
+    }
+
+    private void OpenRoomIdKeyboard(string _)
+    {
+        if (joinRoomInput == null || !joinRoomInput.interactable || roomCreated)
+        {
+            return;
+        }
+
+        if (!TouchScreenKeyboard.isSupported)
+        {
+            return;
+        }
+
+        roomIdKeyboard = TouchScreenKeyboard.Open(
+            joinRoomInput.text,
+            TouchScreenKeyboardType.Default,
+            false,
+            false,
+            false,
+            false,
+            "Input Room ID");
+    }
+
+    private void SyncRoomIdKeyboard()
+    {
+        if (roomIdKeyboard == null)
+        {
+            return;
+        }
+
+        if (roomIdKeyboard.status == TouchScreenKeyboard.Status.Visible)
+        {
+            ApplyRoomIdKeyboardText();
+            return;
+        }
+
+        if (roomIdKeyboard.status == TouchScreenKeyboard.Status.Done)
+        {
+            ApplyRoomIdKeyboardText();
+            roomIdKeyboard = null;
+            return;
+        }
+
+        if (roomIdKeyboard.status == TouchScreenKeyboard.Status.Canceled ||
+            roomIdKeyboard.status == TouchScreenKeyboard.Status.LostFocus)
+        {
+            roomIdKeyboard = null;
+        }
+    }
+
+    private void ApplyRoomIdKeyboardText()
+    {
+        if (joinRoomInput == null || roomIdKeyboard == null)
+        {
+            return;
+        }
+
+        if (joinRoomInput.text == roomIdKeyboard.text)
+        {
+            return;
+        }
+
+        joinRoomInput.SetTextWithoutNotify(roomIdKeyboard.text);
+        joinRoomInput.ForceLabelUpdate();
     }
 
     private static Button FindButtonByName(params string[] names)
@@ -281,6 +384,23 @@ public class StartSceneLobbyUI : MonoBehaviour
                 if (button.name == buttonName)
                 {
                     return button;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static TMP_InputField FindInputByName(params string[] names)
+    {
+        TMP_InputField[] inputs = FindObjectsByType<TMP_InputField>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (TMP_InputField input in inputs)
+        {
+            foreach (string inputName in names)
+            {
+                if (input.name == inputName)
+                {
+                    return input;
                 }
             }
         }
