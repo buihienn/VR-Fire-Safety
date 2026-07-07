@@ -2,11 +2,13 @@ using Fusion;
 using Meta.XR.MultiplayerBlocks.Shared;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class StartSceneLobbyUI : MonoBehaviour
 {
     [Header("Scene")]
+    [SerializeField] private string gameSceneNameOrPath = "MainScene";
     [SerializeField] private int gameSceneBuildIndex = 4;
 
     [Header("Scene References")]
@@ -27,6 +29,8 @@ public class StartSceneLobbyUI : MonoBehaviour
     private bool busy;
     private bool roomCreated;
     private TouchScreenKeyboard roomIdKeyboard;
+    private EventTrigger roomIdEventTrigger;
+    private EventTrigger.Entry roomIdPointerClickEntry;
 
     private void Awake()
     {
@@ -42,6 +46,10 @@ public class StartSceneLobbyUI : MonoBehaviour
         }
 
         joinRoomInput.onSelect.RemoveListener(OpenRoomIdKeyboard);
+        if (roomIdEventTrigger != null && roomIdPointerClickEntry != null)
+        {
+            roomIdEventTrigger.triggers.Remove(roomIdPointerClickEntry);
+        }
     }
 
     private void Update()
@@ -116,6 +124,7 @@ public class StartSceneLobbyUI : MonoBehaviour
             lobbySceneStart = gameObject.AddComponent<LobbyNetworkSceneStart>();
         }
 
+        lobbySceneStart.ConfigureGameScene(gameSceneNameOrPath);
         lobbySceneStart.ConfigureGameScene(gameSceneBuildIndex);
         lobbySceneStart.StartGameForRoom();
     }
@@ -289,6 +298,11 @@ public class StartSceneLobbyUI : MonoBehaviour
             joinButton = FindButtonByName("JoinButton");
         }
 
+        if (startButton == null)
+        {
+            startButton = FindButtonByName("StartButton");
+        }
+
         if (joinRoomInput == null)
         {
             joinRoomInput = FindInputByName("Room ID", "Join Room ID");
@@ -307,6 +321,19 @@ public class StartSceneLobbyUI : MonoBehaviour
 
         joinRoomInput.onSelect.RemoveListener(OpenRoomIdKeyboard);
         joinRoomInput.onSelect.AddListener(OpenRoomIdKeyboard);
+
+        roomIdEventTrigger = joinRoomInput.GetComponent<EventTrigger>();
+        if (roomIdEventTrigger == null)
+        {
+            roomIdEventTrigger = joinRoomInput.gameObject.AddComponent<EventTrigger>();
+        }
+
+        roomIdPointerClickEntry = new EventTrigger.Entry
+        {
+            eventID = EventTriggerType.PointerClick
+        };
+        roomIdPointerClickEntry.callback.AddListener(_ => OpenRoomIdKeyboard(joinRoomInput.text));
+        roomIdEventTrigger.triggers.Add(roomIdPointerClickEntry);
     }
 
     private void OpenRoomIdKeyboard(string _)
@@ -321,6 +348,7 @@ public class StartSceneLobbyUI : MonoBehaviour
             return;
         }
 
+        joinRoomInput.ActivateInputField();
         roomIdKeyboard = TouchScreenKeyboard.Open(
             joinRoomInput.text,
             TouchScreenKeyboardType.Default,

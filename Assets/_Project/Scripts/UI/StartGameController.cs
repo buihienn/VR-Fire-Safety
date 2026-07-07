@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class StartButton : MonoBehaviour
 {
+    [SerializeField] private string networkGameSceneNameOrPath = "MainScene";
     [SerializeField] private int networkGameSceneBuildIndex = 4;
     [SerializeField] private GameObject startMenuLayout;
     [SerializeField] private GameObject loadingLayout;
@@ -19,6 +20,7 @@ public class StartButton : MonoBehaviour
                 lobbySceneStart = starter.AddComponent<LobbyNetworkSceneStart>();
             }
 
+            lobbySceneStart.ConfigureGameScene(networkGameSceneNameOrPath);
             lobbySceneStart.ConfigureGameScene(networkGameSceneBuildIndex);
             lobbySceneStart.StartGameForRoom();
             return;
