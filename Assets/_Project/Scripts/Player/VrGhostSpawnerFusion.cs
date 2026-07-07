@@ -29,6 +29,7 @@ public class VrGhostSpawnerFusion : MonoBehaviour
     private void OnEnable()
     {
         FusionBBEvents.OnSceneLoadDone += OnSceneLoadDone;
+        BeginSpawnWhenReady(null);
     }
 
     private void OnDisable()
@@ -44,6 +45,11 @@ public class VrGhostSpawnerFusion : MonoBehaviour
 
     private void OnSceneLoadDone(NetworkRunner runner)
     {
+        BeginSpawnWhenReady(runner);
+    }
+
+    private void BeginSpawnWhenReady(NetworkRunner runner)
+    {
         if (spawnRoutine != null)
         {
             StopCoroutine(spawnRoutine);
@@ -54,6 +60,18 @@ public class VrGhostSpawnerFusion : MonoBehaviour
 
     private IEnumerator SpawnWhenReady(NetworkRunner runner)
     {
+        if (spawnedGhost != null)
+        {
+            spawnRoutine = null;
+            yield break;
+        }
+
+        while (spawnedGhost == null && (runner == null || !runner.IsRunning))
+        {
+            runner = GetActiveRunner();
+            yield return null;
+        }
+
         while (runner == null || !runner.IsRunning || runner.LocalPlayer == PlayerRef.None)
         {
             yield return null;
@@ -61,6 +79,7 @@ public class VrGhostSpawnerFusion : MonoBehaviour
 
         if (spawnedGhost != null)
         {
+            spawnRoutine = null;
             yield break;
         }
 
@@ -106,6 +125,22 @@ public class VrGhostSpawnerFusion : MonoBehaviour
 
         Debug.Log(
             $"[{nameof(VrGhostSpawnerFusion)}] Spawned local ghost. Room={connectedRoomToken}, LocalPlayer={runner.LocalPlayer}, ActivePlayers={activePlayerCount}");
+
+        spawnRoutine = null;
+    }
+
+    private static NetworkRunner GetActiveRunner()
+    {
+        for (int i = NetworkRunner.Instances.Count - 1; i >= 0; i--)
+        {
+            NetworkRunner runner = NetworkRunner.Instances[i];
+            if (runner != null && runner.IsRunning)
+            {
+                return runner;
+            }
+        }
+
+        return null;
     }
 
     private void FindMissingTrackingSources()
