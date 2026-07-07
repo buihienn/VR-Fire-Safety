@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 public class LobbyNetworkSceneStart : MonoBehaviour
 {
     [Header("Scene")]
+    [SerializeField] private string gameSceneNameOrPath = "MainScene";
     [SerializeField] private int gameSceneBuildIndex = 4;
     [SerializeField] private LoadSceneMode loadSceneMode = LoadSceneMode.Single;
 
@@ -26,6 +27,14 @@ public class LobbyNetworkSceneStart : MonoBehaviour
     public void ConfigureGameScene(int buildIndex)
     {
         gameSceneBuildIndex = buildIndex;
+    }
+
+    public void ConfigureGameScene(string sceneNameOrPath)
+    {
+        if (!string.IsNullOrWhiteSpace(sceneNameOrPath))
+        {
+            gameSceneNameOrPath = sceneNameOrPath;
+        }
     }
 
     public void StartGameForRoom()
@@ -47,18 +56,62 @@ public class LobbyNetworkSceneStart : MonoBehaviour
             return;
         }
 
-        if (gameSceneBuildIndex < 0 || gameSceneBuildIndex >= SceneManager.sceneCountInBuildSettings)
+        onStartRequested?.Invoke();
+
+        SceneRef sceneRef = ResolveGameSceneRef(out string resolvedScene);
+        if (sceneRef == SceneRef.None)
         {
-            Fail($"Invalid game scene build index: {gameSceneBuildIndex}.");
+            Fail($"Could not resolve game scene '{gameSceneNameOrPath}' or build index {gameSceneBuildIndex}.");
             return;
         }
 
-        onStartRequested?.Invoke();
-
-        if (!TryLoadSceneWithRunner(runner, SceneRef.FromIndex(gameSceneBuildIndex)))
+        if (!TryLoadSceneWithRunner(runner, sceneRef))
         {
-            Fail("Could not call Fusion scene load. Check the Fusion version and NetworkRunner scene manager.");
+            Fail($"Could not call Fusion scene load for '{resolvedScene}'. Check the Fusion version and NetworkRunner scene manager.");
         }
+    }
+
+    private SceneRef ResolveGameSceneRef(out string resolvedScene)
+    {
+        resolvedScene = gameSceneNameOrPath;
+
+        int sceneIndex = FindBuildIndexByNameOrPath(gameSceneNameOrPath);
+        if (sceneIndex >= 0)
+        {
+            resolvedScene = SceneUtility.GetScenePathByBuildIndex(sceneIndex);
+            return SceneRef.FromIndex(sceneIndex);
+        }
+
+        if (gameSceneBuildIndex >= 0 && gameSceneBuildIndex < SceneManager.sceneCountInBuildSettings)
+        {
+            resolvedScene = SceneUtility.GetScenePathByBuildIndex(gameSceneBuildIndex);
+            return SceneRef.FromIndex(gameSceneBuildIndex);
+        }
+
+        return SceneRef.None;
+    }
+
+    private static int FindBuildIndexByNameOrPath(string sceneNameOrPath)
+    {
+        if (string.IsNullOrWhiteSpace(sceneNameOrPath))
+        {
+            return -1;
+        }
+
+        string normalizedTarget = sceneNameOrPath.Replace('\\', '/');
+        string targetName = System.IO.Path.GetFileNameWithoutExtension(normalizedTarget);
+
+        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            string scenePath = SceneUtility.GetScenePathByBuildIndex(i).Replace('\\', '/');
+            if (string.Equals(scenePath, normalizedTarget, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(System.IO.Path.GetFileNameWithoutExtension(scenePath), targetName, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static NetworkRunner GetActiveRunner()
@@ -88,13 +141,13 @@ public class LobbyNetworkSceneStart : MonoBehaviour
 
     private bool TryLoadSceneWithRunner(NetworkRunner runner, SceneRef sceneRef)
     {
-        if (TryInvokeLoadScene(runner, sceneRef))
+        object sceneManager = runner.SceneManager;
+        if (sceneManager != null && TryInvokeLoadScene(sceneManager, sceneRef))
         {
             return true;
         }
 
-        object sceneManager = runner.SceneManager;
-        return sceneManager != null && TryInvokeLoadScene(sceneManager, sceneRef);
+        return TryInvokeLoadScene(runner, sceneRef);
     }
 
     private bool TryInvokeLoadScene(object target, SceneRef sceneRef)
@@ -109,12 +162,6 @@ public class LobbyNetworkSceneStart : MonoBehaviour
             }
 
             ParameterInfo[] parameters = method.GetParameters();
-            if (parameters.Length == 1 && parameters[0].ParameterType == typeof(SceneRef))
-            {
-                method.Invoke(target, new object[] { sceneRef });
-                return true;
-            }
-
             if (parameters.Length != 2 || parameters[0].ParameterType != typeof(SceneRef))
             {
                 continue;
@@ -132,6 +179,21 @@ public class LobbyNetworkSceneStart : MonoBehaviour
                 object sceneParameters = Activator.CreateInstance(secondType);
                 SetLoadSceneMode(sceneParameters, loadSceneMode);
                 method.Invoke(target, new[] { (object)sceneRef, sceneParameters });
+                return true;
+            }
+        }
+
+        foreach (MethodInfo method in methods)
+        {
+            if (method.Name != "LoadScene")
+            {
+                continue;
+            }
+
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length == 1 && parameters[0].ParameterType == typeof(SceneRef))
+            {
+                method.Invoke(target, new object[] { sceneRef });
                 return true;
             }
         }

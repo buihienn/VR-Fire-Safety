@@ -48,6 +48,34 @@ public class VrGhostSpawnerFusion : MonoBehaviour
         BeginSpawnWhenReady(runner);
     }
 
+    public void MoveSpawnedGhostTo(Vector3 position, Quaternion rotation)
+    {
+        if (spawnedGhost == null)
+        {
+            return;
+        }
+
+        spawnedGhost.transform.SetPositionAndRotation(position + spawnPositionOffset, rotation);
+
+        Rigidbody[] rigidbodies = spawnedGhost.GetComponentsInChildren<Rigidbody>(true);
+        foreach (Rigidbody rb in rigidbodies)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        NetworkedVrGhost ghost = spawnedGhost.GetComponent<NetworkedVrGhost>();
+        if (ghost != null)
+        {
+            if (autoFindMissingSources)
+            {
+                FindMissingTrackingSources();
+            }
+
+            ghost.SetLocalSources(head, leftHand, rightHand);
+        }
+    }
+
     private void BeginSpawnWhenReady(NetworkRunner runner)
     {
         if (spawnRoutine != null)

@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class StartSceneLobbyUI : MonoBehaviour
 {
     [Header("Scene")]
+    [SerializeField] private string gameSceneNameOrPath = "MainScene";
     [SerializeField] private int gameSceneBuildIndex = 4;
 
     [Header("Scene References")]
@@ -123,6 +124,7 @@ public class StartSceneLobbyUI : MonoBehaviour
             lobbySceneStart = gameObject.AddComponent<LobbyNetworkSceneStart>();
         }
 
+        lobbySceneStart.ConfigureGameScene(gameSceneNameOrPath);
         lobbySceneStart.ConfigureGameScene(gameSceneBuildIndex);
         lobbySceneStart.StartGameForRoom();
     }
@@ -294,6 +296,11 @@ public class StartSceneLobbyUI : MonoBehaviour
         if (joinButton == null)
         {
             joinButton = FindButtonByName("JoinButton");
+        }
+
+        if (startButton == null)
+        {
+            startButton = FindButtonByName("StartButton");
         }
 
         if (joinRoomInput == null)
