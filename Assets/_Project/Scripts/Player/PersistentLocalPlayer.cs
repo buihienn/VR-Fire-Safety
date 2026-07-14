@@ -7,6 +7,7 @@ public class PersistentLocalPlayer : MonoBehaviour
 {
     [SerializeField] private string lobbySceneName = "StartScene";
     [SerializeField] private string gameSceneName = "MainScene";
+    [SerializeField] private string endGameSceneName = "EndGameScene";
     [SerializeField] private string[] scenePlayerMarkerNames =
     {
         "MainScenePlayerSpawn",
@@ -52,7 +53,11 @@ public class PersistentLocalPlayer : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name != gameSceneName)
+        bool shouldPlacePlayer =
+            scene.name == gameSceneName ||
+            scene.name == endGameSceneName;
+
+        if (!shouldPlacePlayer)
         {
             return;
         }

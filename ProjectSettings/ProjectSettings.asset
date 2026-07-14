@@ -145,6 +145,8 @@ PlayerSettings:
   - {fileID: 0}
   - {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   - {fileID: 11400000, guid: 6a3c389c4e1f5f94dbed1c2e89db64a6, type: 2}
+  - {fileID: 8796496246577658064, guid: ab1bd85ea08db2045a347bf9f2a694a1, type: 2}
+  - {fileID: -681739739064459258, guid: 72588298b60ef4442aeb4b6185f63d35, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -849,7 +851,7 @@ PlayerSettings:
   suppressCommonWarnings: 1
   allowUnsafeCode: 1
   useDeterministicCompilation: 1
-  additionalIl2CppArgs: 
+  additionalIl2CppArgs: --jobs=2 --bee-jobs=2
   scriptingRuntimeVersion: 1
   gcIncremental: 1
   gcWBarrierValidation: 0
