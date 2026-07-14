@@ -166,3 +166,12 @@ InitTestScene*.unity*
 *.apk
 *.aab
 *.unitypackage
+
+# Meta Avatar preset ZIP archives
+/Assets/Oculus/Avatar2_SampleAssets/**/PresetAvatars*.zip
+
+# Large Meta Avatar sample environment HDR
+/Assets/Samples/Meta Avatars SDK/**/Directional_flipped.hdr
+
+# Unity generated Burst debug files
+/VR_FireSafety_BurstDebugInformation_DoNotShip/

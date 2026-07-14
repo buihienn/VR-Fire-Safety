@@ -11,14 +11,22 @@ public class PersistentLocalPlayer : MonoBehaviour
     {
         "MainScenePlayerSpawn",
         "PlayerSpawn",
-        "SpawnPoint",
-        "Player"
+        "SpawnPoint"
     };
     [SerializeField] private Vector3 spawnPositionOffset;
+    [SerializeField, Min(0)] private int sceneReadyDelayFrames = 3;
+    [SerializeField, Min(0f)] private float sceneReadyDelaySeconds = 0.5f;
+    [SerializeField] private bool snapSpawnToGround = true;
+    [SerializeField, Min(0f)] private float groundRaycastHeight = 2f;
+    [SerializeField, Min(0f)] private float groundRaycastDistance = 8f;
+    [SerializeField, Min(0f)] private float groundOffset = 0.05f;
+    [SerializeField] private LayerMask groundLayers = ~0;
     [SerializeField] private bool disableGravityForPlayerRigidbodies = true;
     [SerializeField] private bool makePlayerRigidbodiesKinematic = true;
+    [SerializeField, Min(0f)] private float headBlockingResumeDelaySeconds = 0.25f;
 
     private static PersistentLocalPlayer instance;
+    private Coroutine sceneReadyRoutine;
 
     private void Awake()
     {
@@ -49,32 +57,109 @@ public class PersistentLocalPlayer : MonoBehaviour
             return;
         }
 
+        if (sceneReadyRoutine != null)
+        {
+            StopCoroutine(sceneReadyRoutine);
+        }
+
+        sceneReadyRoutine = StartCoroutine(PlacePlayerWhenSceneIsReady(scene));
+    }
+
+    private IEnumerator PlacePlayerWhenSceneIsReady(Scene scene)
+    {
         PreserveNetworkRunners();
+        SceneManager.SetActiveScene(scene);
+
+        for (int i = 0; i < sceneReadyDelayFrames; i++)
+        {
+            yield return null;
+        }
+
+        if (sceneReadyDelaySeconds > 0f)
+        {
+            yield return new WaitForSecondsRealtime(sceneReadyDelaySeconds);
+        }
+
+        Physics.SyncTransforms();
 
         Transform marker = FindSceneTransform(scene, scenePlayerMarkerNames);
         if (marker == null || marker == transform)
         {
-            Debug.LogWarning($"[{nameof(PersistentLocalPlayer)}] Could not find a player spawn marker in {scene.name}.");
+            Debug.LogWarning(
+                $"[{nameof(PersistentLocalPlayer)}] Could not find a player spawn marker in {scene.name}. " +
+                "Create an empty GameObject named MainScenePlayerSpawn, PlayerSpawn, or SpawnPoint in the target scene.");
         }
         else
         {
             MovePlayerTo(marker);
         }
 
-        SceneManager.SetActiveScene(scene);
-        StartCoroutine(UnloadLobbySceneAfterFrame());
+        yield return UnloadLobbySceneAfterFrame();
+        sceneReadyRoutine = null;
     }
 
     private void MovePlayerTo(Transform marker)
     {
-        transform.SetPositionAndRotation(marker.position + spawnPositionOffset, marker.rotation);
-        StabilizePlayerRigidbodies();
-
-        VrGhostSpawnerFusion ghostSpawner = GetComponentInChildren<VrGhostSpawnerFusion>(true);
-        if (ghostSpawner != null)
+        Vector3 spawnPosition = marker.position + spawnPositionOffset;
+        if (snapSpawnToGround)
         {
-            ghostSpawner.MoveSpawnedGhostTo(transform.position, transform.rotation);
+            spawnPosition = SnapPositionToGround(spawnPosition);
         }
+
+        CharacterController[] characterControllers = GetComponentsInChildren<CharacterController>(true);
+        SetCharacterControllersEnabled(characterControllers, false);
+
+        transform.SetPositionAndRotation(spawnPosition, marker.rotation);
+        StabilizePlayerRigidbodies();
+        ResetHeadBlockingAfterTeleport();
+
+        StartCoroutine(ReenableCharacterControllersNextFrame(characterControllers));
+    }
+
+    private Vector3 SnapPositionToGround(Vector3 position)
+    {
+        Vector3 origin = position + Vector3.up * groundRaycastHeight;
+        float maxDistance = groundRaycastHeight + groundRaycastDistance;
+        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, maxDistance, groundLayers, QueryTriggerInteraction.Ignore))
+        {
+            float minimumSafeY = hit.point.y + groundOffset;
+            position.y = Mathf.Max(position.y, minimumSafeY);
+        }
+        else
+        {
+            Debug.LogWarning($"[{nameof(PersistentLocalPlayer)}] No ground collider found below spawn position {position}.");
+        }
+
+        return position;
+    }
+
+    private void ResetHeadBlockingAfterTeleport()
+    {
+        MetaXRHeadBlocking[] blockers = GetComponentsInChildren<MetaXRHeadBlocking>(true);
+        foreach (MetaXRHeadBlocking blocker in blockers)
+        {
+            if (blocker != null)
+            {
+                blocker.ResetAfterTeleport(headBlockingResumeDelaySeconds);
+            }
+        }
+    }
+
+    private static void SetCharacterControllersEnabled(CharacterController[] characterControllers, bool enabled)
+    {
+        foreach (CharacterController characterController in characterControllers)
+        {
+            if (characterController != null)
+            {
+                characterController.enabled = enabled;
+            }
+        }
+    }
+
+    private static IEnumerator ReenableCharacterControllersNextFrame(CharacterController[] characterControllers)
+    {
+        yield return null;
+        SetCharacterControllersEnabled(characterControllers, true);
     }
 
     private void StabilizePlayerRigidbodies()
