@@ -1,5 +1,6 @@
 using System.Collections;
 using Fusion;
+using Oculus.Interaction;
 using UnityEngine;
 
 /// <summary>
@@ -10,7 +11,7 @@ using UnityEngine;
 /// streams the resulting pose to the Host, and the Host applies that pose as the
 /// authoritative state. The Host's NetworkTransform then replicates it to everyone.
 ///
-/// Connect BeginLocalGrab / EndLocalGrab from Meta's InteractableUnityEventWrapper.
+/// The component listens to the root Meta Grabbable automatically.
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NetworkObject))]
@@ -22,6 +23,9 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
 
     [Tooltip("Fusion NetworkTransform on this same root.")]
     [SerializeField] private NetworkTransform networkTransform;
+
+    [Tooltip("Meta Grabbable that moves this object. It is found automatically when empty.")]
+    [SerializeField] private Grabbable targetGrabbable;
 
     [Header("Pose Streaming")]
     [Tooltip("How many pose packets per second a grabbing client sends to the Host.")]
@@ -57,11 +61,13 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
 
     private float nextPoseSendTime;
     private Coroutine reenableRoutine;
+    private bool pointerEventsSubscribed;
 
     private void Reset()
     {
         targetRigidbody = GetComponent<Rigidbody>();
         networkTransform = GetComponent<NetworkTransform>();
+        targetGrabbable = GetComponent<Grabbable>();
     }
 
     private void Awake()
@@ -71,6 +77,46 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
 
         if (networkTransform == null)
             networkTransform = GetComponent<NetworkTransform>();
+
+        if (targetGrabbable == null)
+            targetGrabbable = GetComponent<Grabbable>();
+    }
+
+    private void OnEnable()
+    {
+        SubscribeToPointerEvents();
+    }
+
+    private void Start()
+    {
+        // Some Meta building blocks finish wiring their references after Awake.
+        SubscribeToPointerEvents();
+    }
+
+    private void SubscribeToPointerEvents()
+    {
+        if (pointerEventsSubscribed)
+            return;
+
+        if (targetGrabbable == null)
+            targetGrabbable = GetComponent<Grabbable>();
+
+        if (targetGrabbable == null)
+        {
+            Debug.LogError("[HostNetworkGrabSync] No Meta Grabbable was found on the network object root.", this);
+            return;
+        }
+
+        targetGrabbable.WhenPointerEventRaised += OnPointerEvent;
+        pointerEventsSubscribed = true;
+    }
+
+    private void OnPointerEvent(PointerEvent evt)
+    {
+        if (evt.Type == PointerEventType.Select)
+            BeginLocalGrab();
+        else if (evt.Type == PointerEventType.Unselect)
+            EndLocalGrab();
     }
 
     public override void Spawned()
@@ -140,8 +186,7 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
     }
 
     /// <summary>
-    /// Connect this to InteractableUnityEventWrapper -> When Select
-    /// on every HandGrabInteractable used by this object.
+    /// Starts local grab streaming. This is called automatically from the Meta Grabbable.
     /// </summary>
     public void BeginLocalGrab()
     {
@@ -168,8 +213,7 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
     }
 
     /// <summary>
-    /// Connect this to InteractableUnityEventWrapper -> When Unselect
-    /// on every HandGrabInteractable used by this object.
+    /// Stops local grab streaming. This is called automatically from the Meta Grabbable.
     /// </summary>
     public void EndLocalGrab()
     {
@@ -351,6 +395,12 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
 
     private void OnDisable()
     {
+        if (pointerEventsSubscribed && targetGrabbable != null)
+        {
+            targetGrabbable.WhenPointerEventRaised -= OnPointerEvent;
+            pointerEventsSubscribed = false;
+        }
+
         StopReenableRoutine();
 
         localSelectCount = 0;

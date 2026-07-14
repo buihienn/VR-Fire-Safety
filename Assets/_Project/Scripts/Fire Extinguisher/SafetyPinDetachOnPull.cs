@@ -1,8 +1,9 @@
 using System.Collections;
+using Fusion;
 using UnityEngine;
 using Oculus.Interaction;
 
-public class SafetyPinDetachOnPull : MonoBehaviour
+public class SafetyPinDetachOnPull : NetworkBehaviour
 {
     [Header("Reference on extinguisher")]
     [SerializeField] private Transform socketReference;
@@ -24,11 +25,16 @@ public class SafetyPinDetachOnPull : MonoBehaviour
     private Grabbable grabbable;
     private bool isGrabbed;
     private bool isRemoved;
+    private bool fusionSpawned;
+    private bool removalVisualsApplied;
 
     private Collider[] allColliders;
     private Renderer[] allRenderers;
 
-    public bool IsRemoved => isRemoved;
+    [Networked, OnChangedRender(nameof(OnRemovedNetworkChanged))]
+    private NetworkBool IsRemovedNet { get; set; }
+
+    public bool IsRemoved => fusionSpawned ? IsRemovedNet : isRemoved;
 
     [Header("Outlines")]
     [SerializeField] private Outline extinguisherBodyOutline;
@@ -46,6 +52,9 @@ public class SafetyPinDetachOnPull : MonoBehaviour
         if (grabbable == null)
             grabbable = GetComponentInChildren<Grabbable>(true);
 
+        if (smokeUse == null)
+            smokeUse = GetComponentInParent<FireExtinguisherSmokeUse>(true);
+
         allColliders = GetComponentsInChildren<Collider>(true);
         allRenderers = GetComponentsInChildren<Renderer>(true);
 
@@ -54,6 +63,22 @@ public class SafetyPinDetachOnPull : MonoBehaviour
             pinRigidbody.isKinematic = true;
             pinRigidbody.useGravity = false;
         }
+    }
+
+    public override void Spawned()
+    {
+        fusionSpawned = true;
+
+        if (Object.HasStateAuthority)
+            IsRemovedNet = isRemoved;
+
+        if (IsRemovedNet)
+            ApplyRemovalLocally(false);
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        fusionSpawned = false;
     }
 
     private void OnEnable()
@@ -70,7 +95,7 @@ public class SafetyPinDetachOnPull : MonoBehaviour
 
     private void OnPointerEvent(PointerEvent evt)
     {
-        if (isRemoved) return;
+        if (IsRemoved) return;
 
         if (evt.Type == PointerEventType.Select)
         {
@@ -86,7 +111,7 @@ public class SafetyPinDetachOnPull : MonoBehaviour
 
     private void Update()
     {
-        if (isRemoved) return;
+        if (IsRemoved) return;
         if (!isGrabbed) return;
         if (socketReference == null) return;
 
@@ -104,18 +129,65 @@ public class SafetyPinDetachOnPull : MonoBehaviour
     [ContextMenu("Detach And Remove")]
     public void DetachAndRemove()
     {
-        if (isRemoved) return;
+        if (IsRemoved) return;
+
+        if (!fusionSpawned)
+        {
+            ApplyRemovalLocally(true);
+            return;
+        }
+
+        if (Object.HasStateAuthority)
+            RemoveOnStateAuthority();
+        else
+            RPC_RequestRemove();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    private void RPC_RequestRemove()
+    {
+        RemoveOnStateAuthority();
+    }
+
+    private void RemoveOnStateAuthority()
+    {
+        if (!Object.HasStateAuthority || IsRemovedNet)
+            return;
+
+        IsRemovedNet = true;
+
+        if (smokeUse != null)
+            smokeUse.AllowSpray();
+
+        RPC_ApplyRemoval();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
+    private void RPC_ApplyRemoval()
+    {
+        ApplyRemovalLocally(true);
+    }
+
+    private void OnRemovedNetworkChanged()
+    {
+        if (IsRemovedNet)
+            ApplyRemovalLocally(false);
+    }
+
+    private void ApplyRemovalLocally(bool playSound)
+    {
+        if (removalVisualsApplied)
+            return;
 
         isRemoved = true;
         isGrabbed = false;
-
-        if (smokeUse != null)
-        smokeUse.AllowSpray();
+        removalVisualsApplied = true;
 
         // Update outline
         updateOutlineVisibility();
-        // Sfx
-        AudioManager.Instance.PlayOneShot("FEPullPin");
+
+        if (playSound && AudioManager.Instance != null)
+            AudioManager.Instance.PlayOneShot("FEPullPin");
 
         if (hideInsteadOfDrop)
         {
@@ -154,7 +226,7 @@ public class SafetyPinDetachOnPull : MonoBehaviour
         }
 
         // nếu muốn ẩn hẳn object:
-        gameObject.SetActive(false);
+        // Keep this GameObject active because it contains a NetworkBehaviour.
     }
 
     private IEnumerator DetachAndDropPhysics()
