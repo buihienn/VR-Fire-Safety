@@ -23,11 +23,18 @@ public class MetaXRHeadBlocking : MonoBehaviour
 
     private Vector3 _lastSafeHeadPos;
     private Collider[] _overlapResults;
+    private float _suspendedUntilUnscaledTime;
 
     private void Start()
     {
         _lastSafeHeadPos = transform.position;
         _overlapResults = new Collider[Mathf.Max(4, _maxOverlapHits)];
+    }
+
+    public void ResetAfterTeleport(float resumeDelaySeconds = 0.25f)
+    {
+        _lastSafeHeadPos = transform.position;
+        _suspendedUntilUnscaledTime = Time.unscaledTime + Mathf.Max(0f, resumeDelaySeconds);
     }
 
     private bool ShouldIgnore(Collider col)
@@ -89,6 +96,12 @@ public class MetaXRHeadBlocking : MonoBehaviour
             return;
 
         Vector3 currentHeadPos = transform.position;
+
+        if (Time.unscaledTime < _suspendedUntilUnscaledTime)
+        {
+            _lastSafeHeadPos = currentHeadPos;
+            return;
+        }
 
         bool headBlocked = DetectSphereHit(currentHeadPos, _collisionRadius);
 

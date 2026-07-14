@@ -141,6 +141,16 @@ public class LobbyNetworkSceneStart : MonoBehaviour
 
     private bool TryLoadSceneWithRunner(NetworkRunner runner, SceneRef sceneRef)
     {
+        try
+        {
+            runner.LoadScene(sceneRef, loadSceneMode, LocalPhysicsMode.None, true);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"[{nameof(LobbyNetworkSceneStart)}] Direct runner scene load failed. Trying compatibility path. {exception.Message}");
+        }
+
         object sceneManager = runner.SceneManager;
         if (sceneManager != null && TryInvokeLoadScene(sceneManager, sceneRef))
         {

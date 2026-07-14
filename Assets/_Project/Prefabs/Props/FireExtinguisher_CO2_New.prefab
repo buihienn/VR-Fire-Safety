@@ -360,6 +360,7 @@ GameObject:
   - component: {fileID: 237611785178269660}
   - component: {fileID: 8874909688060893634}
   - component: {fileID: 7525984820781633572}
+  - component: {fileID: 910000000000000001}
   m_Layer: 0
   m_Name: FireExtinguisher_CO2_New
   m_TagString: Untagged
@@ -400,7 +401,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: e9b4b64f-1c7e-4dff-8f3c-ce409bdc3951
-  instanceId: 784d54b9-904b-4c68-913a-d494d5f1d5cf
+  instanceId: 9ed6427b-ddd5-4285-9aad-dc7e0ca78a16
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 54548176-30f4-4a4a-8057-340a383c6102
@@ -592,6 +593,8 @@ MonoBehaviour:
   - {fileID: 8143270188165741571}
   - {fileID: 8874909688060893634}
   - {fileID: 7525984820781633572}
+  - {fileID: 910000000000000001}
+  - {fileID: 8597454900626273323}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &8874909688060893634
 MonoBehaviour:
@@ -622,6 +625,33 @@ MonoBehaviour:
   SyncParent: 0
   _autoAOIOverride: 1
   DisableSharedModeInterpolation: 1
+--- !u!114 &910000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654166493758443201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 227c73dc8ef568e469c70d551d650de1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRigidbody: {fileID: 4116172800630246910}
+  networkTransform: {fileID: 7525984820781633572}
+  targetGrabbable: {fileID: 6097875054720744126}
+  poseSendRate: 30
+  reenableNetworkTransformDelay: 0.12
+  restoreOriginalKinematic: 1
+  zeroVelocityOnRelease: 1
+  fusionSpawned: 0
+  localGrabActive: 0
+  localSelectCount: 0
+  hasStateAuthority: 0
+  isGrabbedNetworked: 0
+  grabberDebug: None
+  _IsGrabbedNet:
+    _value: 0
 --- !u!1 &1227785828543762549
 GameObject:
   m_ObjectHideFlags: 0
