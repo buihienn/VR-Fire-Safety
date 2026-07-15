@@ -16,9 +16,11 @@ public class ExportRecordedVideoButton : MonoBehaviour
             return;
         }
 
+        Debug.Log("ExportLastRecording requested. Manager state: " + manager.DebugState);
+
         if (!manager.HasRecordingReady)
         {
-            Debug.LogWarning("Cannot export video because no completed recording is ready.");
+            Debug.LogWarning("Cannot export video because no completed recording is ready. Manager state: " + manager.DebugState);
             return;
         }
 
