@@ -1,0 +1,29 @@
+{
+  "sessionId": "mock_review_10s",
+  "videoPath": "mock_review_10s.mp4",
+  "createdAt": "2026-07-15 00:00:00",
+  "actions": [
+    {
+      "time": 2.0,
+      "eventType": "MockCorrectAction",
+      "actionId": "mock_correct_action",
+      "title": "Correct action at 2s",
+      "description": "Mock marker for a correct player action.",
+      "result": 0,
+      "actorId": "Player",
+      "targetId": "MockTargetA",
+      "sceneName": "MockReviewScene"
+    },
+    {
+      "time": 6.0,
+      "eventType": "MockWrongAction",
+      "actionId": "mock_wrong_action",
+      "title": "Wrong action at 6s",
+      "description": "Mock marker for a wrong player action.",
+      "result": 1,
+      "actorId": "Player",
+      "targetId": "MockTargetB",
+      "sceneName": "MockReviewScene"
+    }
+  ]
+}
