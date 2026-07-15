@@ -1,4 +1,6 @@
 using UnityEngine;
+using MetaFirstPersonLocomotor = Oculus.Interaction.Locomotion.FirstPersonLocomotor;
+using MetaLocomotionEvent = Oculus.Interaction.Locomotion.LocomotionEvent;
 
 public class MetaXRHeadBlocking : MonoBehaviour
 {
@@ -24,17 +26,92 @@ public class MetaXRHeadBlocking : MonoBehaviour
     private Vector3 _lastSafeHeadPos;
     private Collider[] _overlapResults;
     private float _suspendedUntilUnscaledTime;
+    private MetaFirstPersonLocomotor[] _locomotors;
+    private Coroutine _resetAfterLocomotionRoutine;
+    private bool _subscribedToLocomotion;
+
+    private void OnEnable()
+    {
+        SubscribeToLocomotionEvents();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeFromLocomotionEvents();
+    }
 
     private void Start()
     {
         _lastSafeHeadPos = transform.position;
         _overlapResults = new Collider[Mathf.Max(4, _maxOverlapHits)];
+        SubscribeToLocomotionEvents();
     }
 
     public void ResetAfterTeleport(float resumeDelaySeconds = 0.25f)
     {
         _lastSafeHeadPos = transform.position;
         _suspendedUntilUnscaledTime = Time.unscaledTime + Mathf.Max(0f, resumeDelaySeconds);
+    }
+
+    private void SubscribeToLocomotionEvents()
+    {
+        if (_subscribedToLocomotion)
+            return;
+
+        Transform searchRoot = player != null ? player.transform : transform.root;
+        if (searchRoot == null)
+            return;
+
+        _locomotors = searchRoot.GetComponentsInChildren<MetaFirstPersonLocomotor>(true);
+        foreach (MetaFirstPersonLocomotor locomotor in _locomotors)
+        {
+            if (locomotor != null)
+            {
+                locomotor.WhenLocomotionEventHandled += HandleLocomotionEventHandled;
+            }
+        }
+
+        _subscribedToLocomotion = _locomotors.Length > 0;
+    }
+
+    private void UnsubscribeFromLocomotionEvents()
+    {
+        if (!_subscribedToLocomotion || _locomotors == null)
+            return;
+
+        foreach (MetaFirstPersonLocomotor locomotor in _locomotors)
+        {
+            if (locomotor != null)
+            {
+                locomotor.WhenLocomotionEventHandled -= HandleLocomotionEventHandled;
+            }
+        }
+
+        _locomotors = null;
+        _subscribedToLocomotion = false;
+    }
+
+    private void HandleLocomotionEventHandled(MetaLocomotionEvent locomotionEvent, Pose delta)
+    {
+        if (locomotionEvent.Translation != MetaLocomotionEvent.TranslationType.Absolute
+            && locomotionEvent.Translation != MetaLocomotionEvent.TranslationType.AbsoluteEyeLevel)
+        {
+            return;
+        }
+
+        if (_resetAfterLocomotionRoutine != null)
+        {
+            StopCoroutine(_resetAfterLocomotionRoutine);
+        }
+
+        _resetAfterLocomotionRoutine = StartCoroutine(ResetAfterLocomotionAtEndOfFrame());
+    }
+
+    private System.Collections.IEnumerator ResetAfterLocomotionAtEndOfFrame()
+    {
+        yield return new WaitForEndOfFrame();
+        ResetAfterTeleport(0.1f);
+        _resetAfterLocomotionRoutine = null;
     }
 
     private bool ShouldIgnore(Collider col)

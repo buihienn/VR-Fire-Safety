@@ -2,6 +2,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Fusion;
 using System.Collections;
+using MetaCharacterController = Oculus.Interaction.Locomotion.CharacterController;
+using MetaFirstPersonLocomotor = Oculus.Interaction.Locomotion.FirstPersonLocomotor;
+using UnityCharacterController = UnityEngine.CharacterController;
 
 public class PersistentLocalPlayer : MonoBehaviour
 {
@@ -57,6 +60,8 @@ public class PersistentLocalPlayer : MonoBehaviour
             return;
         }
 
+        SetMetaLocomotorsMovement(GetComponentsInChildren<MetaFirstPersonLocomotor>(true), false);
+
         if (sceneReadyRoutine != null)
         {
             StopCoroutine(sceneReadyRoutine);
@@ -106,14 +111,22 @@ public class PersistentLocalPlayer : MonoBehaviour
             spawnPosition = SnapPositionToGround(spawnPosition);
         }
 
-        CharacterController[] characterControllers = GetComponentsInChildren<CharacterController>(true);
+        MetaFirstPersonLocomotor[] metaLocomotors = GetComponentsInChildren<MetaFirstPersonLocomotor>(true);
+        SetMetaLocomotorsMovement(metaLocomotors, false);
+
+        UnityCharacterController[] characterControllers = GetComponentsInChildren<UnityCharacterController>(true);
         SetCharacterControllersEnabled(characterControllers, false);
 
         transform.SetPositionAndRotation(spawnPosition, marker.rotation);
+        Physics.SyncTransforms();
+
+        MetaCharacterController[] metaCharacterControllers = GetComponentsInChildren<MetaCharacterController>(true);
+        ResetMetaCharacterControllers(metaCharacterControllers, spawnPosition, marker.rotation);
+
         StabilizePlayerRigidbodies();
         ResetHeadBlockingAfterTeleport();
 
-        StartCoroutine(ReenableCharacterControllersNextFrame(characterControllers));
+        StartCoroutine(ReenableControllersAfterTeleport(characterControllers, metaLocomotors, metaCharacterControllers, spawnPosition));
     }
 
     private Vector3 SnapPositionToGround(Vector3 position)
@@ -145,9 +158,9 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
     }
 
-    private static void SetCharacterControllersEnabled(CharacterController[] characterControllers, bool enabled)
+    private static void SetCharacterControllersEnabled(UnityCharacterController[] characterControllers, bool enabled)
     {
-        foreach (CharacterController characterController in characterControllers)
+        foreach (UnityCharacterController characterController in characterControllers)
         {
             if (characterController != null)
             {
@@ -156,10 +169,66 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
     }
 
-    private static IEnumerator ReenableCharacterControllersNextFrame(CharacterController[] characterControllers)
+    private void ResetMetaCharacterControllers(MetaCharacterController[] characterControllers, Vector3 feetPosition, Quaternion rotation)
+    {
+        foreach (MetaCharacterController characterController in characterControllers)
+        {
+            if (characterController == null)
+            {
+                continue;
+            }
+
+            characterController.SetRotation(rotation);
+
+            float capsuleCenterHeight = characterController.Height * 0.5f + characterController.SkinWidth;
+            characterController.SetPosition(feetPosition + Vector3.up * capsuleCenterHeight);
+
+            if (!characterController.TryGround(characterController.MaxStep))
+            {
+                Debug.LogWarning(
+                    $"[{nameof(PersistentLocalPlayer)}] Meta locomotion controller could not find ground below {feetPosition}. " +
+                    "Check the MainScene floor collider and the PlayerController locomotion Layer Mask.");
+            }
+        }
+    }
+
+    private static void SetMetaLocomotorsMovement(MetaFirstPersonLocomotor[] locomotors, bool enabled)
+    {
+        foreach (MetaFirstPersonLocomotor locomotor in locomotors)
+        {
+            if (locomotor == null)
+            {
+                continue;
+            }
+
+            if (enabled)
+            {
+                locomotor.EnableMovement();
+            }
+            else
+            {
+                locomotor.DisableMovement();
+            }
+        }
+    }
+
+    private IEnumerator ReenableControllersAfterTeleport(
+        UnityCharacterController[] characterControllers,
+        MetaFirstPersonLocomotor[] metaLocomotors,
+        MetaCharacterController[] metaCharacterControllers,
+        Vector3 feetPosition)
     {
         yield return null;
+
+        Physics.SyncTransforms();
+        ResetMetaCharacterControllers(metaCharacterControllers, feetPosition, transform.rotation);
+
+        yield return new WaitForFixedUpdate();
+
+        Physics.SyncTransforms();
         SetCharacterControllersEnabled(characterControllers, true);
+        ResetMetaCharacterControllers(metaCharacterControllers, feetPosition, transform.rotation);
+        SetMetaLocomotorsMovement(metaLocomotors, true);
     }
 
     private void StabilizePlayerRigidbodies()
