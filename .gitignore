@@ -175,3 +175,9 @@ InitTestScene*.unity*
 
 # Unity generated Burst debug files
 /VR_FireSafety_BurstDebugInformation_DoNotShip/
+
+# Meta Avatar runtime/sample preset archives
+/Assets/StreamingAssets/SampleAssets/PresetAvatars*.zip
+
+# Ignore Unity meta files belonging to ignored ZIP archives
+/Assets/StreamingAssets/SampleAssets/PresetAvatars*.zip.meta

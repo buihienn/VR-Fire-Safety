@@ -139,7 +139,8 @@ public class NetworkAvatarSpawnerFusion : MonoBehaviour
                     {
                         avatar.SetLocalSources(inputManager, localRigRoot);
                     }
-                });
+                },
+                NetworkSpawnFlags.DontDestroyOnLoad);
         }
         catch (System.Exception exception)
         {

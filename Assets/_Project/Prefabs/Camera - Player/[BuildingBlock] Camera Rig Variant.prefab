@@ -1965,7 +1965,7 @@ MonoBehaviour:
   player: {fileID: 3100140430830021276}
   _collisionLayers:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 1073741824
   _collisionRadius: 0.07
   _useBodyBlocking: 1
   _bodyRadius: 0.07
