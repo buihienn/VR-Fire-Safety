@@ -37,7 +37,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 4971.66, y: -2760}
-  m_SizeDelta: {x: 9143.32, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1042123797274961343
 MonoBehaviour:
@@ -1016,7 +1016,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 4571.66, y: -2860}
-  m_SizeDelta: {x: 9000, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1262429184229049715
 MonoBehaviour:
@@ -1109,6 +1109,8 @@ MonoBehaviour:
   startMenuLayout: {fileID: 138319312812931075}
   settingsLayout: {fileID: 7954801403432028781}
   aboutLayout: {fileID: 1846649807275783857}
+  reviewLayout: {fileID: 0}
+  reviewVideoListLayout: {fileID: 0}
   hubGas: {fileID: 0}
   timeLabel: {fileID: 0}
 --- !u!1 &2250105985867044504
@@ -1639,7 +1641,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 4500, y: -2820}
-  m_SizeDelta: {x: 9000, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &4513733429862851945
 MonoBehaviour:
@@ -1773,10 +1775,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34651ebcd31cbce4f9c8f775081a80ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  networkGameSceneNameOrPath: MainScene
+  networkGameSceneBuildIndex: 4
   startMenuLayout: {fileID: 138319312812931075}
   loadingLayout: {fileID: 4828727597601903639}
-  progressBar: {fileID: 7549477899363018701}
-  fillDuration: 2
+  sceneTransitionManager: {fileID: 0}
 --- !u!1 &4833710021044145146
 GameObject:
   m_ObjectHideFlags: 0
@@ -2302,7 +2305,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 9943.32, y: -5520}
-  m_SizeDelta: {x: 9943.32, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &6677844957007584904
 CanvasRenderer:
