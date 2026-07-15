@@ -401,7 +401,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: e9b4b64f-1c7e-4dff-8f3c-ce409bdc3951
-  instanceId: 9ed6427b-ddd5-4285-9aad-dc7e0ca78a16
+  instanceId: 9f1ccb64-b8f2-4182-b7c1-8ca38bef387a
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 54548176-30f4-4a4a-8057-340a383c6102
@@ -640,18 +640,11 @@ MonoBehaviour:
   targetRigidbody: {fileID: 4116172800630246910}
   networkTransform: {fileID: 7525984820781633572}
   targetGrabbable: {fileID: 6097875054720744126}
-  poseSendRate: 30
-  reenableNetworkTransformDelay: 0.12
-  restoreOriginalKinematic: 1
-  zeroVelocityOnRelease: 1
+  disablePhysicsWithoutStateAuthority: 1
+  zeroVelocityOnAuthorityLoss: 1
   fusionSpawned: 0
-  localGrabActive: 0
-  localSelectCount: 0
   hasStateAuthority: 0
-  isGrabbedNetworked: 0
-  grabberDebug: None
-  _IsGrabbedNet:
-    _value: 0
+  rigidbodyIsKinematic: 0
 --- !u!1 &1227785828543762549
 GameObject:
   m_ObjectHideFlags: 0
@@ -13365,7 +13358,7 @@ MonoBehaviour:
   extinguisherBodyOutline: {fileID: 3714987277769295919}
   nozzleOutline: {fileID: 7146853535451710925}
   safetyPinOutline: {fileID: 2187457206651454073}
-  smokeUse: {fileID: 0}
+  smokeUse: {fileID: 8143270188165741571}
 --- !u!4 &3148914899901909889 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1123009855700476023, guid: 5b4dabee42c0c0149ae27762ebe971cf, type: 3}
