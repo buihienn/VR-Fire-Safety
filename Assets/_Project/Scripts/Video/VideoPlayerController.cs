@@ -138,6 +138,12 @@ public class VideoPlayerController : MonoBehaviour
         videoPlayer.time = 0;
         videoPlayer.Prepare();
 
+        ReviewTimelineMarkerRenderer markerRenderer = GetComponentInChildren<ReviewTimelineMarkerRenderer>(true);
+        if (markerRenderer != null)
+        {
+            markerRenderer.LoadJsonNextToVideo(videoPath);
+        }
+
         ShowLoadingIcon(true);
         UpdatePlayPauseIcon();
         UpdateTimelineText(0);
@@ -300,6 +306,37 @@ public class VideoPlayerController : MonoBehaviour
         ShowLoadingIcon(true);
         UpdatePlayPauseIcon();
         UpdateTimelineText(0);
+    }
+
+    public void SeekToTime(float time)
+    {
+        if (videoPlayer == null || !videoPlayer.isPrepared)
+        {
+            return;
+        }
+
+        double duration = GetVideoDuration();
+        if (duration > 0)
+        {
+            time = Mathf.Clamp(time, 0f, (float)duration);
+        }
+        else
+        {
+            time = Mathf.Max(0f, time);
+        }
+
+        videoPlayer.time = time;
+        if (!videoPlayer.isPlaying)
+        {
+            videoPlayer.Play();
+        }
+
+        NotifyInteraction();
+    }
+
+    public double GetDuration()
+    {
+        return GetVideoDuration();
     }
 
     private double GetVideoDuration()
