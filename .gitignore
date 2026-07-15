@@ -157,6 +157,9 @@ InitTestScene*.unity*
 [Aa]ssets/TextMesh Pro/Sprites/
 [Aa]ssets/TextMesh Pro/Fonts/Resources/
 
+# Video example
+[Aa]ssets/_Project/Video/
+
 # Local testing builds
 [Bb]uilds/
 [Bb]uild/

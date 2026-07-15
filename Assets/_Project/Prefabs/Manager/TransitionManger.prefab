@@ -45,6 +45,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fadeScreen: {fileID: 0}
-  progressBar: {fileID: 0}
-  fillDuration: 2
-  resetProgressOnStart: 1
