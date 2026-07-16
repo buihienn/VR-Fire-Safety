@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class ExportRecordedVideoButton : MonoBehaviour
 {
+    private const string DebugPrefix = "Record review debug";
+
     [SerializeField] private bool copyJsonMetadata;
     [SerializeField] private string exportFilePrefix = "VRFireSafety_Review";
 
@@ -12,15 +14,15 @@ public class ExportRecordedVideoButton : MonoBehaviour
         QuestScreenRecordingManager manager = QuestScreenRecordingManager.Instance;
         if (manager == null)
         {
-            Debug.LogWarning("Cannot export video because QuestScreenRecordingManager was not found.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot export video because QuestScreenRecordingManager was not found.");
             return;
         }
 
-        Debug.Log("ExportLastRecording requested. Manager state: " + manager.DebugState);
+        Debug.Log($"[{DebugPrefix}] ExportLastRecording requested. Manager state: {manager.DebugState}");
 
         if (!manager.HasRecordingReady)
         {
-            Debug.LogWarning("Cannot export video because no completed recording is ready. Manager state: " + manager.DebugState);
+            Debug.LogWarning($"[{DebugPrefix}] Cannot export video because no completed recording is ready. Manager state: {manager.DebugState}");
             return;
         }
 
@@ -31,13 +33,13 @@ public class ExportRecordedVideoButton : MonoBehaviour
     {
         if (string.IsNullOrEmpty(sourceVideoPath))
         {
-            Debug.LogWarning("Cannot export video because source path is empty.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot export video because source path is empty.");
             return;
         }
 
         if (!File.Exists(sourceVideoPath))
         {
-            Debug.LogWarning("Cannot export video because source file does not exist: " + sourceVideoPath);
+            Debug.LogWarning($"[{DebugPrefix}] Cannot export video because source file does not exist: {sourceVideoPath}");
             return;
         }
 
@@ -56,14 +58,14 @@ public class ExportRecordedVideoButton : MonoBehaviour
 
         if (string.IsNullOrEmpty(exportedUri))
         {
-            Debug.LogWarning("Failed to export video: " + sourceVideoPath);
+            Debug.LogWarning($"[{DebugPrefix}] Failed to export video: {sourceVideoPath}");
             return;
         }
 
-        Debug.Log("Video exported to public Movies through MediaStore: " + exportedUri);
+        Debug.Log($"[{DebugPrefix}] Video exported to public Movies through MediaStore: {exportedUri}");
 #else
         string exportedUri = ExportVideoInEditor(sourceVideoPath, exportFileName);
-        Debug.Log("Video exported in Editor: " + exportedUri);
+        Debug.Log($"[{DebugPrefix}] Video exported in Editor: {exportedUri}");
 #endif
 
         if (copyJsonMetadata)
@@ -104,11 +106,11 @@ public class ExportRecordedVideoButton : MonoBehaviour
         try
         {
             File.Copy(sourceJsonPath, destinationPath, true);
-            Debug.Log("Review metadata exported: " + destinationPath);
+            Debug.Log($"[{DebugPrefix}] Review metadata exported: {destinationPath}");
         }
         catch (Exception exception)
         {
-            Debug.LogWarning("Video was exported, but JSON metadata export failed: " + exception.Message);
+            Debug.LogWarning($"[{DebugPrefix}] Video was exported, but JSON metadata export failed: {exception.Message}");
         }
     }
 

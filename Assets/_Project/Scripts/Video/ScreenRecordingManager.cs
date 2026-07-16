@@ -6,19 +6,25 @@ using UnityEngine.SceneManagement;
 
 public class QuestScreenRecordingManager : MonoBehaviour
 {
+    private const string DebugPrefix = "Record review debug";
+
     public static QuestScreenRecordingManager Instance { get; private set; }
+    public event Action<string> RecordingStarted;
     public event Action<string> RecordingReady;
 
     [Header("Recording")]
     [SerializeField] private bool startRecordingOnStart = true;
+    [SerializeField] private bool startRecordingOnSceneLoaded;
+    [SerializeField] private string gameplaySceneName = "MainScene";
     [SerializeField] private string endGameSceneName = "EndGameScene";
+    [SerializeField] private bool autoAttachRecordingToVideoPlayerOnReady;
     [SerializeField] private int width = 1280;
     [SerializeField] private int height = 720;
     [SerializeField] private int fps = 30;
     [SerializeField] private int bitrate = 8000000;
 
     [Header("Debug")]
-    [SerializeField] private bool stopAfterDebugDelay = true;
+    [SerializeField] private bool stopAfterDebugDelay;
     [SerializeField] private float debugStopDelay = 5f;
 
     [Header("Editor Test")]
@@ -29,7 +35,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
     public bool HasRecordingReady => !IsRecording && !waitingForStopCallback && !string.IsNullOrEmpty(LastRecordingPath);
     public bool IsStopping => waitingForStopCallback;
     public string DebugState =>
-        $"IsRecording={IsRecording}, WaitingForStopCallback={waitingForStopCallback}, HasRecordingReady={HasRecordingReady}, LastRecordingPath={LastRecordingPath}, EndGameSceneName={endGameSceneName}";
+        $"IsRecording={IsRecording}, WaitingForStopCallback={waitingForStopCallback}, HasRecordingReady={HasRecordingReady}, LastRecordingPath={LastRecordingPath}, GameplaySceneName={gameplaySceneName}, EndGameSceneName={endGameSceneName}";
 
     private bool waitingForStopCallback;
     private float recordingElapsedTime;
@@ -68,7 +74,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
         if (recordingElapsedTime >= debugStopDelay)
         {
             hasDebugStopTriggered = true;
-            Debug.Log("Debug stop recording after " + debugStopDelay + " seconds.");
+            Debug.Log($"[{DebugPrefix}] Debug stop recording after {debugStopDelay} seconds.");
             StopRecording();
         }
     }
@@ -77,7 +83,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
     {
         if (IsRecording)
         {
-            Debug.Log("StartRecording ignored because recording is already active. " + DebugState);
+            Debug.Log($"[{DebugPrefix}] StartRecording ignored because recording is already active. {DebugState}");
             return;
         }
 
@@ -87,7 +93,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
         string fileName = "review_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".mp4";
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        Debug.Log("StartRecording requested on Android. Output file name: " + fileName);
+        Debug.Log($"[{DebugPrefix}] StartRecording requested on Android. Output file name: {fileName}");
 
         using AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
         using AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
@@ -104,22 +110,22 @@ public class QuestScreenRecordingManager : MonoBehaviour
             gameObject.name);
 
         IsRecording = true;
-        Debug.Log("StartRecording permission flow launched. " + DebugState);
+        Debug.Log($"[{DebugPrefix}] StartRecording permission flow launched. {DebugState}");
 #else
         LastRecordingPath = ResolveEditorFallbackPath();
         IsRecording = true;
-        PlayerActionLogManager.Instance?.BeginSession(LastRecordingPath);
-        Debug.Log("Editor fallback recording started: " + LastRecordingPath);
+        NotifyRecordingStarted();
+        Debug.Log($"[{DebugPrefix}] Editor fallback recording started: {LastRecordingPath}");
 #endif
     }
 
     public void StopRecording()
     {
-        Debug.Log("StopRecording requested. " + DebugState);
+        Debug.Log($"[{DebugPrefix}] StopRecording requested. {DebugState}");
 
         if (!IsRecording)
         {
-            Debug.Log("StopRecording ignored because manager is not recording. " + DebugState);
+            Debug.Log($"[{DebugPrefix}] StopRecording ignored because manager is not recording. {DebugState}");
             TryAttachLastRecordingToVideoPlayer();
             return;
         }
@@ -127,19 +133,18 @@ public class QuestScreenRecordingManager : MonoBehaviour
         waitingForStopCallback = true;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        Debug.Log("Sending Android stopRecording command. " + DebugState);
+        Debug.Log($"[{DebugPrefix}] Sending Android stopRecording command. {DebugState}");
 
         using AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
         using AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
         using AndroidJavaClass bridge = new AndroidJavaClass("com.vrfiresafety.screenrecorder.ScreenRecorderBridge");
 
         bridge.CallStatic("stopRecording", activity);
-        Debug.Log("Android stopRecording command sent. Waiting for OnScreenRecordStopped callback.");
+        Debug.Log($"[{DebugPrefix}] Android stopRecording command sent. Waiting for OnScreenRecordStopped callback.");
 #else
         IsRecording = false;
         waitingForStopCallback = false;
-        Debug.Log("Editor fallback recording stopped: " + LastRecordingPath);
-        PlayerActionLogManager.Instance?.SaveSession();
+        Debug.Log($"[{DebugPrefix}] Editor fallback recording stopped: {LastRecordingPath}");
         NotifyRecordingReady();
         TryAttachLastRecordingToVideoPlayer();
 #endif
@@ -147,18 +152,18 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
     public void OnScreenRecordStarted(string videoPath)
     {
-        Debug.Log("OnScreenRecordStarted callback received: " + videoPath);
+        Debug.Log($"[{DebugPrefix}] OnScreenRecordStarted callback received: {videoPath}");
         LastRecordingPath = videoPath;
         IsRecording = true;
         recordingElapsedTime = 0f;
         hasDebugStopTriggered = false;
-        PlayerActionLogManager.Instance?.BeginSession(videoPath);
-        Debug.Log("Screen recording started: " + videoPath);
+        NotifyRecordingStarted();
+        Debug.Log($"[{DebugPrefix}] Screen recording started: {videoPath}");
     }
 
     public void OnScreenRecordStopped(string videoPath)
     {
-        Debug.Log("OnScreenRecordStopped callback received: " + videoPath);
+        Debug.Log($"[{DebugPrefix}] OnScreenRecordStopped callback received: {videoPath}");
 
         if (!string.IsNullOrEmpty(videoPath))
         {
@@ -167,8 +172,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
         IsRecording = false;
         waitingForStopCallback = false;
-        Debug.Log("Screen recording stopped: " + LastRecordingPath);
-        PlayerActionLogManager.Instance?.SaveSession();
+        Debug.Log($"[{DebugPrefix}] Screen recording stopped: {LastRecordingPath}");
         NotifyRecordingReady();
         TryAttachLastRecordingToVideoPlayer();
     }
@@ -177,29 +181,41 @@ public class QuestScreenRecordingManager : MonoBehaviour
     {
         IsRecording = false;
         waitingForStopCallback = false;
-        Debug.LogWarning("Screen recording permission denied. " + DebugState);
+        Debug.LogWarning($"[{DebugPrefix}] Screen recording permission denied. {DebugState}");
     }
 
     public void OnScreenRecordFailed(string error)
     {
         IsRecording = false;
         waitingForStopCallback = false;
-        Debug.LogError("Screen recording failed: " + error + ". " + DebugState);
+        Debug.LogError($"[{DebugPrefix}] Screen recording failed: {error}. {DebugState}");
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"Scene loaded: {scene.name}. Mode={mode}. {DebugState}");
+        Debug.Log($"[{DebugPrefix}] Scene loaded: {scene.name}. Mode={mode}. {DebugState}");
+
+        if (startRecordingOnSceneLoaded && scene.name == gameplaySceneName)
+        {
+            Debug.Log($"[{DebugPrefix}] Gameplay scene reached, starting recording.");
+            StartRecording();
+            return;
+        }
 
         if (scene.name == endGameSceneName)
         {
-            Debug.Log("End game scene reached, stopping recording.");
+            Debug.Log($"[{DebugPrefix}] End game scene reached, stopping recording.");
             StopRecording();
         }
     }
 
     private void TryAttachLastRecordingToVideoPlayer()
     {
+        if (!autoAttachRecordingToVideoPlayerOnReady)
+        {
+            return;
+        }
+
         if (waitingForStopCallback || string.IsNullOrEmpty(LastRecordingPath))
         {
             return;
@@ -229,7 +245,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
     {
         if (controller == null)
         {
-            Debug.LogWarning("Cannot play last recording because VideoPlayerController is missing.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot play last recording because VideoPlayerController is missing.");
             return;
         }
 
@@ -240,7 +256,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
         if (!IsRecording && !waitingForStopCallback)
         {
-            Debug.LogWarning("Cannot play last recording because recording is not ready. " + DebugState);
+            Debug.LogWarning($"[{DebugPrefix}] Cannot play last recording because recording is not ready. {DebugState}");
             return;
         }
 
@@ -273,6 +289,16 @@ public class QuestScreenRecordingManager : MonoBehaviour
         }
 
         RecordingReady?.Invoke(LastRecordingPath);
+    }
+
+    private void NotifyRecordingStarted()
+    {
+        if (string.IsNullOrEmpty(LastRecordingPath))
+        {
+            return;
+        }
+
+        RecordingStarted?.Invoke(LastRecordingPath);
     }
 
     private string ResolveEditorFallbackPath()

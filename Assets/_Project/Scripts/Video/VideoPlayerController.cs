@@ -6,6 +6,8 @@ using UnityEngine.EventSystems;
 
 public class VideoPlayerController : MonoBehaviour
 {
+    private const string DebugPrefix = "Record review debug";
+
     public VideoPlayer videoPlayer;
     public Button playPauseButton;
     public Button skipForwardButton;
@@ -35,7 +37,7 @@ public class VideoPlayerController : MonoBehaviour
 
             if (videoPlayer == null)
             {
-                Debug.LogError("VideoPlayer component is not assigned or found!");
+                Debug.LogError($"[{DebugPrefix}] VideoPlayer component is not assigned or found!");
                 return;
             }
         }
@@ -104,7 +106,7 @@ public class VideoPlayerController : MonoBehaviour
     {
         if (clip == null)
         {
-            Debug.LogError("VideoClip is null!");
+            Debug.LogError($"[{DebugPrefix}] VideoClip is null!");
             return;
         }
 
@@ -122,7 +124,7 @@ public class VideoPlayerController : MonoBehaviour
     {
         if (string.IsNullOrEmpty(videoPath))
         {
-            Debug.LogError("Video path is null or empty!");
+            Debug.LogError($"[{DebugPrefix}] Video path is null or empty!");
             return;
         }
 
@@ -137,6 +139,7 @@ public class VideoPlayerController : MonoBehaviour
         videoPlayer.url = videoUrl;
         videoPlayer.time = 0;
         videoPlayer.Prepare();
+        Debug.Log($"[{DebugPrefix}] Review video URL prepared: {videoUrl}");
 
         ReviewTimelineMarkerRenderer markerRenderer = GetComponentInChildren<ReviewTimelineMarkerRenderer>(true);
         if (markerRenderer != null)
@@ -295,7 +298,7 @@ public class VideoPlayerController : MonoBehaviour
     {
         if (videoPlayer == null)
         {
-            Debug.LogError("VideoPlayer is not assigned.");
+            Debug.LogError($"[{DebugPrefix}] VideoPlayer is not assigned.");
             return;
         }
 

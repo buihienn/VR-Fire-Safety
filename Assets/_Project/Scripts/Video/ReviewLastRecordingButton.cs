@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class ReviewLastRecordingButton : MonoBehaviour
 {
+    private const string DebugPrefix = "Record review debug";
+
     [SerializeField] private StartMenuUIManager startMenuUIManager;
     [SerializeField] private VideoPlayerController videoPlayerController;
 
@@ -19,7 +21,7 @@ public class ReviewLastRecordingButton : MonoBehaviour
 
         if (startMenuUIManager == null)
         {
-            Debug.LogWarning("Cannot show review because StartMenuUIManager was not found.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot show review because StartMenuUIManager was not found.");
             return;
         }
 
@@ -32,17 +34,18 @@ public class ReviewLastRecordingButton : MonoBehaviour
 
         if (videoPlayerController == null)
         {
-            Debug.LogWarning("Cannot play review video because VideoPlayerController was not found.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot play review video because VideoPlayerController was not found.");
             return;
         }
 
         QuestScreenRecordingManager manager = QuestScreenRecordingManager.Instance;
         if (manager == null)
         {
-            Debug.LogWarning("Cannot play review video because QuestScreenRecordingManager was not found.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot play review video because QuestScreenRecordingManager was not found.");
             return;
         }
 
+        Debug.Log($"[{DebugPrefix}] Review Gameplay clicked. Requesting last recording playback.");
         manager.StopRecordingAndPlayWhenReady(videoPlayerController);
     }
 }

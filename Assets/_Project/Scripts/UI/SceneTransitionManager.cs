@@ -4,7 +4,15 @@ using UnityEngine.SceneManagement;
 
 public class SceneTransitionManager : MonoBehaviour
 {
-    public FadeScreen fadeScreen;
+    [SerializeField] private bool useFadeScreen = true;
+    [SerializeField] private string preferredFadeScreenName = "FadeScreen";
+
+    private FadeScreen fadeScreen;
+
+    private void Awake()
+    {
+        ResolveFadeScreen();
+    }
 
     public void GoToScene(int sceneIndex)
     {
@@ -22,12 +30,46 @@ public class SceneTransitionManager : MonoBehaviour
         while (operation.progress < 0.9f)
             yield return null;
 
-        if (fadeScreen != null)
+        FadeScreen activeFadeScreen = ResolveFadeScreen();
+        if (useFadeScreen && activeFadeScreen != null)
         {
-            fadeScreen.FadeOut();
-            yield return new WaitForSeconds(fadeScreen.fadeDuration);
+            activeFadeScreen.FadeOut();
+            yield return new WaitForSeconds(activeFadeScreen.fadeDuration);
         }
 
         operation.allowSceneActivation = true;
+    }
+
+    private FadeScreen ResolveFadeScreen()
+    {
+        if (!useFadeScreen)
+        {
+            return null;
+        }
+
+        if (fadeScreen != null)
+        {
+            return fadeScreen;
+        }
+
+        FadeScreen[] fadeScreens = FindObjectsByType<FadeScreen>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        foreach (FadeScreen candidate in fadeScreens)
+        {
+            if (candidate != null && candidate.name == preferredFadeScreenName)
+            {
+                fadeScreen = candidate;
+                return fadeScreen;
+            }
+        }
+
+        if (fadeScreens.Length > 0)
+        {
+            fadeScreen = fadeScreens[0];
+        }
+
+        return fadeScreen;
     }
 }
