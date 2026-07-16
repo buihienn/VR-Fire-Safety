@@ -34,7 +34,7 @@ public class SafetyPinDetachOnPull : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnRemovedNetworkChanged))]
     private NetworkBool IsRemovedNet { get; set; }
 
-    public bool IsRemoved => fusionSpawned ? IsRemovedNet : isRemoved;
+    public bool IsRemoved => fusionSpawned ? (bool)IsRemovedNet : isRemoved;
 
     [Header("Outlines")]
     [SerializeField] private Outline extinguisherBodyOutline;
