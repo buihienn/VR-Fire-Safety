@@ -4935,6 +4935,8 @@ MonoBehaviour:
   buildRatePerFire: 0.01
   maximumFireContribution: 5
   naturalClearRate: 0.003
+  clearFasterWhenWindowOpen: 1
+  windowClearRate: 0.03
   _Smoke01Net: 0
 --- !u!114 &4091001508871191234
 MonoBehaviour:

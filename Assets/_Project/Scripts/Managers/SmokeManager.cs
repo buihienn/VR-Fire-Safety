@@ -31,6 +31,14 @@ public class SmokeManager : NetworkBehaviour
     [Min(0f)]
     [SerializeField] private float naturalClearRate = 0.003f;
 
+    [Header("Window Exhaust")]
+    [Tooltip("When there is no active fire, open windows clear smoke faster.")]
+    [SerializeField] private bool clearFasterWhenWindowOpen = true;
+
+    [Tooltip("Additional clear rate for each fully open window.")]
+    [Min(0f)]
+    [SerializeField] private float windowClearRate = 0.03f;
+
     [Header("Network State")]
     [Networked]
     public float Smoke01Net { get; private set; }
@@ -53,6 +61,12 @@ public class SmokeManager : NetworkBehaviour
                 $"Có nhiều SmokeManager trong scene. Object thừa: {name}",
                 this
             );
+        }
+
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
         }
 
         Instance = this;
@@ -110,9 +124,12 @@ public class SmokeManager : NetworkBehaviour
         }
         else
         {
-            Smoke01Net -=
-                naturalClearRate *
-                Runner.DeltaTime;
+            float clearRate = naturalClearRate;
+
+            if (clearFasterWhenWindowOpen && GasSystem.Instance != null)
+                clearRate += windowClearRate * GasSystem.Instance.WindowOpen01();
+
+            Smoke01Net -= clearRate * Runner.DeltaTime;
         }
 
         Smoke01Net = Mathf.Clamp01(Smoke01Net);
@@ -224,5 +241,6 @@ public class SmokeManager : NetworkBehaviour
         maximumFireContribution =
             Mathf.Max(0.1f, maximumFireContribution);
         naturalClearRate = Mathf.Max(0f, naturalClearRate);
+        windowClearRate = Mathf.Max(0f, windowClearRate);
     }
 }

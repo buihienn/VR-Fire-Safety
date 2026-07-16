@@ -84,6 +84,8 @@ MonoBehaviour:
   vents:
   - {fileID: 0}
   - {fileID: 0}
+  synchronizedOpeningActiveAngle: 10
+  synchronizedOpeningFullAngle: 100
   level1Threshold: 0.1
   level2Threshold: 0.35
   level3Threshold: 0.7

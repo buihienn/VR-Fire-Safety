@@ -1,10 +1,12 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [InitializeOnLoad]
 public static class StartSceneLobbySceneViewControls
 {
     private const float PanelWidth = 180f;
+    private const string EndGameSceneName = "EndGameScene";
 
     static StartSceneLobbySceneViewControls()
     {
@@ -26,7 +28,7 @@ public static class StartSceneLobbySceneViewControls
 
         Handles.BeginGUI();
 
-        Rect area = new Rect(12f, 12f, PanelWidth, 98f);
+        Rect area = new Rect(12f, 12f, PanelWidth, 130f);
         GUILayout.BeginArea(area, GUI.skin.window);
         GUILayout.Label("Start Scene Debug", EditorStyles.boldLabel);
 
@@ -40,8 +42,21 @@ public static class StartSceneLobbySceneViewControls
             lobbyUI.StartGame();
         }
 
+        if (GUILayout.Button("Open End Game", GUILayout.Height(26f)))
+        {
+            EditorApplication.delayCall += OpenEndGameScene;
+        }
+
         GUILayout.EndArea();
 
         Handles.EndGUI();
+    }
+
+    private static void OpenEndGameScene()
+    {
+        if (EditorApplication.isPlaying)
+        {
+            SceneManager.LoadScene(EndGameSceneName, LoadSceneMode.Single);
+        }
     }
 }

@@ -50,6 +50,7 @@ GameObject:
   - component: {fileID: 4886690879415307964}
   - component: {fileID: 7846623446018537124}
   - component: {fileID: 2089812369799092700}
+  - component: {fileID: 909100000000000001}
   m_Layer: 0
   m_Name: RightWindowPivot
   m_TagString: Untagged
@@ -229,6 +230,9 @@ MonoBehaviour:
   hingeAxis: 1
   closedAngle: 0
   openAngle: 170
+  raiseDoorOpenedEvent: 0
+  openEventThresholdDeg: 10
+  actorId: Player
   invertDoorDirection: 0
   debugLogs: 0
   doorSmoothTime: 0.06
@@ -5376,6 +5380,7 @@ GameObject:
   - component: {fileID: 3142816277617158155}
   - component: {fileID: 4829703122496972044}
   - component: {fileID: 5287574772921799401}
+  - component: {fileID: 909100000000000002}
   m_Layer: 0
   m_Name: LeftWindowPivot
   m_TagString: Untagged
@@ -5511,6 +5516,44 @@ MonoBehaviour:
   rightDoorMesh: {fileID: 474271278848078679}
   leftOpenThreshold: 10
   rightOpenThreshold: 3
+--- !u!114 &909100000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1089731144539367520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e5816e148b4fc496fc45112aaf2ca1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  pivot: {fileID: 2617665154689917601}
+  localAxis: 1
+  networkSlot: 0
+  isWindow: 1
+  sendThresholdDegrees: 0.25
+  remoteSmoothTime: 0.06
+  localControlHoldSeconds: 0.2
+--- !u!114 &909100000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6455789001438822771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e5816e148b4fc496fc45112aaf2ca1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  pivot: {fileID: 5625741871439611028}
+  localAxis: 1
+  networkSlot: 1
+  isWindow: 1
+  sendThresholdDegrees: 0.25
+  remoteSmoothTime: 0.06
+  localControlHoldSeconds: 0.2
 --- !u!59 &5287574772921799401
 HingeJoint:
   m_ObjectHideFlags: 0

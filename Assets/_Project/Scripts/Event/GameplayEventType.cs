@@ -14,5 +14,7 @@ public enum GameplayEventType
     PlayerFainted,
     MatchStarted,
     MatchEnded,
-    WrongActionPerformed
+    WrongActionPerformed,
+    DoorOpened,
+    DoorClosed
 }

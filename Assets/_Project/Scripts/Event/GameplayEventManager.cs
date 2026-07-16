@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class GameplayEventManager : MonoBehaviour
 {
+    public static GameplayEventManager Instance { get; private set; }
+
     [SerializeField] private bool dontDestroyOnLoad = true;
     [SerializeField] private bool logEvents;
 
@@ -9,12 +11,23 @@ public class GameplayEventManager : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
         if (dontDestroyOnLoad)
             DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()
     {
+        if (Instance != this)
+            return;
+
         if (logEvents)
         {
             GameplayEventBus.OnEvent += LogEvent;
@@ -29,6 +42,12 @@ public class GameplayEventManager : MonoBehaviour
             GameplayEventBus.OnEvent -= LogEvent;
             subscribedToLog = false;
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     public void Raise(GameplayEventType type)
