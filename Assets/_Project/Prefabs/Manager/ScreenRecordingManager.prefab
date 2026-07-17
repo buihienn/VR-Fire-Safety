@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2203122162348079761
+--- !u!1 &3572116087581233923
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8373821548959604197}
-  - component: {fileID: 1212880873351277699}
+  - component: {fileID: 2724522939487689597}
+  - component: {fileID: 180905416302021404}
   m_Layer: 0
   m_Name: ScreenRecordingManager
   m_TagString: Untagged
@@ -17,13 +17,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8373821548959604197
+--- !u!4 &2724522939487689597
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2203122162348079761}
+  m_GameObject: {fileID: 3572116087581233923}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 10.93467, y: 0, z: 8.68539}
@@ -32,24 +32,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1212880873351277699
+--- !u!114 &180905416302021404
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2203122162348079761}
+  m_GameObject: {fileID: 3572116087581233923}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2566afa2b0687f4fad91cf9a4d89d43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startRecordingOnStart: 1
+  startRecordingOnStart: 0
+  startRecordingOnSceneLoaded: 1
+  gameplaySceneName: MainScene
   endGameSceneName: EndGameScene
+  autoAttachRecordingToVideoPlayerOnReady: 0
   width: 1280
   height: 720
   fps: 30
   bitrate: 8000000
-  stopAfterDebugDelay: 1
+  stopAfterDebugDelay: 0
   debugStopDelay: 10
   editorFallbackVideoPath: 
