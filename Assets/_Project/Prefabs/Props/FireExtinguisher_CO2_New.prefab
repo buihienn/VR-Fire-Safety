@@ -401,7 +401,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: e9b4b64f-1c7e-4dff-8f3c-ce409bdc3951
-  instanceId: 9f1ccb64-b8f2-4182-b7c1-8ca38bef387a
+  instanceId: 29d6c5d4-05ac-4d83-b61f-12d24f91f621
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 54548176-30f4-4a4a-8057-340a383c6102
@@ -528,8 +528,8 @@ MonoBehaviour:
   collisionOnlyForLocalSprayer: 1
   requirePinRemoved: 1
   safetyPin: {fileID: 8597454900626273323}
-  maxSpraySeconds: 10
-  remainingSpraySeconds: 10
+  maxSpraySeconds: 60
+  remainingSpraySeconds: 60
   delayBeforeSpray: 0.5
   requireCanSpray: 0
   canSpray: 1
