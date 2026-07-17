@@ -524,6 +524,7 @@ GameObject:
   - component: {fileID: 4033012017465496764}
   - component: {fileID: 7334805794934290193}
   - component: {fileID: 5357429405103535235}
+  - component: {fileID: 909100000000000003}
   m_Layer: 0
   m_Name: DoorLeft1Pivot
   m_TagString: Untagged
@@ -572,6 +573,9 @@ MonoBehaviour:
   hingeAxis: 1
   closedAngle: 0
   openAngle: 170
+  raiseDoorOpenedEvent: 0
+  openEventThresholdDeg: 10
+  actorId: Player
   invertDoorDirection: 0
   debugLogs: 0
   doorSmoothTime: 0.06
@@ -1105,6 +1109,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fdb7a1a3f540c35448e9e54ea14949a3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5663393100300354707}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fdb7a1a3f540c35448e9e54ea14949a3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 909100000000000004}
   m_SourcePrefab: {fileID: 100100000, guid: fdb7a1a3f540c35448e9e54ea14949a3, type: 3}
 --- !u!1 &1406595717726558373 stripped
 GameObject:
@@ -1222,6 +1229,44 @@ MonoBehaviour:
   rightDoorMesh: {fileID: 1406595717726558373}
   leftOpenThreshold: 10
   rightOpenThreshold: 3
+--- !u!114 &909100000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5330164893223800256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e5816e148b4fc496fc45112aaf2ca1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  pivot: {fileID: 4815238966270632204}
+  localAxis: 1
+  networkSlot: 2
+  isWindow: 0
+  sendThresholdDegrees: 0.25
+  remoteSmoothTime: 0.06
+  localControlHoldSeconds: 0.2
+--- !u!114 &909100000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1406595717726558373}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e5816e148b4fc496fc45112aaf2ca1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  pivot: {fileID: 1787625547314823711}
+  localAxis: 1
+  networkSlot: 3
+  isWindow: 0
+  sendThresholdDegrees: 0.25
+  remoteSmoothTime: 0.06
+  localControlHoldSeconds: 0.2
 --- !u!59 &5673245659708777394
 HingeJoint:
   m_ObjectHideFlags: 0

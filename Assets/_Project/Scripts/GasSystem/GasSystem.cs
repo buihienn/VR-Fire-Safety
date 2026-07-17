@@ -26,6 +26,18 @@ public class GasSystem : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
     private bool LeakActiveNet { get; set; }
 
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private float OpeningAngle0Net { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private float OpeningAngle1Net { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private float OpeningAngle2Net { get; set; }
+
+    [Networked, OnChangedRender(nameof(OnGasStateNetChanged))]
+    private float OpeningAngle3Net { get; set; }
+
     [Header("Leak Causes")]
     public bool hoseLeak = false;
     public List<GasStoveKnobLeakByAngle> stoveKnobs = new();
@@ -39,6 +51,13 @@ public class GasSystem : NetworkBehaviour
 
     [Header("Vent Sources")]
     public List<GasVentByAngle> vents = new();
+
+    [Header("Synchronized Openings")]
+    [Tooltip("Goc bat dau duoc tinh la dang mo/thong gio.")]
+    [SerializeField] private float synchronizedOpeningActiveAngle = 10f;
+
+    [Tooltip("Goc duoc tinh la mo hoan toan cho muc dich thong gio.")]
+    [SerializeField] private float synchronizedOpeningFullAngle = 100f;
 
     [Header("Level Thresholds (read from gas01)")]
     [Tooltip("gas01 < level1Threshold => Level 0")]
@@ -91,6 +110,10 @@ public class GasSystem : NetworkBehaviour
     private int currentGasLevel = -1;
     private bool fusionSpawned = false;
     private bool previousLeakActive = false;
+    private readonly float[] openingAngleCache = new float[4];
+    private readonly bool[] openingRegistered = new bool[4];
+    private readonly bool[] openingIsWindow = new bool[4];
+    private readonly bool[] openingWasOpen = new bool[4];
 
     private void Awake()
     {
@@ -120,6 +143,7 @@ public class GasSystem : NetworkBehaviour
             UpdateKnobLeak();
             UpdateVentilation();
             UpdateDerivedLeakState();
+            WriteNetworkOpeningState();
             WriteNetworkGasState();
         }
         else
@@ -216,6 +240,17 @@ public class GasSystem : NetworkBehaviour
         LeakActiveNet = leakActive;
     }
 
+    private void WriteNetworkOpeningState()
+    {
+        if (!fusionSpawned || !Object.HasStateAuthority)
+            return;
+
+        OpeningAngle0Net = openingAngleCache[0];
+        OpeningAngle1Net = openingAngleCache[1];
+        OpeningAngle2Net = openingAngleCache[2];
+        OpeningAngle3Net = openingAngleCache[3];
+    }
+
     private void ApplyNetworkGasStateToCache()
     {
         gas01 = Mathf.Clamp01(Gas01Net);
@@ -225,6 +260,10 @@ public class GasSystem : NetworkBehaviour
         leakActive = LeakActiveNet;
         leakPresent = hoseLeak || leakActive;
         mainSupplyOpen = mainValveOpen01 > mainValveOpenThreshold;
+        openingAngleCache[0] = OpeningAngle0Net;
+        openingAngleCache[1] = OpeningAngle1Net;
+        openingAngleCache[2] = OpeningAngle2Net;
+        openingAngleCache[3] = OpeningAngle3Net;
         RefreshGasLevel();
     }
 
@@ -256,6 +295,25 @@ public class GasSystem : NetworkBehaviour
         activeOpenings = 0;
         float ventSum = 0f;
 
+        bool hasSynchronizedOpenings = false;
+        for (int i = 0; i < openingRegistered.Length; i++)
+        {
+            if (!openingRegistered[i]) continue;
+
+            hasSynchronizedOpenings = true;
+            float open01 = GetOpeningOpen01(i);
+            ventSum += open01;
+
+            if (open01 > 0f)
+                activeOpenings++;
+        }
+
+        if (hasSynchronizedOpenings)
+        {
+            vent01 = Mathf.Max(0f, ventSum);
+            return;
+        }
+
         for (int i = 0; i < vents.Count; i++)
         {
             var v = vents[i];
@@ -271,6 +329,119 @@ public class GasSystem : NetworkBehaviour
         // Same as old version: do not clamp to 1.
         // 1 max vent = 1, 2 max vents = 2, etc.
         vent01 = Mathf.Max(0f, ventSum);
+    }
+
+    public void RegisterOpening(int slot, bool isWindow, float initialAngle)
+    {
+        if (!IsValidOpeningSlot(slot)) return;
+
+        openingRegistered[slot] = true;
+        openingIsWindow[slot] = isWindow;
+
+        if (!fusionSpawned || Object.HasStateAuthority)
+        {
+            openingAngleCache[slot] = NormalizeOpeningAngle(initialAngle);
+            openingWasOpen[slot] = IsOpeningAngleOpen(openingAngleCache[slot]);
+            WriteNetworkOpeningState();
+        }
+    }
+
+    public float GetOpeningAngle(int slot)
+    {
+        return IsValidOpeningSlot(slot) ? openingAngleCache[slot] : 0f;
+    }
+
+    public float GetOpeningOpen01(int slot)
+    {
+        if (!IsValidOpeningSlot(slot) || !openingRegistered[slot]) return 0f;
+
+        return Mathf.InverseLerp(
+            synchronizedOpeningActiveAngle,
+            synchronizedOpeningFullAngle,
+            Mathf.Abs(openingAngleCache[slot]));
+    }
+
+    public float WindowOpen01()
+    {
+        float total = 0f;
+
+        for (int i = 0; i < openingRegistered.Length; i++)
+        {
+            if (openingRegistered[i] && openingIsWindow[i])
+                total += GetOpeningOpen01(i);
+        }
+
+        return total;
+    }
+
+    public bool AnyWindowOpen()
+    {
+        return WindowOpen01() > 0f;
+    }
+
+    public void SetOpeningAngle(int slot, float angle, bool isWindow)
+    {
+        if (!IsValidOpeningSlot(slot)) return;
+
+        angle = NormalizeOpeningAngle(angle);
+
+        if (!fusionSpawned)
+        {
+            ApplyOpeningAngle(slot, angle, isWindow);
+            return;
+        }
+
+        if (Object.HasStateAuthority)
+            ApplyOpeningAngle(slot, angle, isWindow);
+        else
+            RPC_RequestSetOpeningAngle(slot, angle, isWindow);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestSetOpeningAngle(int slot, float angle, bool isWindow)
+    {
+        ApplyOpeningAngle(slot, angle, isWindow);
+    }
+
+    private void ApplyOpeningAngle(int slot, float angle, bool isWindow)
+    {
+        if (!IsValidOpeningSlot(slot)) return;
+
+        openingRegistered[slot] = true;
+        openingIsWindow[slot] = isWindow;
+        openingAngleCache[slot] = NormalizeOpeningAngle(angle);
+
+        bool isOpen = IsOpeningAngleOpen(openingAngleCache[slot]);
+        if (openingWasOpen[slot] != isOpen)
+        {
+            openingWasOpen[slot] = isOpen;
+
+            GameplayEventBus.Raise(
+                isWindow
+                    ? (isOpen ? GameplayEventType.WindowOpened : GameplayEventType.WindowClosed)
+                    : (isOpen ? GameplayEventType.DoorOpened : GameplayEventType.DoorClosed),
+                actorId: "Player",
+                targetId: $"Opening_{slot}",
+                payload: openingAngleCache[slot]);
+        }
+
+        UpdateVentilation();
+        WriteNetworkOpeningState();
+    }
+
+    private bool IsOpeningAngleOpen(float angle)
+    {
+        return Mathf.Abs(angle) >= synchronizedOpeningActiveAngle;
+    }
+
+    private static bool IsValidOpeningSlot(int slot)
+    {
+        return slot >= 0 && slot < 4;
+    }
+
+    private static float NormalizeOpeningAngle(float angle)
+    {
+        return Mathf.DeltaAngle(0f, angle);
     }
 
     private void CheckLeakEvent()
@@ -402,7 +573,15 @@ public class GasSystem : NetworkBehaviour
         currentGasLevel = newLevel;
 
         if (Application.isPlaying)
+        {
             GasLevelChanged?.Invoke(currentGasLevel);
+
+            GameplayEventBus.Raise(
+                GameplayEventType.GasLevelChanged,
+                actorId: "GasSystem",
+                targetId: gameObject.name,
+                payload: currentGasLevel);
+        }
     }
 
     public string GasLevelText()
@@ -466,6 +645,12 @@ public class GasSystem : NetworkBehaviour
 
         if (secondsToClearNaturally < 0.01f)
             secondsToClearNaturally = 0.01f;
+
+        synchronizedOpeningActiveAngle = Mathf.Clamp(synchronizedOpeningActiveAngle, 0.1f, 179f);
+        synchronizedOpeningFullAngle = Mathf.Clamp(
+            synchronizedOpeningFullAngle,
+            synchronizedOpeningActiveAngle + 0.1f,
+            180f);
 
         level1Threshold = Mathf.Clamp(level1Threshold, 0f, 0.98f);
         level2Threshold = Mathf.Clamp(level2Threshold, level1Threshold + 0.01f, 0.99f);

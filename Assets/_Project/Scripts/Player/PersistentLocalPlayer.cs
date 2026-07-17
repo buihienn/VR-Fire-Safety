@@ -102,6 +102,9 @@ public class PersistentLocalPlayer : MonoBehaviour
         else
         {
             MovePlayerTo(marker);
+            Debug.Log(
+                $"[{nameof(PersistentLocalPlayer)}] Placed player in {scene.name} at marker " +
+                $"{marker.name}: {transform.position}.");
         }
 
         yield return UnloadLobbySceneAfterFrame();
@@ -140,8 +143,7 @@ public class PersistentLocalPlayer : MonoBehaviour
         float maxDistance = groundRaycastHeight + groundRaycastDistance;
         if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, maxDistance, groundLayers, QueryTriggerInteraction.Ignore))
         {
-            float minimumSafeY = hit.point.y + groundOffset;
-            position.y = Mathf.Max(position.y, minimumSafeY);
+            position.y = hit.point.y + groundOffset;
         }
         else
         {

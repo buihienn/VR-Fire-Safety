@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 using UnityEngine.Events;
@@ -32,6 +33,8 @@ public class PlayerGasExposure : MonoBehaviour
     [SerializeField] private bool fainted;
 
     private Collider exposureCollider;
+    private readonly Dictionary<GasSystem, int> overlappingGasSystems = new();
+    private bool wasInDanger;
 
     private void Awake()
     {
@@ -65,6 +68,19 @@ public class PlayerGasExposure : MonoBehaviour
             insideGasZone &&
             currentGas != null &&
             currentGasLevel >= dangerousLevelStartsAt;
+
+        if (inDanger != wasInDanger)
+        {
+            GameplayEventBus.Raise(
+                inDanger
+                    ? GameplayEventType.PlayerEnteredDangerZone
+                    : GameplayEventType.PlayerExitedDangerZone,
+                actorId: GetActorId(),
+                targetId: currentGas != null ? currentGas.gameObject.name : "GasZone",
+                payload: currentGasLevel);
+
+            wasInDanger = inDanger;
+        }
 
         if (inDanger)
         {
@@ -107,8 +123,10 @@ public class PlayerGasExposure : MonoBehaviour
         GasSystem gas = other.GetComponentInParent<GasSystem>();
         if (gas == null) return;
 
+        overlappingGasSystems.TryGetValue(gas, out int overlapCount);
+        overlappingGasSystems[gas] = overlapCount + 1;
         currentGas = gas;
-        insideGasZone = true;
+        insideGasZone = overlappingGasSystems.Count > 0;
     }
 
     private void OnTriggerStay(Collider other)
@@ -118,8 +136,11 @@ public class PlayerGasExposure : MonoBehaviour
         GasSystem gas = other.GetComponentInParent<GasSystem>();
         if (gas == null) return;
 
+        if (!overlappingGasSystems.ContainsKey(gas))
+            overlappingGasSystems[gas] = 1;
+
         currentGas = gas;
-        insideGasZone = true;
+        insideGasZone = overlappingGasSystems.Count > 0;
     }
 
     private void OnTriggerExit(Collider other)
@@ -128,10 +149,27 @@ public class PlayerGasExposure : MonoBehaviour
 
         GasSystem gas = other.GetComponentInParent<GasSystem>();
         if (gas == null) return;
-        if (gas != currentGas) return;
 
-        insideGasZone = false;
-        currentGas = null;
+        if (overlappingGasSystems.TryGetValue(gas, out int overlapCount))
+        {
+            overlapCount--;
+            if (overlapCount <= 0)
+                overlappingGasSystems.Remove(gas);
+            else
+                overlappingGasSystems[gas] = overlapCount;
+        }
+
+        insideGasZone = overlappingGasSystems.Count > 0;
+
+        if (gas == currentGas)
+        {
+            currentGas = null;
+            foreach (GasSystem remainingGas in overlappingGasSystems.Keys)
+            {
+                currentGas = remainingGas;
+                break;
+            }
+        }
     }
 
     private void Faint()
@@ -142,6 +180,12 @@ public class PlayerGasExposure : MonoBehaviour
         faintProgress01 = 1f;
 
         onFainted?.Invoke();
+
+        GameplayEventBus.Raise(
+            GameplayEventType.PlayerFainted,
+            actorId: GetActorId(),
+            targetId: currentGas != null ? currentGas.gameObject.name : "GasZone",
+            payload: currentGasLevel);
 
         if (notifyGameFlowManager && GameFlowManager.Instance != null)
         {
@@ -170,10 +214,12 @@ public class PlayerGasExposure : MonoBehaviour
     public void ResetExposure()
     {
         insideGasZone = false;
+        overlappingGasSystems.Clear();
         currentGas = null;
         currentGasLevel = 0;
         faintProgress01 = 0f;
         fainted = false;
+        wasInDanger = false;
     }
 
     public bool HasFainted() => fainted;
