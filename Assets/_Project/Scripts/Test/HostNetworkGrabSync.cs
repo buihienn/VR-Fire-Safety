@@ -29,6 +29,23 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
     [Tooltip("Clear velocity when this peer loses State Authority.")]
     [SerializeField] private bool zeroVelocityOnAuthorityLoss = true;
 
+    [Header("Optional Secondary Grab - Hose Nozzle")]
+    [Tooltip("Sync a child Rigidbody such as WireBuilder/EndAnchor without adding a second NetworkObject.")]
+    [SerializeField] private bool syncSecondaryTransform;
+    [SerializeField] private Transform secondaryTransform;
+    [SerializeField] private Rigidbody secondaryRigidbody;
+    [SerializeField] private Grabbable secondaryGrabbable;
+
+    [Tooltip("The client selecting the nozzle requests authority of the extinguisher root.")]
+    [SerializeField] private bool requestAuthorityOnSecondarySelect = true;
+
+    [Min(0f)]
+    [SerializeField] private float secondaryRemoteFollowSpeed = 25f;
+
+    [Networked] private Vector3 SecondaryLocalPositionNet { get; set; }
+    [Networked] private Quaternion SecondaryLocalRotationNet { get; set; }
+    [Networked] private NetworkBool SecondaryPoseInitializedNet { get; set; }
+
     [Header("Debug - Runtime")]
     [SerializeField] private bool fusionSpawned;
     [SerializeField] private bool hasStateAuthority;
@@ -39,6 +56,10 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
     private bool originalSettingsCached;
     private bool authorityStateInitialized;
     private bool previousHasStateAuthority;
+    private bool secondaryLocallySelected;
+    private bool secondaryOriginalIsKinematic;
+    private bool secondaryOriginalUseGravity;
+    private bool secondarySettingsCached;
 
     private void Reset()
     {
@@ -49,6 +70,7 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
     {
         ResolveReferences();
         CacheOriginalRigidbodySettings();
+        CacheSecondaryRigidbodySettings();
 
         // A previous version disabled NetworkTransform while a client was grabbing.
         // Shared Mode transfers State Authority instead, so NetworkTransform must
@@ -57,6 +79,18 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
         {
             networkTransform.enabled = true;
         }
+    }
+
+    private void OnEnable()
+    {
+        if (secondaryGrabbable != null)
+            secondaryGrabbable.WhenPointerEventRaised += OnSecondaryPointerEvent;
+    }
+
+    private void OnDisable()
+    {
+        if (secondaryGrabbable != null)
+            secondaryGrabbable.WhenPointerEventRaised -= OnSecondaryPointerEvent;
     }
 
     public override void Spawned()
@@ -70,6 +104,11 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
         }
 
         ApplyAuthorityPhysics(force: true);
+
+        if (syncSecondaryTransform && Object.HasStateAuthority)
+            WriteSecondaryPose();
+
+        ApplySecondaryAuthorityPhysics();
         RefreshDebug();
     }
 
@@ -78,7 +117,38 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
         fusionSpawned = false;
         authorityStateInitialized = false;
         RestoreOriginalRigidbodySettings();
+        RestoreSecondaryRigidbodySettings();
         RefreshDebug();
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!syncSecondaryTransform || !Object.HasStateAuthority)
+            return;
+
+        WriteSecondaryPose();
+    }
+
+    public override void Render()
+    {
+        if (!syncSecondaryTransform || secondaryTransform == null)
+            return;
+
+        if (Object == null || Object.HasStateAuthority || secondaryLocallySelected)
+            return;
+
+        if (!SecondaryPoseInitializedNet)
+            return;
+
+        float follow01 = 1f - Mathf.Exp(-secondaryRemoteFollowSpeed * Time.deltaTime);
+        secondaryTransform.localPosition = Vector3.Lerp(
+            secondaryTransform.localPosition,
+            SecondaryLocalPositionNet,
+            follow01);
+        secondaryTransform.localRotation = Quaternion.Slerp(
+            secondaryTransform.localRotation,
+            SecondaryLocalRotationNet,
+            follow01);
     }
 
     private void LateUpdate()
@@ -90,7 +160,56 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
         }
 
         ApplyAuthorityPhysics(force: false);
+        ApplySecondaryAuthorityPhysics();
         RefreshDebug();
+    }
+
+    private void OnSecondaryPointerEvent(PointerEvent evt)
+    {
+        if (evt.Type == PointerEventType.Select)
+        {
+            secondaryLocallySelected = true;
+
+            if (requestAuthorityOnSecondarySelect &&
+                fusionSpawned &&
+                Object != null &&
+                !Object.HasStateAuthority)
+            {
+                Object.RequestStateAuthority();
+            }
+        }
+        else if (evt.Type == PointerEventType.Unselect ||
+                 evt.Type == PointerEventType.Cancel)
+        {
+            secondaryLocallySelected = false;
+        }
+    }
+
+    private void WriteSecondaryPose()
+    {
+        if (secondaryTransform == null)
+            return;
+
+        SecondaryLocalPositionNet = secondaryTransform.localPosition;
+        SecondaryLocalRotationNet = secondaryTransform.localRotation;
+        SecondaryPoseInitializedNet = true;
+    }
+
+    private void ApplySecondaryAuthorityPhysics()
+    {
+        if (!syncSecondaryTransform || secondaryRigidbody == null || Object == null)
+            return;
+
+        if (Object.HasStateAuthority)
+        {
+            secondaryRigidbody.useGravity = secondaryOriginalUseGravity;
+            secondaryRigidbody.isKinematic =
+                secondaryLocallySelected || secondaryOriginalIsKinematic;
+            return;
+        }
+
+        secondaryRigidbody.useGravity = false;
+        secondaryRigidbody.isKinematic = true;
     }
 
     private void ApplyAuthorityPhysics(bool force)
@@ -152,6 +271,25 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
         {
             targetGrabbable = GetComponentInChildren<Grabbable>(true);
         }
+
+        if (secondaryTransform != null)
+        {
+            if (secondaryRigidbody == null)
+                secondaryRigidbody = secondaryTransform.GetComponent<Rigidbody>();
+
+            if (secondaryGrabbable == null)
+                secondaryGrabbable = secondaryTransform.GetComponent<Grabbable>();
+        }
+    }
+
+    private void CacheSecondaryRigidbodySettings()
+    {
+        if (secondaryRigidbody == null || secondarySettingsCached)
+            return;
+
+        secondaryOriginalIsKinematic = secondaryRigidbody.isKinematic;
+        secondaryOriginalUseGravity = secondaryRigidbody.useGravity;
+        secondarySettingsCached = true;
     }
 
     private void CacheOriginalRigidbodySettings()
@@ -175,6 +313,20 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
 
         targetRigidbody.useGravity = originalUseGravity;
         targetRigidbody.isKinematic = originalIsKinematic;
+    }
+
+    private void RestoreSecondaryRigidbodySettings()
+    {
+        if (secondaryRigidbody == null || !secondarySettingsCached)
+            return;
+
+        secondaryRigidbody.useGravity = secondaryOriginalUseGravity;
+        secondaryRigidbody.isKinematic = secondaryOriginalIsKinematic;
+    }
+
+    private void OnValidate()
+    {
+        secondaryRemoteFollowSpeed = Mathf.Max(0f, secondaryRemoteFollowSpeed);
     }
 
     private void RefreshDebug()
