@@ -7,6 +7,8 @@ using UnityEngine.Video;
 
 public class ReviewTimelineMarkerRenderer : MonoBehaviour
 {
+    private const string DebugPrefix = "Record review debug";
+
     [Header("References")]
     [SerializeField] private VideoPlayerController videoPlayerController;
     [SerializeField] private VideoPlayer videoPlayer;
@@ -59,7 +61,10 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
     {
         if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
         {
-            Debug.LogWarning("Cannot load review marker JSON: " + jsonPath);
+            loadedFromMock = false;
+            loadedSession = null;
+            ClearMarkers();
+            Debug.LogWarning($"[{DebugPrefix}] Cannot load review marker JSON: {jsonPath}");
             return;
         }
 
@@ -71,7 +76,7 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
     {
         if (string.IsNullOrEmpty(json))
         {
-            Debug.LogWarning("Cannot load review markers because JSON text is empty.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot load review markers because JSON text is empty.");
             return;
         }
 
@@ -105,7 +110,7 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
 
         if (markerContainer == null || markerPrefab == null)
         {
-            Debug.LogWarning("Cannot render review markers because marker container or prefab is missing.");
+            Debug.LogWarning($"[{DebugPrefix}] Cannot render review markers because marker container or prefab is missing.");
             return;
         }
 
@@ -117,7 +122,7 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
 
-        Debug.Log($"Rendering {loadedSession.actions.Count} review markers. Duration={duration:0.00}s, ContainerWidth={markerContainer.rect.width:0.00}");
+        Debug.Log($"[{DebugPrefix}] Rendering {loadedSession.actions.Count} review markers. Duration={duration:0.00}s, ContainerWidth={markerContainer.rect.width:0.00}");
 
         foreach (PlayerActionLogEntry action in loadedSession.actions)
         {
@@ -143,7 +148,7 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
         markerRect.pivot = new Vector2(0.5f, 0.5f);
         markerRect.anchoredPosition = new Vector2(markerX, 0f);
 
-        Debug.Log($"Review marker '{action.title}' at {action.time:0.00}s => {normalizedTime:P0}, X={markerX:0.00}");
+        Debug.Log($"[{DebugPrefix}] Review marker '{action.title}' at {action.time:0.00}s => {normalizedTime:P0}, X={markerX:0.00}");
 
         Image image = marker.GetComponent<Image>();
         if (image != null)

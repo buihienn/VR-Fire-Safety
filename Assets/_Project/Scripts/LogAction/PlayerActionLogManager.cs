@@ -36,9 +36,12 @@ public class PlayerActionLogSession
 
 public class PlayerActionLogManager : MonoBehaviour
 {
+    private const string DebugPrefix = "Record review debug";
+
     public static PlayerActionLogManager Instance { get; private set; }
 
-    [SerializeField] private bool dontDestroyOnLoad = true;
+    [SerializeField] private bool dontDestroyOnLoad = false;
+    [SerializeField] private bool saveActiveSessionOnDestroy = true;
     [SerializeField] private bool logToConsole = true;
     [SerializeField] private bool listenToGameplayEvents = true;
 
@@ -74,6 +77,11 @@ public class PlayerActionLogManager : MonoBehaviour
 
         GameplayEventBus.OnEvent += OnGameplayEvent;
         subscribedToGameplayEvents = true;
+
+        if (logToConsole)
+        {
+            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Subscribed to GameplayEventBus.");
+        }
     }
 
     private void OnDisable()
@@ -85,6 +93,11 @@ public class PlayerActionLogManager : MonoBehaviour
 
         GameplayEventBus.OnEvent -= OnGameplayEvent;
         subscribedToGameplayEvents = false;
+
+        if (logToConsole)
+        {
+            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Unsubscribed from GameplayEventBus.");
+        }
     }
 
     public void BeginSession(string videoPath)
@@ -108,7 +121,34 @@ public class PlayerActionLogManager : MonoBehaviour
 
         if (logToConsole)
         {
-            Debug.Log("Player action log session started: " + CurrentJsonPath);
+            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Player action log session started: {CurrentJsonPath}");
+        }
+    }
+
+    public void BeginSession()
+    {
+        BeginSession(string.Empty);
+    }
+
+    public void AttachVideoPath(string videoPath)
+    {
+        if (currentSession == null || string.IsNullOrEmpty(videoPath))
+        {
+            return;
+        }
+
+        string sessionId = Path.GetFileNameWithoutExtension(videoPath);
+        if (!string.IsNullOrEmpty(sessionId))
+        {
+            currentSession.sessionId = sessionId;
+        }
+
+        currentSession.videoPath = videoPath;
+        CurrentJsonPath = CreateJsonPath(videoPath, currentSession.sessionId);
+
+        if (logToConsole)
+        {
+            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Player action log attached to video: {CurrentJsonPath}");
         }
     }
 
@@ -131,7 +171,7 @@ public class PlayerActionLogManager : MonoBehaviour
     {
         if (!IsSessionActive || currentSession == null)
         {
-            Debug.LogWarning("Cannot log player action because no action log session is active.");
+            Debug.LogWarning($"[{DebugPrefix}] [PlayerActionLogManager] Cannot log player action because no action log session is active.");
             return;
         }
 
@@ -140,8 +180,19 @@ public class PlayerActionLogManager : MonoBehaviour
 
     private void OnGameplayEvent(GameplayEvent gameplayEvent)
     {
+        if (logToConsole)
+        {
+            Debug.Log(
+                $"[{DebugPrefix}] [PlayerActionLogManager] Received event {gameplayEvent.Type} | Actor={gameplayEvent.ActorId} | Target={gameplayEvent.TargetId} | SessionActive={IsSessionActive}");
+        }
+
         if (!IsSessionActive || currentSession == null)
         {
+            if (logToConsole)
+            {
+                Debug.LogWarning($"[{DebugPrefix}] [PlayerActionLogManager] Event {gameplayEvent.Type} ignored because no action log session is active.");
+            }
+
             return;
         }
 
@@ -186,7 +237,8 @@ public class PlayerActionLogManager : MonoBehaviour
 
         if (logToConsole)
         {
-            Debug.Log($"Player action logged [{entry.result}] {entry.time:0.00}s - {entry.title}");
+            Debug.Log(
+                $"[{DebugPrefix}] [PlayerActionLogManager] Action logged #{currentSession.actions.Count} [{entry.result}] {entry.time:0.00}s - {entry.title} | EventType={entry.eventType} | Actor={entry.actorId} | Target={entry.targetId} | Scene={entry.sceneName}");
         }
     }
 
@@ -255,7 +307,7 @@ public class PlayerActionLogManager : MonoBehaviour
 
     public void SaveSession()
     {
-        if (currentSession == null || string.IsNullOrEmpty(CurrentJsonPath))
+        if (!IsSessionActive || currentSession == null || string.IsNullOrEmpty(CurrentJsonPath))
         {
             return;
         }
@@ -272,7 +324,7 @@ public class PlayerActionLogManager : MonoBehaviour
 
         if (logToConsole)
         {
-            Debug.Log("Player action log saved: " + CurrentJsonPath);
+            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Player action log saved: {CurrentJsonPath} | ActionCount={currentSession.actions.Count}");
         }
     }
 
@@ -288,5 +340,18 @@ public class PlayerActionLogManager : MonoBehaviour
         }
 
         return Path.Combine(Application.persistentDataPath, "Movies", "Replays", sessionId + ".json");
+    }
+
+    private void OnDestroy()
+    {
+        if (saveActiveSessionOnDestroy)
+        {
+            SaveSession();
+        }
+
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 }
