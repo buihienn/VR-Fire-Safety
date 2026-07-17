@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -14,6 +15,12 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
     [SerializeField] private VideoPlayer videoPlayer;
     [SerializeField] private RectTransform markerContainer;
     [SerializeField] private Button markerPrefab;
+    [SerializeField] private float markerVerticalOffset = 20f;
+
+    [Header("Action Detail")]
+    [SerializeField] private GameObject actionDetailCanvas;
+    [SerializeField] private TMP_Text headlineLabel;
+    [SerializeField] private TMP_Text contentLabel;
 
     [Header("Mock/Test")]
     [SerializeField] private TextAsset mockJsonLog;
@@ -134,6 +141,8 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
     {
         Button marker = Instantiate(markerPrefab, markerContainer);
         marker.gameObject.SetActive(true);
+        marker.transform.SetAsLastSibling();
+        marker.interactable = true;
         spawnedMarkers.Add(marker.gameObject);
 
         RectTransform markerRect = marker.GetComponent<RectTransform>();
@@ -146,7 +155,7 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
         markerRect.anchorMin = new Vector2(0.5f, 0.5f);
         markerRect.anchorMax = new Vector2(0.5f, 0.5f);
         markerRect.pivot = new Vector2(0.5f, 0.5f);
-        markerRect.anchoredPosition = new Vector2(markerX, 0f);
+        markerRect.anchoredPosition = new Vector2(markerX, markerVerticalOffset);
 
         Debug.Log($"[{DebugPrefix}] Review marker '{action.title}' at {action.time:0.00}s => {normalizedTime:P0}, X={markerX:0.00}");
 
@@ -154,13 +163,40 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
         if (image != null)
         {
             image.color = GetMarkerColor(action.result);
+            image.raycastTarget = true;
         }
 
         marker.onClick.RemoveAllListeners();
         marker.onClick.AddListener(() =>
         {
-            videoPlayerController?.SeekToTime(action.time);
+            OnMarkerClicked(action);
         });
+    }
+
+    private void OnMarkerClicked(PlayerActionLogEntry action)
+    {
+        Debug.Log($"[{DebugPrefix}] Review marker clicked '{action.title}' at {action.time:0.00}s");
+
+        videoPlayerController?.SeekToTime(action.time);
+        ShowActionDetail(action);
+    }
+
+    private void ShowActionDetail(PlayerActionLogEntry action)
+    {
+        if (actionDetailCanvas != null)
+        {
+            actionDetailCanvas.SetActive(true);
+        }
+
+        if (headlineLabel != null)
+        {
+            headlineLabel.text = action.title;
+        }
+
+        if (contentLabel != null)
+        {
+            contentLabel.text = action.result.ToString();
+        }
     }
 
     private Color GetMarkerColor(PlayerActionResult result)

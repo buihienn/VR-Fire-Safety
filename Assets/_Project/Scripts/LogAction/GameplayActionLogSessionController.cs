@@ -5,7 +5,7 @@ public class GameplayActionLogSessionController : MonoBehaviour
     private const string DebugPrefix = "Record review debug";
 
     [Header("Session")]
-    [SerializeField] private bool beginSessionOnStart = true;
+    [SerializeField] private bool beginSessionOnStart;
     [SerializeField] private bool saveSessionOnDestroy = true;
     [SerializeField] private bool attachCurrentRecordingVideo = true;
     [SerializeField] private bool logToConsole = true;

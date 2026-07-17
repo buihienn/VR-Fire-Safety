@@ -8,6 +8,7 @@ public class StartMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject aboutLayout;
     [SerializeField] private GameObject reviewLayout;
     [SerializeField] private GameObject reviewVideoListLayout;
+    [SerializeField] private GameObject reviewActionLogCanvas;
     [SerializeField] private GameObject hubGas;
     [SerializeField] private GameObject timeLabel;
 
@@ -65,5 +66,8 @@ public class StartMenuUIManager : MonoBehaviour
 
         if (reviewVideoListLayout != null)
             reviewVideoListLayout.SetActive(activeLayout == reviewVideoListLayout);
+
+        if (reviewActionLogCanvas != null && activeLayout != reviewLayout)
+            reviewActionLogCanvas.SetActive(false);
     }
 }

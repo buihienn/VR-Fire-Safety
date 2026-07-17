@@ -23,6 +23,8 @@ public class VideoPlayerController : MonoBehaviour
 
     private bool isDraggingSlider = false;
     private bool hasInteracted = false;
+    private bool hasPendingSeek;
+    private float pendingSeekTime;
 
     public delegate void VideoPlayerInteractionEvent();
     public static event VideoPlayerInteractionEvent OnVideoPlayerInteracted;
@@ -251,6 +253,13 @@ public class VideoPlayerController : MonoBehaviour
             timeSlider.value = 0f;
         }
 
+        if (hasPendingSeek)
+        {
+            float seekTime = pendingSeekTime;
+            hasPendingSeek = false;
+            SeekToTime(seekTime);
+        }
+
         UpdatePlayPauseIcon();
         UpdateTimelineText(0);
     }
@@ -315,6 +324,9 @@ public class VideoPlayerController : MonoBehaviour
     {
         if (videoPlayer == null || !videoPlayer.isPrepared)
         {
+            hasPendingSeek = true;
+            pendingSeekTime = Mathf.Max(0f, time);
+            Debug.Log($"[{DebugPrefix}] Review video seek queued until prepared: {pendingSeekTime:0.00}s");
             return;
         }
 
@@ -329,11 +341,19 @@ public class VideoPlayerController : MonoBehaviour
         }
 
         videoPlayer.time = time;
+        if (timeSlider != null)
+        {
+            timeSlider.value = time;
+        }
+
+        UpdateTimelineText(time);
+
         if (!videoPlayer.isPlaying)
         {
             videoPlayer.Play();
         }
 
+        Debug.Log($"[{DebugPrefix}] Review video seek requested: {time:0.00}s");
         NotifyInteraction();
     }
 
