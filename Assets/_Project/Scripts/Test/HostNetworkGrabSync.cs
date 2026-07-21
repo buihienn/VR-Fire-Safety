@@ -36,7 +36,7 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
     [SerializeField] private Rigidbody secondaryRigidbody;
     [SerializeField] private Grabbable secondaryGrabbable;
 
-    [Tooltip("The client selecting the nozzle requests authority of the extinguisher root.")]
+    [Tooltip("The client hovering or selecting the nozzle requests authority of the extinguisher root.")]
     [SerializeField] private bool requestAuthorityOnSecondarySelect = true;
 
     [Min(0f)]
@@ -140,6 +140,12 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
         if (!SecondaryPoseInitializedNet)
             return;
 
+        // A kinematic Rigidbody is followed from FixedUpdate so Unity can
+        // interpolate it together with the physical hose chain. Keep this direct
+        // Transform path only as a fallback when no secondary Rigidbody exists.
+        if (secondaryRigidbody != null)
+            return;
+
         float follow01 = 1f - Mathf.Exp(-secondaryRemoteFollowSpeed * Time.deltaTime);
         secondaryTransform.localPosition = Vector3.Lerp(
             secondaryTransform.localPosition,
@@ -149,6 +155,42 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
             secondaryTransform.localRotation,
             SecondaryLocalRotationNet,
             follow01);
+    }
+
+    private void FixedUpdate()
+    {
+        if (!syncSecondaryTransform ||
+            !fusionSpawned ||
+            Object == null ||
+            Object.HasStateAuthority ||
+            secondaryLocallySelected ||
+            secondaryTransform == null ||
+            secondaryRigidbody == null ||
+            !SecondaryPoseInitializedNet)
+        {
+            return;
+        }
+
+        secondaryRigidbody.useGravity = false;
+        secondaryRigidbody.isKinematic = true;
+
+        Transform parent = secondaryTransform.parent;
+        Vector3 targetPosition = parent != null
+            ? parent.TransformPoint(SecondaryLocalPositionNet)
+            : SecondaryLocalPositionNet;
+        Quaternion targetRotation = parent != null
+            ? parent.rotation * SecondaryLocalRotationNet
+            : SecondaryLocalRotationNet;
+
+        float follow01 = 1f - Mathf.Exp(-secondaryRemoteFollowSpeed * Time.fixedDeltaTime);
+        secondaryRigidbody.MovePosition(Vector3.Lerp(
+            secondaryRigidbody.position,
+            targetPosition,
+            follow01));
+        secondaryRigidbody.MoveRotation(Quaternion.Slerp(
+            secondaryRigidbody.rotation,
+            targetRotation,
+            follow01));
     }
 
     private void LateUpdate()
@@ -166,23 +208,37 @@ public sealed class HostNetworkGrabSync : NetworkBehaviour
 
     private void OnSecondaryPointerEvent(PointerEvent evt)
     {
-        if (evt.Type == PointerEventType.Select)
+        // Request on Hover as well as Select. Requesting only on Select creates a
+        // deadlock on remote peers: their nozzle Rigidbody is kinematic until they
+        // own the root, but ownership was previously requested only after the grab
+        // had already begun.
+        if (evt.Type == PointerEventType.Hover)
+        {
+            TryRequestSecondaryAuthority();
+        }
+        else if (evt.Type == PointerEventType.Select)
         {
             secondaryLocallySelected = true;
-
-            if (requestAuthorityOnSecondarySelect &&
-                fusionSpawned &&
-                Object != null &&
-                !Object.HasStateAuthority)
-            {
-                Object.RequestStateAuthority();
-            }
+            TryRequestSecondaryAuthority();
         }
         else if (evt.Type == PointerEventType.Unselect ||
                  evt.Type == PointerEventType.Cancel)
         {
             secondaryLocallySelected = false;
         }
+    }
+
+    private void TryRequestSecondaryAuthority()
+    {
+        if (!requestAuthorityOnSecondarySelect ||
+            !fusionSpawned ||
+            Object == null ||
+            Object.HasStateAuthority)
+        {
+            return;
+        }
+
+        Object.RequestStateAuthority();
     }
 
     private void WriteSecondaryPose()
