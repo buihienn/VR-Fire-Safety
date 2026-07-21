@@ -55,7 +55,12 @@ public class TubeRenderer : MonoBehaviour
 
 	void Update ()
 	{
-		GenerateMesh();
+		// At runtime the active hose controller updates positions explicitly.
+		// Regenerating here as well doubles the mesh work on Quest.
+		if (!Application.isPlaying)
+		{
+			GenerateMesh();
+		}
 	}
 
 	private void OnValidate()

@@ -139,8 +139,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d73b0a95be81246699cf0d9ecdc01863, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   PreferredRunner: 0
   Components:
   - {fileID: 861854}
@@ -24755,16 +24755,89 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 306149299}
-    m_RemovedComponents: []
+    - target: {fileID: 521985230129611279, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: maxLength
+      value: 0.53
+      objectReference: {fileID: 0}
+    - target: {fileID: 290608795098044874, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: m_UseGravity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 290608795098044874, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6370024665313083233, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: _throwWhenUnselected
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7481670931836441960, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6425410838284499922, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 521985230129611279, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: clampToMaxLength
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 521985230129611279, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: overstretchGraceSeconds
+      value: 0.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 910000000000000001, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      propertyPath: secondaryRemoteFollowSpeed
+      value: 18
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 3489069060563435075, guid: 92f6546f39549924ba185a28412d3165, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 495502645711806783, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 900020001}
   m_SourcePrefab: {fileID: 100100000, guid: 92f6546f39549924ba185a28412d3165, type: 3}
 --- !u!4 &997480957 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 557195193584299027, guid: 92f6546f39549924ba185a28412d3165, type: 3}
   m_PrefabInstance: {fileID: 997480956}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &900020000 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 495502645711806783, guid: 92f6546f39549924ba185a28412d3165, type: 3}
+  m_PrefabInstance: {fileID: 997480956}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &900020001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900020000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1a6d43bb2834ad6a44de2edb4f0a9c7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  wireController: {fileID: 0}
+  tubeRenderer: {fileID: 0}
+  startAnchor: {fileID: 0}
+  endAnchor: {fileID: 0}
+  nozzleRigidbody: {fileID: 0}
+  nozzleGrabbable: {fileID: 0}
+  wireProxy: {fileID: 0}
+  maxLength: 0.53
+  maximumReturnSpeed: 3
+  returnRotationSpeed: 10
+  dockingDistance: 0.015
+  visualPointCount: 24
+  sagPerMetreOfSlack: 0.55
+  maximumSag: 0.1
+  proxyPadding: 0.012
+  smoothingPasses: 1
 --- !u!1 &998185928
 GameObject:
   m_ObjectHideFlags: 0
