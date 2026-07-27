@@ -9,6 +9,7 @@ using StreamLOD = Oculus.Avatar2.OvrAvatarEntity.StreamLOD;
 public class NetworkAvatarFusion : NetworkBehaviour
 {
     private const int MaxAvatarStreamBytes = ushort.MaxValue;
+    public const int MaxAvatarOption = 5;
 
     [Header("Meta Avatar Entities")]
     [SerializeField] private SampleAvatarEntity localAvatar;
@@ -28,6 +29,9 @@ public class NetworkAvatarFusion : NetworkBehaviour
     [SerializeField] private bool isLocalAvatar;
     [SerializeField] private int lastStreamByteCount;
     [SerializeField] private int lastStreamChunkCount;
+    [SerializeField] private int loadedAvatarOption;
+
+    [Networked] public int AvatarOption { get; private set; }
 
     private SampleInputManager localInputManager;
     private NativeArray<byte> captureBuffer;
@@ -47,6 +51,11 @@ public class NetworkAvatarFusion : NetworkBehaviour
     {
         localInputManager = inputManager;
         localRigRoot = rigRoot;
+    }
+
+    public void SetAvatarOptionBeforeSpawn(int option)
+    {
+        AvatarOption = Mathf.Clamp(option, 0, MaxAvatarOption);
     }
 
     private void Awake()
@@ -75,6 +84,8 @@ public class NetworkAvatarFusion : NetworkBehaviour
         {
             SetAvatarObjectsActive(false, true);
         }
+
+        LoadSelectedAvatar();
 
         if (debugVisuals != null)
         {
@@ -383,6 +394,26 @@ public class NetworkAvatarFusion : NetworkBehaviour
         if (remoteAvatar != null)
         {
             remoteAvatar.gameObject.SetActive(remoteActive);
+        }
+    }
+
+    private void LoadSelectedAvatar()
+    {
+        SampleAvatarEntity activeAvatar = isLocalAvatar ? localAvatar : remoteAvatar;
+        if (activeAvatar == null)
+        {
+            Debug.LogError(
+                $"[{nameof(NetworkAvatarFusion)}] Missing active SampleAvatarEntity.",
+                this);
+            return;
+        }
+
+        loadedAvatarOption = Mathf.Clamp(AvatarOption, 0, MaxAvatarOption);
+        if (!activeAvatar.LoadPreset(loadedAvatarOption))
+        {
+            Debug.LogError(
+                $"[{nameof(NetworkAvatarFusion)}] Could not load avatar option {loadedAvatarOption}.",
+                activeAvatar);
         }
     }
 

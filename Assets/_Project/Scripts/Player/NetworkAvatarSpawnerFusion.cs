@@ -23,6 +23,7 @@ public class NetworkAvatarSpawnerFusion : MonoBehaviour
     [SerializeField] private NetworkObject spawnedAvatar;
     [SerializeField] private string connectedRoomToken;
     [SerializeField] private int activePlayerCount;
+    [SerializeField] private int selectedAvatarOption;
 
     private Coroutine spawnRoutine;
 
@@ -124,6 +125,7 @@ public class NetworkAvatarSpawnerFusion : MonoBehaviour
             ? localRigRoot.position + spawnPositionOffset
             : spawnPositionOffset;
         Quaternion spawnRotation = localRigRoot != null ? localRigRoot.rotation : Quaternion.identity;
+        selectedAvatarOption = GetAvatarOption(runner.LocalPlayer);
 
         try
         {
@@ -137,6 +139,7 @@ public class NetworkAvatarSpawnerFusion : MonoBehaviour
                     NetworkAvatarFusion avatar = avatarObject.GetComponent<NetworkAvatarFusion>();
                     if (avatar != null)
                     {
+                        avatar.SetAvatarOptionBeforeSpawn(selectedAvatarOption);
                         avatar.SetLocalSources(inputManager, localRigRoot);
                     }
                 },
@@ -171,6 +174,7 @@ public class NetworkAvatarSpawnerFusion : MonoBehaviour
         Debug.Log(
             $"[{nameof(NetworkAvatarSpawnerFusion)}] Spawned local avatar. " +
             $"Room={connectedRoomToken}, LocalPlayer={runner.LocalPlayer}, ActivePlayers={activePlayerCount}, " +
+            $"AvatarOption={selectedAvatarOption}, " +
             $"HasInput={spawnedAvatar.HasInputAuthority}, HasState={spawnedAvatar.HasStateAuthority}",
             this);
 
@@ -219,6 +223,11 @@ public class NetworkAvatarSpawnerFusion : MonoBehaviour
             runner.LocalPlayer != PlayerRef.None &&
             runner.IsSimulationUpdating &&
             runner.CanSpawn;
+    }
+
+    private static int GetAvatarOption(PlayerRef player)
+    {
+        return Mathf.Clamp(player.AsIndex, 0, NetworkAvatarFusion.MaxAvatarOption);
     }
 
     private static string GetRunnerStateText(NetworkRunner runner)
