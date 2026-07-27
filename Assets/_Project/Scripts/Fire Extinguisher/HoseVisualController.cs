@@ -24,6 +24,8 @@ public sealed class HoseVisualController : MonoBehaviour
     [Min(0.05f)] [SerializeField] private float maxLength = 0.46f;
 
     [Header("Automatic Nozzle Return")]
+    [Tooltip("Optional editable dock pose. Parent this outside EndAnchor, normally under WireBuilder. If empty, the initial EndAnchor pose is used.")]
+    [SerializeField] private Transform nozzleRestPoint;
     [Min(0.1f)] [SerializeField] private float maximumReturnSpeed = 3f;
     [Min(0f)] [SerializeField] private float returnRotationSpeed = 10f;
     [Tooltip("Inside this distance the released nozzle docks exactly to the stored rest pose, removing residual jitter.")]
@@ -78,8 +80,7 @@ public sealed class HoseVisualController : MonoBehaviour
         if (!CanSimulateNozzle() || nozzleSelected || endAnchor == null)
             return;
 
-        Vector3 restWorldPosition = transform.TransformPoint(restLocalPosition);
-        Quaternion restWorldRotation = transform.rotation * restLocalRotation;
+        GetRestWorldPose(out Vector3 restWorldPosition, out Quaternion restWorldRotation);
 
         EnforceMaximumDistance();
 
@@ -273,6 +274,19 @@ public sealed class HoseVisualController : MonoBehaviour
         if (networkObject.Runner == null)
             return false;
         return networkObject.HasStateAuthority;
+    }
+
+    private void GetRestWorldPose(out Vector3 position, out Quaternion rotation)
+    {
+        if (nozzleRestPoint != null)
+        {
+            position = nozzleRestPoint.position;
+            rotation = nozzleRestPoint.rotation;
+            return;
+        }
+
+        position = transform.TransformPoint(restLocalPosition);
+        rotation = transform.rotation * restLocalRotation;
     }
 
     private void EnforceMaximumDistance()

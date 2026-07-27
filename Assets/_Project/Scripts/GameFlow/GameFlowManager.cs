@@ -116,20 +116,37 @@ public class GameFlowManager : NetworkBehaviour
             return;
         }
 
-        if (Object.HasStateAuthority)
-        {
-            if (MatchEndedNet) return;
+        // Khi Fusion đã chạy, cả Host và Client chỉ hiển thị snapshot network
+        // trong Update. Không dùng Runner.DeltaTime tại đây vì Update chạy theo
+        // FPS và có thể trừ cùng một network tick nhiều lần.
+        remainingSeconds = RemainingSecondsNet;
+        matchEnded = MatchEndedNet;
+        playerWon = PlayerWonNet;
+        UpdateTimerUI();
 
-            ProcessMatch(Runner != null ? Runner.DeltaTime : Time.deltaTime);
-        }
-        else
+        // RPC xử lý trường hợp realtime. Nhánh này bảo đảm Client vào trễ vẫn
+        // áp dụng màn hình kết thúc từ trạng thái Networked hiện tại.
+        if (matchEnded &&
+            !localEndApplied &&
+            EndReasonNet >= (int)EndReason.Win &&
+            EndReasonNet <= (int)EndReason.PlayerFainted)
         {
-            // Client chỉ nhận timer từ Host.
-            remainingSeconds = RemainingSecondsNet;
-            matchEnded = MatchEndedNet;
-            playerWon = PlayerWonNet;
-            UpdateTimerUI();
+            ApplyEndLocal((EndReason)EndReasonNet);
         }
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (MatchEndedNet)
+            return;
+
+        // Networked value là nguồn dữ liệu authority/rollback.
+        // Chỉ giảm đúng một lần cho mỗi Fusion simulation tick.
+        remainingSeconds = RemainingSecondsNet;
+        ProcessMatch(Runner.DeltaTime);
     }
 
     private void ProcessMatch(float deltaTime)

@@ -9,6 +9,7 @@ public class HoseBurnSequence : MonoBehaviour
     [SerializeField] private FlameNode valveFireNode;
     [SerializeField] private GameObject hoseRoot;
     [SerializeField] private GasSystem gasSystem;
+    [SerializeField] private GasCylinderFlameShutdown valveFlameController;
 
     [Header("Timing")]
     [Min(0f)] [SerializeField] private float hoseBurnSeconds = 2f;
@@ -43,6 +44,9 @@ public class HoseBurnSequence : MonoBehaviour
     {
         if (!gasSystem)
             gasSystem = GasSystem.Instance;
+
+        ResolveValveFlameController();
+        LockValveIgnition();
     }
 
     private void Start()
@@ -60,6 +64,8 @@ public class HoseBurnSequence : MonoBehaviour
         if (valveFireNode != null)
         {
             valveFireNode.gameObject.SetActive(true);
+            valveFireNode.SetCanSpread(false);
+            valveFireNode.SetAllowIgniteFromSpread(false);
 
             if (extinguishValveNodeOnStart)
                 ExtinguishNodeLocalOnly(valveFireNode);
@@ -73,9 +79,11 @@ public class HoseBurnSequence : MonoBehaviour
 
     private void Update()
     {
+        SyncPresentationFromFireState();
+        UpdateHoseAudio();
+
         if (FireManager.Instance != null && !FireManager.Instance.HasFireAuthority)
             return;
-        UpdateHoseAudio();
 
         if (sequenceCompleted) return;
         if (sequenceRunning) return;
@@ -117,9 +125,7 @@ public class HoseBurnSequence : MonoBehaviour
             yield break;
         }
 
-        afterFireNode.gameObject.SetActive(true);
-        afterFireNode.transform.position = hoseFireNode.transform.position;
-        afterFireNode.transform.rotation = hoseFireNode.transform.rotation;
+        AlignAfterNodeToHose();
         afterFireNode.SetVisualDamp01(1f);
 
         IgniteNode(afterFireNode);
@@ -153,6 +159,7 @@ public class HoseBurnSequence : MonoBehaviour
 
         if (valveFireNode != null)
         {
+            UnlockValveIgnition();
             valveFireNode.gameObject.SetActive(true);
             valveFireNode.SetVisualDamp01(1f);
             IgniteNode(valveFireNode);
@@ -163,6 +170,88 @@ public class HoseBurnSequence : MonoBehaviour
         timerRemaining = 0f;
         stage = "Completed";
         sequenceRoutine = null;
+    }
+
+    private void SyncPresentationFromFireState()
+    {
+        bool afterBurning = IsNodeBurning(afterFireNode);
+        bool valveBurning = IsNodeBurning(valveFireNode);
+
+        if (afterBurning)
+            AlignAfterNodeToHose();
+
+        // FireManager synchronizes the flame states. Deriving this visual from the
+        // synchronized valve state makes the burned hose disappear on every peer.
+        if (valveBurning)
+        {
+            UnlockValveIgnition();
+
+            if (hideHoseRootWhenBurned && hoseRoot != null && hoseRoot.activeSelf)
+                hoseRoot.SetActive(false);
+
+            if (FireManager.Instance != null && !FireManager.Instance.HasFireAuthority)
+            {
+                sequenceCompleted = true;
+                sequenceRunning = false;
+                timerRemaining = 0f;
+                stage = "Completed (Synced)";
+            }
+        }
+        else if (FireManager.Instance != null && !FireManager.Instance.HasFireAuthority)
+        {
+            if (afterBurning)
+                stage = "AfterNodeBurning (Synced)";
+            else if (IsNodeBurning(hoseFireNode))
+                stage = "HoseBurning (Synced)";
+        }
+    }
+
+    private void AlignAfterNodeToHose()
+    {
+        if (afterFireNode == null || hoseFireNode == null)
+            return;
+
+        afterFireNode.gameObject.SetActive(true);
+        afterFireNode.transform.SetPositionAndRotation(
+            hoseFireNode.transform.position,
+            hoseFireNode.transform.rotation
+        );
+    }
+
+    private void ResolveValveFlameController()
+    {
+        if (valveFlameController != null || valveFireNode == null)
+            return;
+
+        valveFlameController = valveFireNode.GetComponent<GasCylinderFlameShutdown>();
+
+        if (valveFlameController == null)
+            valveFlameController = valveFireNode.GetComponentInParent<GasCylinderFlameShutdown>(true);
+
+        if (valveFlameController == null)
+            valveFlameController = valveFireNode.GetComponentInChildren<GasCylinderFlameShutdown>(true);
+    }
+
+    private void LockValveIgnition()
+    {
+        ResolveValveFlameController();
+
+        if (valveFireNode != null)
+        {
+            valveFireNode.SetCanSpread(false);
+            valveFireNode.SetAllowIgniteFromSpread(false);
+        }
+
+        if (valveFlameController != null)
+            valveFlameController.SetSequenceIgnitionLocked(true);
+    }
+
+    private void UnlockValveIgnition()
+    {
+        ResolveValveFlameController();
+
+        if (valveFlameController != null)
+            valveFlameController.SetSequenceIgnitionLocked(false);
     }
 
     private void IgniteNode(FlameNode node)
@@ -291,6 +380,11 @@ public class HoseBurnSequence : MonoBehaviour
         sequenceCompleted = false;
         timerRemaining = 0f;
         stage = "Idle";
+
+        LockValveIgnition();
+
+        if (hoseRoot != null)
+            hoseRoot.SetActive(true);
 
         if (afterFireNode != null)
         {
