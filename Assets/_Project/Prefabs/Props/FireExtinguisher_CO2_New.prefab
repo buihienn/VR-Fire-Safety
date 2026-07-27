@@ -140,6 +140,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2440912494090483851}
   - component: {fileID: 2305502811978986126}
+  - component: {fileID: 7604569695772254322}
   m_Layer: 12
   m_Name: WireBuilder
   m_TagString: Untagged
@@ -185,6 +186,7 @@ Transform:
   - {fileID: 1441389190397311594}
   - {fileID: 2326353357128782305}
   - {fileID: 345685583595000569}
+  - {fileID: 8003195522061505868}
   m_Father: {fileID: 6652885838744925155}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2305502811978986126
@@ -245,6 +247,35 @@ MonoBehaviour:
   selectPosition: {x: -2.4655273, y: 1.1613402, z: -12.514191}
   mousePossHelper: {fileID: 2259087380655987431}
   presetJoint: {fileID: 2655988077585873504, guid: abc25b6363fdfea44958d0fb6b73e3c5, type: 2}
+--- !u!114 &7604569695772254322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 495502645711806783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1a6d43bb2834ad6a44de2edb4f0a9c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wireController: {fileID: 2305502811978986126}
+  tubeRenderer: {fileID: 1648543280034347857}
+  startAnchor: {fileID: 2638648115628424701}
+  endAnchor: {fileID: 345685583595000569}
+  nozzleRigidbody: {fileID: 290608795098044874}
+  nozzleGrabbable: {fileID: 6370024665313083233}
+  wireProxy: {fileID: 6425410838284499922}
+  maxLength: 0.56
+  nozzleRestPoint: {fileID: 8003195522061505868}
+  maximumReturnSpeed: 3
+  returnRotationSpeed: 10
+  dockingDistance: 0.015
+  visualPointCount: 24
+  sagPerMetreOfSlack: 0.55
+  maximumSag: 0.1
+  proxyPadding: 0.012
+  smoothingPasses: 1
 --- !u!1 &620506212659729422
 GameObject:
   m_ObjectHideFlags: 0
@@ -296,7 +327,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 0.14939225, y: 0.4961334, z: 0.13668966}
   m_Center: {x: 0.0008172393, y: 0, z: 0}
@@ -401,7 +432,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: e9b4b64f-1c7e-4dff-8f3c-ce409bdc3951
-  instanceId: b456dfd1-474e-4f46-a73b-9fb279e2ab4d
+  instanceId: b7beba39-bbef-4da5-b00c-87590b3021f3
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 54548176-30f4-4a4a-8057-340a383c6102
@@ -647,7 +678,7 @@ MonoBehaviour:
   secondaryRigidbody: {fileID: 290608795098044874}
   secondaryGrabbable: {fileID: 6370024665313083233}
   requestAuthorityOnSecondarySelect: 1
-  secondaryRemoteFollowSpeed: 25
+  secondaryRemoteFollowSpeed: 18
   fusionSpawned: 0
   hasStateAuthority: 0
   rigidbodyIsKinematic: 0
@@ -1424,7 +1455,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1870,6 +1901,37 @@ MonoBehaviour:
   _releaseDistance: 0
   _resetGrabOnGrabsUpdated: 1
   _physicsGrabbable: {fileID: 0}
+--- !u!1 &2961826662639487538
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8003195522061505868}
+  m_Layer: 12
+  m_Name: NozzleRestPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8003195522061505868
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2961826662639487538}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.5, y: 0.5, z: -0.5, w: 0.5}
+  m_LocalPosition: {x: 0.0659, y: 0.4209, z: 0.0233}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2440912494090483851}
+  m_LocalEulerAnglesHint: {x: 90, y: 90, z: 0}
 --- !u!1 &3089411866124951325
 GameObject:
   m_ObjectHideFlags: 0
@@ -9311,7 +9373,6 @@ GameObject:
   - component: {fileID: 345685583595000569}
   - component: {fileID: 2220209856254174648}
   - component: {fileID: 290608795098044874}
-  - component: {fileID: 3489069060563435075}
   - component: {fileID: 6370024665313083233}
   - component: {fileID: 521985230129611279}
   m_Layer: 12
@@ -9385,113 +9446,11 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!153 &3489069060563435075
-ConfigurableJoint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4434253665035961123}
-  serializedVersion: 4
-  m_ConnectedBody: {fileID: 4345919017415937999}
-  m_ConnectedArticulationBody: {fileID: 0}
-  m_Anchor: {x: 0, y: 0, z: 0}
-  m_Axis: {x: 1, y: 0, z: 0}
-  m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: 0, y: 0, z: 0}
-  m_SecondaryAxis: {x: 0, y: 1, z: 0}
-  m_XMotion: 0
-  m_YMotion: 0
-  m_ZMotion: 0
-  m_AngularXMotion: 1
-  m_AngularYMotion: 1
-  m_AngularZMotion: 0
-  m_LinearLimitSpring:
-    spring: 0
-    damper: 0
-  m_LinearLimit:
-    limit: 0
-    bounciness: 0
-    contactDistance: 0
-  m_AngularXLimitSpring:
-    spring: 10
-    damper: 1
-  m_LowAngularXLimit:
-    limit: -10
-    bounciness: 0
-    contactDistance: 0
-  m_HighAngularXLimit:
-    limit: 10
-    bounciness: 0
-    contactDistance: 0
-  m_AngularYZLimitSpring:
-    spring: 10
-    damper: 1
-  m_AngularYLimit:
-    limit: 20
-    bounciness: 0
-    contactDistance: 0
-  m_AngularZLimit:
-    limit: 0
-    bounciness: 0
-    contactDistance: 0
-  m_TargetPosition: {x: 0, y: 0, z: 0}
-  m_TargetVelocity: {x: 0, y: 0, z: 0}
-  m_XDrive:
-    serializedVersion: 4
-    positionSpring: 4000
-    positionDamper: 3
-    maximumForce: 3.4028233e+38
-    useAcceleration: 0
-  m_YDrive:
-    serializedVersion: 4
-    positionSpring: 4000
-    positionDamper: 3
-    maximumForce: 3.4028233e+38
-    useAcceleration: 0
-  m_ZDrive:
-    serializedVersion: 4
-    positionSpring: 4000
-    positionDamper: 3
-    maximumForce: 3.4028233e+38
-    useAcceleration: 0
-  m_TargetRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_TargetAngularVelocity: {x: 0, y: 0, z: 0}
-  m_RotationDriveMode: 0
-  m_AngularXDrive:
-    serializedVersion: 4
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.4028233e+38
-    useAcceleration: 0
-  m_AngularYZDrive:
-    serializedVersion: 4
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.4028233e+38
-    useAcceleration: 0
-  m_SlerpDrive:
-    serializedVersion: 4
-    positionSpring: 0
-    positionDamper: 0
-    maximumForce: 3.4028233e+38
-    useAcceleration: 0
-  m_ProjectionMode: 1
-  m_ProjectionDistance: 0.01
-  m_ProjectionAngle: 0
-  m_ConfiguredInWorldSpace: 0
-  m_SwapBodies: 0
-  m_BreakForce: Infinity
-  m_BreakTorque: Infinity
-  m_EnableCollision: 0
-  m_EnablePreprocessing: 0
-  m_MassScale: 1
-  m_ConnectedMassScale: 1
 --- !u!114 &6370024665313083233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9513,7 +9472,7 @@ MonoBehaviour:
   _maxGrabPoints: -1
   _rigidbody: {fileID: 290608795098044874}
   _kinematicWhileSelected: 1
-  _throwWhenUnselected: 1
+  _throwWhenUnselected: 0
 --- !u!114 &521985230129611279
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9528,8 +9487,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startAnchor: {fileID: 2638648115628424701}
   endAnchor: {fileID: 345685583595000569}
-  maxLength: 0.6
+  maxLength: 0.56
   clampToMaxLength: 1
+  overstretchGraceSeconds: 0.03
   disableSeconds: 0.2
 --- !u!1 &4636169001368457305
 GameObject:

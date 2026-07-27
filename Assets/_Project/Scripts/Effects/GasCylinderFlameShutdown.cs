@@ -32,10 +32,12 @@ public class GasCylinderFlameShutdown : MonoBehaviour
     [SerializeField] private bool debugGasStillLeaking;
     [SerializeField] private bool debugNearbyFireFound;
     [SerializeField] private float debugReigniteTimer;
+    [SerializeField] private bool debugSequenceIgnitionLocked;
 
     private Coroutine extinguishRoutine;
     private float reigniteTimer = 0f;
     private float nextCheckTime = 0f;
+    private bool sequenceIgnitionLocked;
 
     private const float ForceExtinguishAmount = 999999f;
 
@@ -99,6 +101,16 @@ public class GasCylinderFlameShutdown : MonoBehaviour
 
         CancelExtinguishRoutine();
 
+        // The Gas Unit has an explicit hose -> after-fire -> valve sequence.
+        // While that sequence owns the valve, nearby fires must not bypass it.
+        if (sequenceIgnitionLocked)
+        {
+            debugGasStillLeaking = false;
+            debugNearbyFireFound = false;
+            ResetReigniteTimer();
+            return;
+        }
+
         bool gasStillLeaking = gasSystem != null && gasSystem.CanSustainNozzleFire();
         bool nearbyFireFound = HasNearbyBurningNode();
         bool flameBurning = IsNodeBurning(flameNode);
@@ -132,6 +144,21 @@ public class GasCylinderFlameShutdown : MonoBehaviour
         PlayOneShot(gasBurstSound);
 
         ResetReigniteTimer();
+    }
+
+    /// <summary>
+    /// Prevents the valve flame from using its proximity re-ignite path.
+    /// HoseBurnSequence releases this lock only after the hose fire stages finish.
+    /// Valve-close shutdown remains active while locked.
+    /// </summary>
+    public void SetSequenceIgnitionLocked(bool locked)
+    {
+        sequenceIgnitionLocked = locked;
+        debugSequenceIgnitionLocked = locked;
+        ResetReigniteTimer();
+
+        if (locked)
+            SetGasLeakLoop(false);
     }
 
     private void IgniteNode(FlameNode node)

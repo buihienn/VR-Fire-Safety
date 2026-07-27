@@ -11,7 +11,7 @@ public class FireManager : NetworkBehaviour
     [Header("Flame Nodes")]
     [SerializeField] private List<FlameNode> flameNodes = new();
 
-    [Tooltip("Nếu Flame Nodes list đang trống, FireManager sẽ tự tìm FlameNode trong toàn scene.")]
+    [Tooltip("Tự tìm và bổ sung các FlameNode còn thiếu trong scene vào danh sách. Giúp các node trong prefab lồng nhau vẫn được đồng bộ.")]
     [SerializeField] private bool autoFindFlameNodesInSceneIfListEmpty = true;
 
     [Tooltip("Nếu auto find, sort theo FlameId để Host/Client có thứ tự ổn định hơn.")]
@@ -74,37 +74,32 @@ public class FireManager : NetworkBehaviour
         InitArrays();
 
         if (!Object.HasStateAuthority)
+        {
+            RPC_RequestFullState();
             return;
+        }
 
         // Host đọc trạng thái ban đầu và sync lại cho tất cả client.
-        for (int i = 0; i < flameNodes.Count; i++)
-        {
-            FlameNode node = flameNodes[i];
-            if (node == null) continue;
-
-            bool startBurning = node.IsBurning;
-            float health01 = startBurning ? Mathf.Max(node.Health01, 1f) : 0f;
-
-            SyncNodeState(i, startBurning, health01);
-        }
+        SendFullStateSnapshot();
     }
 
     private void AutoFindNodesIfNeeded()
     {
         if (!autoFindFlameNodesInSceneIfListEmpty) return;
-        if (flameNodes != null && flameNodes.Count > 0) return;
 
         FlameNode[] found = UnityEngine.Object.FindObjectsByType<FlameNode>(
             FindObjectsInactive.Include,
             FindObjectsSortMode.None
         );
 
-        flameNodes = new List<FlameNode>();
+        flameNodes ??= new List<FlameNode>();
+        flameNodes.RemoveAll(node => node == null);
 
         foreach (FlameNode node in found)
         {
             if (node == null) continue;
             if (!node.gameObject.scene.IsValid()) continue;
+            if (flameNodes.Contains(node)) continue;
 
             flameNodes.Add(node);
         }
@@ -400,6 +395,28 @@ public class FireManager : NetworkBehaviour
     private void RPC_SetNodeHealth(int nodeIndex, float health01)
     {
         ApplyNodeHealthLocal(nodeIndex, health01);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestFullState(RpcInfo info = default)
+    {
+        SendFullStateSnapshot();
+    }
+
+    private void SendFullStateSnapshot()
+    {
+        if (fusionSpawned && !Object.HasStateAuthority)
+            return;
+
+        for (int i = 0; i < flameNodes.Count; i++)
+        {
+            FlameNode node = flameNodes[i];
+            if (node == null) continue;
+
+            bool isBurning = node.IsBurning;
+            float health01 = isBurning ? Mathf.Max(node.Health01, 0.001f) : 0f;
+            SyncNodeState(i, isBurning, health01);
+        }
     }
 
     // =========================
