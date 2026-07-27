@@ -320,7 +320,7 @@ MonoBehaviour:
   _loadUserFromCdn: 0
   _cdnUserID: 0
   _style2DropdownIndex: 0
-  _deferLoading: 0
+  _deferLoading: 1
   _assets:
   - source: 0
     path: 5
@@ -467,7 +467,7 @@ MonoBehaviour:
   _loadUserFromCdn: 0
   _cdnUserID: 0
   _style2DropdownIndex: 0
-  _deferLoading: 0
+  _deferLoading: 1
   _assets:
   - source: 0
     path: 5
@@ -681,3 +681,4 @@ MonoBehaviour:
   isLocalAvatar: 0
   lastStreamByteCount: 0
   lastStreamChunkCount: 0
+  loadedAvatarOption: 0
