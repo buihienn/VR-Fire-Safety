@@ -1117,6 +1117,7 @@ MonoBehaviour:
   aboutLayout: {fileID: 1846649807275783857}
   reviewLayout: {fileID: 0}
   reviewVideoListLayout: {fileID: 0}
+  reviewActionLogCanvas: {fileID: 0}
   hubGas: {fileID: 0}
   timeLabel: {fileID: 0}
 --- !u!1 &2250105985867044504
@@ -4593,6 +4594,18 @@ PrefabInstance:
     - target: {fileID: 6164804513502958587, guid: c4d9cdfed8d011e4f9f51a7857de2e1c, type: 3}
       propertyPath: m_IsOn
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6164804513502958587, guid: c4d9cdfed8d011e4f9f51a7857de2e1c, type: 3}
+      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6164804513502958587, guid: c4d9cdfed8d011e4f9f51a7857de2e1c, type: 3}
+      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6164804513502958587, guid: c4d9cdfed8d011e4f9f51a7857de2e1c, type: 3}
+      propertyPath: onValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

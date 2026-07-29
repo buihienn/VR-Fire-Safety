@@ -290,6 +290,18 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
+          m_StringArgument:
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1142714776248453492}
+        m_TargetAssemblyTypeName: SparkIgnitionTrigger, Assembly-CSharp
+        m_MethodName: TriggerSpark
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
@@ -407,6 +419,7 @@ GameObject:
   - component: {fileID: 1713098614246035021}
   - component: {fileID: 6349938331623517140}
   - component: {fileID: 5538941901018780351}
+  - component: {fileID: 9058556561440082944}
   m_Layer: 0
   m_Name: EletricOutletAndLightSwtich
   m_TagString: Untagged
@@ -532,6 +545,103 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!82 &9058556561440082944
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3790459774550244529}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &4509606881235239205
 GameObject:
   m_ObjectHideFlags: 0
@@ -10326,7 +10436,9 @@ GameObject:
   - component: {fileID: 6033839286712606619}
   - component: {fileID: 8904178504215397898}
   - component: {fileID: 7122613862316215402}
+  - component: {fileID: 910000000000000002}
   - component: {fileID: 4068452154092103804}
+  - component: {fileID: 1142714776248453492}
   m_Layer: 0
   m_Name: LightSwitch
   m_TagString: Untagged
@@ -10414,14 +10526,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   outlineMode: 0
-  outlineColor: {r: 0, g: 1, b: 1, a: 1}
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
   outlineWidth: 2
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
+--- !u!114 &910000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728918119116995539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  SortKey: 141421356
+  ObjectInterest: 1
+  Flags: 786433
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 4068452154092103804}
+  ForceRemoteRenderTimeframe: 0
 --- !u!114 &4068452154092103804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10434,32 +10565,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7340e8fd89be4d4a920143d8b4d475e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  buttonVisual: {fileID: 8825561269597917549}
   offAngle: 98
   onAngle: 82
+  lightComponents: []
+  lightObjects: []
+  startOn: 0
+--- !u!114 &1142714776248453492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728918119116995539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 960615caa13200540b88180e21850d0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   sparksFx: {fileID: 7661531405414288543}
-  igniteDelay: 0.05
-  nodesToIgnite: []
-  triggerOnlyWhenTurningOn: 1
-  igniteOnlyOnce: 1
-  elements:
-  - diffuseRenderer: {fileID: 0}
-    pointLight: {fileID: 0}
-    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
-  - diffuseRenderer: {fileID: 0}
-    pointLight: {fileID: 0}
-    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
-  - diffuseRenderer: {fileID: 0}
-    pointLight: {fileID: 0}
-    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
-  - diffuseRenderer: {fileID: 0}
-    pointLight: {fileID: 0}
-    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
-  - diffuseRenderer: {fileID: 0}
-    pointLight: {fileID: 0}
-    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
-  - diffuseRenderer: {fileID: 0}
-    pointLight: {fileID: 0}
-    diffuseEmissionColor: {r: 0, g: 0, b: 0, a: 0}
+  sparkAudio: {fileID: 0}
+  ignitionNode: {fileID: 0}
+  autoFindNearestIfMissing: 1
+  autoFindRadius: 1
+  requiredGasLevelForIgnition: 1
+  playSparkEvenIfCannotIgnite: 1
+  debugLog: 0
 --- !u!1 &7686068756178013233
 GameObject:
   m_ObjectHideFlags: 0
