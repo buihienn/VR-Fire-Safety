@@ -4,6 +4,7 @@ public class StartMenuUIManager : MonoBehaviour
 {
     [Header("Layouts")]
     [SerializeField] private GameObject startMenuLayout;
+    [SerializeField] private GameObject multiplayerLayout;
     [SerializeField] private GameObject settingsLayout;
     [SerializeField] private GameObject aboutLayout;
     [SerializeField] private GameObject reviewLayout;
@@ -30,6 +31,11 @@ public class StartMenuUIManager : MonoBehaviour
         SetActiveLayout(startMenuLayout);
     }
 
+    public void ShowMultiplayer()
+    {
+        SetActiveLayout(multiplayerLayout);
+    }
+
     public void ShowSettings()
     {
         SetActiveLayout(settingsLayout);
@@ -54,6 +60,9 @@ public class StartMenuUIManager : MonoBehaviour
     {
         if (startMenuLayout != null)
             startMenuLayout.SetActive(activeLayout == startMenuLayout);
+
+        if (multiplayerLayout != null)
+            multiplayerLayout.SetActive(activeLayout == multiplayerLayout);
 
         if (settingsLayout != null)
             settingsLayout.SetActive(activeLayout == settingsLayout);

@@ -129,6 +129,18 @@ public class StartSceneLobbyUI : MonoBehaviour
         lobbySceneStart.StartGameForRoom();
     }
 
+    public async void StartGameAsSingleplayer()
+    {
+        CreateRoom();
+
+        while (busy)
+        {
+            await System.Threading.Tasks.Task.Yield();
+        }
+
+        StartGame();
+    }
+
     private bool CanUseMatchmaking()
     {
         if (busy)
