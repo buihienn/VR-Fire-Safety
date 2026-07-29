@@ -1,135 +1,258 @@
-using UnityEngine;
-using System.Reflection;
+using Fusion;
 using Oculus.Interaction;
+using UnityEngine;
 
-/// <summary>
-/// Bám nấc cho núm vặn theo các bước cố định khi dùng OneGrabRotateTransformer.
-/// </summary>
 [RequireComponent(typeof(Grabbable))]
-public class FanSwitch : MonoBehaviour
+public class FanSwitch : NetworkBehaviour
 {
-	private const int Steps = 6; // Co dinh 6 nac: 0..5.
-	private const float StepAngle = 60f; // Moi nac cach nhau 60 do.
+    private const int Steps = 6;
+    private const float StepAngle = 60f;
 
-	[Header("Rotation Settings")]
-	[SerializeField] private Vector3 localAxis = Vector3.up; // Trục xoay trong local của núm.
+    [Header("Rotation Settings")]
+    [SerializeField] private Vector3 localAxis = Vector3.up;
 
-	[Header("Fan Output")]
-	[SerializeField] private FanRotator fanRotator; // Đối tượng điều khiển tốc độ quạt.
-	[SerializeField] private float[] stepSpeeds = new float[] { 0f, 100f, 200f, 300f, 400f, 500f }; // Tốc độ theo từng nấc.
+    [Header("Fan Output")]
+    [SerializeField] private FanRotator fanRotator;
+    [SerializeField] private float[] stepSpeeds = { 0f, 100f, 200f, 300f, 400f, 500f };
 
-	[Header("Ignition")]
+    [Header("Ignition")]
     [SerializeField] private SparkIgnitionTrigger sparkIgnitionTrigger;
 
-	private Grabbable _grabbable; // Nguồn sự kiện grab.
-	private Quaternion _initialLocalRotation; // Góc local gốc để làm mốc.
-	// private bool _isGrabbed; // Trạng thái đang grab.
-	private int _currentStepIndex = -1; // Nấc hiện tại.
-	
+    [Header("Gas Rule")]
+    [Tooltip("Quạt chỉ được phép chạy khi gas level không vượt quá giá trị này.")]
+    [Range(0, 3)]
+    [SerializeField] private int maximumOperatingGasLevel = 1;
 
-	private void Awake()
-	{
-		_grabbable = GetComponent<Grabbable>();
-		_initialLocalRotation = transform.localRotation; 
+    [Header("Debug")]
+    [SerializeField] private bool fusionSpawned;
+    [SerializeField] private bool isGrabbed;
+    [SerializeField] private int currentStepIndex;
 
-		ApplyStep(0); // Đặt về nấc 0 khi khởi tạo.
-	}
+    [Networked, OnChangedRender(nameof(OnStepNetworkChanged))]
+    private int CurrentStepNet { get; set; }
 
-	private void OnEnable()
-	{
-		if (_grabbable != null) _grabbable.WhenPointerEventRaised += HandlePointerEvent;
-	}
+    private Grabbable grabbable;
+    private Quaternion initialLocalRotation;
+    private int lastRequestedStep = -1;
 
-	private void OnDisable()
-	{
-		if (_grabbable != null) _grabbable.WhenPointerEventRaised -= HandlePointerEvent; 
-	}
+    private void Awake()
+    {
+        grabbable = GetComponent<Grabbable>();
+        initialLocalRotation = transform.localRotation;
 
-	private void LateUpdate()
-	{
-		UpdateStepFromRotation(); // Cập nhật mức theo góc hiện tại.
-	}
+        currentStepIndex = 0;
+        lastRequestedStep = 0;
+        ApplyFanOutput(0);
+    }
 
-	private void HandlePointerEvent(PointerEvent evt)
-	{
-		switch (evt.Type)
-		{
-			case PointerEventType.Select:
-				// _isGrabbed = true; // Bắt đầu grab.
-				break;
+    public override void Spawned()
+    {
+        fusionSpawned = true;
 
-			case PointerEventType.Unselect:
-				// _isGrabbed = false; // Kết thúc grab.
-				break;
-		}
-	}
+        if (Object.HasStateAuthority)
+            CurrentStepNet = 0;
 
-	private void UpdateStepFromRotation()
-	{
-		var axis = localAxis.normalized; // Chuẩn hóa trục local.
-		if (axis == Vector3.zero) return; // Trục không hợp lệ.
+        ApplyAcceptedStep(CurrentStepNet, snapKnob: true);
+    }
 
-		Vector3 refDir = Vector3.Cross(axis, Vector3.up); // Tìm hướng tham chiếu vuông góc với trục.
-		if (refDir.sqrMagnitude < 1e-4f)
-		{
-			refDir = Vector3.Cross(axis, Vector3.right); // Dự phòng nếu trục song song với up.
-		}
-		refDir.Normalize(); // Chuẩn hóa hướng tham chiếu.
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        fusionSpawned = false;
+    }
 
-		var currentLocalRotation = transform.localRotation; // Góc local hiện tại.
-		var axisWorld = _initialLocalRotation * axis; // Trục xoay trong world.
-		var refStart = _initialLocalRotation * refDir; // Hướng tham chiếu lúc bắt đầu.
-		var refNow = currentLocalRotation * refDir; // Hướng tham chiếu hiện tại.
+    public override void FixedUpdateNetwork()
+    {
+        if (!Object.HasStateAuthority) return;
+        if (CurrentStepNet <= 0) return;
+        if (CanOperateAtCurrentGasLevel()) return;
 
-		float angle = Vector3.SignedAngle(refStart, refNow, axisWorld); // Góc hiện tại quanh trục.
-		int stepIndex = GetStepIndexFromAngle(angle); // Xác định mức theo khoảng góc.
-		ApplyStep(stepIndex); // Cập nhật tốc độ quạt theo nấc.
-	}
+        SetStepOnStateAuthority(0);
+    }
 
-	private int GetStepIndexFromAngle(float angle)
-	{
-		float wrapped = Mathf.Repeat(angle + 360f, 360f); // Dua goc ve [0, 360).
-		if (wrapped <= 29f) return 0; // 0-29
-		if (wrapped <= 89f) return 1; // 30-89
-		if (wrapped <= 149f) return 2; // 90-149
-		if (wrapped <= 209f) return 3; // 150-209
-		if (wrapped <= 269f) return 4; // 210-269
-		if (wrapped <= 300f) return 5; // 270-300
-		return 5;
-	}
+    private void OnEnable()
+    {
+        if (grabbable != null)
+            grabbable.WhenPointerEventRaised += HandlePointerEvent;
+    }
 
-	private void ApplyStep(int stepIndex)
-	{	
-		// Cháy nên bỏ qua việc quạt quay
-		if (fanRotator == null) return; // Không có quạt để điều khiển.
-		if (stepIndex == _currentStepIndex) return; // Không đổi nếu cùng nấc.
+    private void OnDisable()
+    {
+        if (grabbable != null)
+            grabbable.WhenPointerEventRaised -= HandlePointerEvent;
+    }
 
-		int previousStep = _currentStepIndex;
-		_currentStepIndex = stepIndex;
+    private void Update()
+    {
+        if (fusionSpawned) return;
+        if (currentStepIndex <= 0) return;
+        if (CanOperateAtCurrentGasLevel()) return;
 
-		// Tắt hoạt động của quạt do cháy
-		// float speed = GetStepSpeed(stepIndex); 
-		// fanRotator.speed = speed; 
-		// fanRotator.SetOn(speed > 0f); 
+        ApplyAcceptedStep(0, snapKnob: !isGrabbed);
+    }
 
-		bool wasOff = previousStep <= 0;
-        bool isNowOn = stepIndex > 0;
+    private void LateUpdate()
+    {
+        if (isGrabbed)
+            UpdateStepFromRotation();
+    }
 
-		if (wasOff && isNowOn && sparkIgnitionTrigger != null)
-		{
-			sparkIgnitionTrigger.TriggerSpark();
-		}
-	}
+    private void HandlePointerEvent(PointerEvent evt)
+    {
+        switch (evt.Type)
+        {
+            case PointerEventType.Select:
+                isGrabbed = true;
+                lastRequestedStep = GetAcceptedStep();
+                break;
 
-	private float GetStepSpeed(int stepIndex)
-	{
-		if (stepSpeeds != null && stepSpeeds.Length > 0)
-		{
-			int clamped = Mathf.Clamp(stepIndex, 0, stepSpeeds.Length - 1); 
-			return stepSpeeds[clamped];
-		}
+            case PointerEventType.Unselect:
+                isGrabbed = false;
+                lastRequestedStep = GetAcceptedStep();
+                SnapKnobToStep(lastRequestedStep);
+                break;
+        }
+    }
 
-		return 0f; // Mặc định tắt.
-	}
+    private void UpdateStepFromRotation()
+    {
+        Vector3 axis = localAxis.normalized;
+        if (axis == Vector3.zero) return;
 
+        Vector3 refDir = Vector3.Cross(axis, Vector3.up);
+        if (refDir.sqrMagnitude < 1e-4f)
+            refDir = Vector3.Cross(axis, Vector3.right);
+
+        refDir.Normalize();
+
+        Quaternion currentLocalRotation = transform.localRotation;
+        Vector3 rotationAxis = initialLocalRotation * axis;
+        Vector3 refStart = initialLocalRotation * refDir;
+        Vector3 refNow = currentLocalRotation * refDir;
+
+        float angle = Vector3.SignedAngle(refStart, refNow, rotationAxis);
+        int requestedStep = GetStepIndexFromAngle(angle);
+
+        if (requestedStep == lastRequestedStep)
+            return;
+
+        bool attemptingToTurnOn = GetAcceptedStep() <= 0 && requestedStep > 0;
+        if (attemptingToTurnOn && sparkIgnitionTrigger != null)
+            sparkIgnitionTrigger.TriggerSpark();
+
+        lastRequestedStep = requestedStep;
+        RequestSetStep(requestedStep);
+    }
+
+    private int GetStepIndexFromAngle(float angle)
+    {
+        float wrapped = Mathf.Repeat(angle + 360f, 360f);
+        if (wrapped <= 29f) return 0;
+        if (wrapped <= 89f) return 1;
+        if (wrapped <= 149f) return 2;
+        if (wrapped <= 209f) return 3;
+        if (wrapped <= 269f) return 4;
+        return 5;
+    }
+
+    private void RequestSetStep(int requestedStep)
+    {
+        requestedStep = Mathf.Clamp(requestedStep, 0, Steps - 1);
+
+        if (!fusionSpawned)
+        {
+            int acceptedStep = CanAcceptStep(requestedStep) ? requestedStep : 0;
+            ApplyAcceptedStep(acceptedStep, snapKnob: false);
+            return;
+        }
+
+        if (Object.HasStateAuthority)
+            SetStepOnStateAuthority(requestedStep);
+        else
+            RPC_RequestSetStep(requestedStep);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    private void RPC_RequestSetStep(int requestedStep)
+    {
+        SetStepOnStateAuthority(requestedStep);
+    }
+
+    private void SetStepOnStateAuthority(int requestedStep)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        requestedStep = Mathf.Clamp(requestedStep, 0, Steps - 1);
+        int acceptedStep = CanAcceptStep(requestedStep) ? requestedStep : 0;
+
+        CurrentStepNet = acceptedStep;
+        ApplyAcceptedStep(acceptedStep, snapKnob: !isGrabbed);
+        RPC_ApplyAcceptedStep(acceptedStep);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
+    private void RPC_ApplyAcceptedStep(int acceptedStep)
+    {
+        ApplyAcceptedStep(acceptedStep, snapKnob: !isGrabbed);
+    }
+
+    private void OnStepNetworkChanged()
+    {
+        ApplyAcceptedStep(CurrentStepNet, snapKnob: !isGrabbed);
+    }
+
+    private bool CanAcceptStep(int requestedStep)
+    {
+        return requestedStep <= 0 || CanOperateAtCurrentGasLevel();
+    }
+
+    private bool CanOperateAtCurrentGasLevel()
+    {
+        return GasSystem.Instance != null &&
+               GasSystem.Instance.GasLevel() <= maximumOperatingGasLevel;
+    }
+
+    private int GetAcceptedStep()
+    {
+        return fusionSpawned ? CurrentStepNet : currentStepIndex;
+    }
+
+    private void ApplyAcceptedStep(int stepIndex, bool snapKnob)
+    {
+        stepIndex = Mathf.Clamp(stepIndex, 0, Steps - 1);
+        currentStepIndex = stepIndex;
+
+        ApplyFanOutput(stepIndex);
+
+        if (snapKnob)
+            SnapKnobToStep(stepIndex);
+    }
+
+    private void ApplyFanOutput(int stepIndex)
+    {
+        if (fanRotator == null) return;
+
+        float speed = GetStepSpeed(stepIndex);
+        fanRotator.speed = speed;
+        fanRotator.SetOn(speed > 0f);
+    }
+
+    private void SnapKnobToStep(int stepIndex)
+    {
+        Vector3 axis = localAxis.normalized;
+        if (axis == Vector3.zero) return;
+
+        transform.localRotation =
+            initialLocalRotation *
+            Quaternion.AngleAxis(stepIndex * StepAngle, axis);
+    }
+
+    private float GetStepSpeed(int stepIndex)
+    {
+        if (stepSpeeds == null || stepSpeeds.Length == 0)
+            return 0f;
+
+        int clamped = Mathf.Clamp(stepIndex, 0, stepSpeeds.Length - 1);
+        return stepSpeeds[clamped];
+    }
 }

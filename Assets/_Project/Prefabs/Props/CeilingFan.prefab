@@ -75,8 +75,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   _surface: {fileID: 0}
   _relativeTo: {fileID: 6260920614327527926}
   _usesHandPose: 1
@@ -178,6 +178,7 @@ GameObject:
   - component: {fileID: 8124535047354865529}
   - component: {fileID: 6990311224723570725}
   - component: {fileID: 7501914935070143874}
+  - component: {fileID: 910000000000000001}
   - component: {fileID: 6352867698475949954}
   - component: {fileID: 7172977760562470739}
   m_Layer: 0
@@ -345,6 +346,25 @@ MonoBehaviour:
   _rigidbody: {fileID: 8124535047354865529}
   _kinematicWhileSelected: 1
   _throwWhenUnselected: 1
+--- !u!114 &910000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6748805175455642444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 161803398
+  ObjectInterest: 1
+  Flags: 786433
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 6352867698475949954}
+  ForceRemoteRenderTimeframe: 0
 --- !u!114 &6352867698475949954
 MonoBehaviour:
   m_ObjectHideFlags: 0
