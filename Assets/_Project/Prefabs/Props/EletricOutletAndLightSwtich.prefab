@@ -10566,11 +10566,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buttonVisual: {fileID: 8825561269597917549}
-  offAngle: 98
-  onAngle: 82
+  offAngle: 82
+  onAngle: 98
   lightComponents: []
   lightObjects: []
+  lightGroupRoot: {fileID: 0}
+  autoFindLightsWhenTargetsEmpty: 1
+  fallbackLightGroupName: CeilingLightGroup
+  controlEmissionUnderLightGroup: 1
   startOn: 0
+  maximumOperatingGasLevel: 1
+  fusionSpawned: 0
+  currentState: 0
 --- !u!114 &1142714776248453492
 MonoBehaviour:
   m_ObjectHideFlags: 0

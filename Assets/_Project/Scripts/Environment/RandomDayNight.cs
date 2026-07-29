@@ -22,6 +22,12 @@ public class RandomDayNight : MonoBehaviour
     [SerializeField] private Light directionalLight;
     [SerializeField] private bool updateEnvironment = true;
 
+    [Header("Night Object Visibility")]
+    [SerializeField] private bool forceDarkNightUntilRoomLightsOn = true;
+    [SerializeField, Range(0f, 1f)]
+    [Tooltip("0 = mesh gần như không nhìn thấy khi đèn tắt; 1 = dùng đầy đủ ambient và reflection ban đêm. Outline không bị ảnh hưởng.")]
+    private float nightObjectVisibility = 0f;
+
     [Header("Day - Environment Lighting")]
     [SerializeField] private AmbientMode dayAmbientMode = AmbientMode.Flat;
     [SerializeField] private Color dayAmbientColor = new Color(0.72f, 0.72f, 0.72f);
@@ -101,7 +107,6 @@ public class RandomDayNight : MonoBehaviour
         }
 
         currentIsNight = isNight;   
-
         if (isNight)
             ApplyRandomSkyboxFromArray(nightSkyboxes, true);
         else
@@ -129,18 +134,36 @@ public class RandomDayNight : MonoBehaviour
 
         if (isNight)
         {
-            ApplyEnvironmentLighting(
-                nightAmbientMode,
-                nightAmbientColor,
-                nightAmbientSkyColor,
-                nightAmbientEquatorColor,
-                nightAmbientGroundColor,
-                nightAmbientIntensity);
+            if (forceDarkNightUntilRoomLightsOn)
+            {
+                float visibility = Mathf.Clamp01(nightObjectVisibility);
+                Color visibleAmbientColor = ScaleRgb(nightAmbientColor, visibility);
+
+                ApplyEnvironmentLighting(
+                    AmbientMode.Flat,
+                    visibleAmbientColor,
+                    visibleAmbientColor,
+                    visibleAmbientColor,
+                    visibleAmbientColor,
+                    nightAmbientIntensity * visibility);
+            }
+            else
+            {
+                ApplyEnvironmentLighting(
+                    nightAmbientMode,
+                    nightAmbientColor,
+                    nightAmbientSkyColor,
+                    nightAmbientEquatorColor,
+                    nightAmbientGroundColor,
+                    nightAmbientIntensity);
+            }
 
             ApplyEnvironmentReflections(
                 nightReflectionMode,
                 nightCustomReflection,
-                nightReflectionIntensity,
+                forceDarkNightUntilRoomLightsOn
+                    ? nightReflectionIntensity * Mathf.Clamp01(nightObjectVisibility)
+                    : nightReflectionIntensity,
                 nightReflectionBounces);
 
             RenderSettings.fog = nightFog;
@@ -203,6 +226,15 @@ public class RandomDayNight : MonoBehaviour
         }
 
         RenderSettings.ambientIntensity = ambientIntensity;
+    }
+
+    private static Color ScaleRgb(Color color, float multiplier)
+    {
+        return new Color(
+            color.r * multiplier,
+            color.g * multiplier,
+            color.b * multiplier,
+            color.a);
     }
 
     private static void ApplyEnvironmentReflections(
