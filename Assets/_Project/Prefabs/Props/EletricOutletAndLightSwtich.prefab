@@ -10566,11 +10566,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buttonVisual: {fileID: 8825561269597917549}
-  offAngle: 98
-  onAngle: 82
+  offAngle: 82
+  onAngle: 98
   lightComponents: []
   lightObjects: []
+  lightGroupRoot: {fileID: 0}
+  autoFindLightsWhenTargetsEmpty: 1
+  fallbackLightGroupName: CeilingLightGroup
+  controlEmissionUnderLightGroup: 1
   startOn: 0
+  maximumOperatingGasLevel: 1
+  fusionSpawned: 0
+  currentState: 0
 --- !u!114 &1142714776248453492
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10583,11 +10590,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 960615caa13200540b88180e21850d0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoFindLightsWhenTargetsEmpty: 1
-  automaticLightRoot: {fileID: 0}
-  automaticLightRootName: CeilingLightGroup
-  controlEmissionUnderAutomaticRoot: 1
-  startOn: 0
   sparksFx: {fileID: 7661531405414288543}
   sparkAudio: {fileID: 0}
   ignitionNode: {fileID: 0}
