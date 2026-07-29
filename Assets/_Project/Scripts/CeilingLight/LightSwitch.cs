@@ -23,17 +23,10 @@ public class LightSwitch : NetworkBehaviour
     [Header("State")]
     [SerializeField] private bool startOn;
 
-<<<<<<< Updated upstream
-    [Header("Gas Rule")]
-    [Tooltip("Đèn chỉ được phép bật khi gas level không vượt quá giá trị này.")]
-    [Range(0, 3)]
-    [SerializeField] private int maximumOperatingGasLevel = 1;
-=======
     private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
 
     private readonly List<EmissionTarget> emissionTargets = new List<EmissionTarget>();
     private bool isOn;
->>>>>>> Stashed changes
 
     [Header("Debug")]
     [SerializeField] private bool fusionSpawned;
@@ -46,48 +39,9 @@ public class LightSwitch : NetworkBehaviour
 
     private void Awake()
     {
-<<<<<<< Updated upstream
-        ResolveLightTargets();
-        isOn = startOn && CanOperateAtCurrentGasLevel();
-        ApplyStateInstant(isOn);
-    }
-
-    public override void Spawned()
-    {
-        fusionSpawned = true;
-
-        if (Object.HasStateAuthority)
-            IsOnNet = isOn && CanOperateAtCurrentGasLevel();
-
-        ApplyStateInstant(IsOnNet);
-    }
-
-    public override void Despawned(NetworkRunner runner, bool hasState)
-    {
-        fusionSpawned = false;
-    }
-
-    public override void FixedUpdateNetwork()
-    {
-        if (!Object.HasStateAuthority) return;
-        if (!IsOnNet) return;
-        if (CanOperateAtCurrentGasLevel()) return;
-
-        SetLightOnStateAuthority(false);
-    }
-
-    private void Update()
-    {
-        if (fusionSpawned) return;
-        if (!isOn) return;
-        if (CanOperateAtCurrentGasLevel()) return;
-
-        ApplyStateInstant(false);
-=======
         ResolveAutomaticTargets();
         isOn = startOn;
         ApplyStateInstant();
->>>>>>> Stashed changes
     }
 
     public void PressButton()
@@ -195,8 +149,6 @@ public class LightSwitch : NetworkBehaviour
         euler.y = yAngle;
         buttonVisual.localEulerAngles = euler;
     }
-<<<<<<< Updated upstream
-=======
 
     private void ResolveAutomaticTargets()
     {
@@ -272,5 +224,4 @@ public class LightSwitch : NetworkBehaviour
         public int MaterialIndex;
         public Color OnColor;
     }
->>>>>>> Stashed changes
 }
