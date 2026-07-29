@@ -1,4 +1,4 @@
-using Fusion;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LightSwitch : NetworkBehaviour
@@ -14,13 +14,26 @@ public class LightSwitch : NetworkBehaviour
     [SerializeField] private Transform lightGroupRoot;
     [SerializeField] private string fallbackLightGroupName = "CeilingLightGroup";
 
+    [Header("Automatic Scene Targets")]
+    [SerializeField] private bool autoFindLightsWhenTargetsEmpty = true;
+    [SerializeField] private Transform automaticLightRoot;
+    [SerializeField] private string automaticLightRootName = "CeilingLightGroup";
+    [SerializeField] private bool controlEmissionUnderAutomaticRoot = true;
+
     [Header("State")]
     [SerializeField] private bool startOn;
 
+<<<<<<< Updated upstream
     [Header("Gas Rule")]
     [Tooltip("Đèn chỉ được phép bật khi gas level không vượt quá giá trị này.")]
     [Range(0, 3)]
     [SerializeField] private int maximumOperatingGasLevel = 1;
+=======
+    private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
+
+    private readonly List<EmissionTarget> emissionTargets = new List<EmissionTarget>();
+    private bool isOn;
+>>>>>>> Stashed changes
 
     [Header("Debug")]
     [SerializeField] private bool fusionSpawned;
@@ -33,6 +46,7 @@ public class LightSwitch : NetworkBehaviour
 
     private void Awake()
     {
+<<<<<<< Updated upstream
         ResolveLightTargets();
         isOn = startOn && CanOperateAtCurrentGasLevel();
         ApplyStateInstant(isOn);
@@ -69,6 +83,11 @@ public class LightSwitch : NetworkBehaviour
         if (CanOperateAtCurrentGasLevel()) return;
 
         ApplyStateInstant(false);
+=======
+        ResolveAutomaticTargets();
+        isOn = startOn;
+        ApplyStateInstant();
+>>>>>>> Stashed changes
     }
 
     public void PressButton()
@@ -164,6 +183,8 @@ public class LightSwitch : NetworkBehaviour
                     lightObjects[i].SetActive(isOn);
             }
         }
+
+        ApplyEmissionState();
     }
 
     private void SetButtonVisual(float yAngle)
@@ -174,4 +195,82 @@ public class LightSwitch : NetworkBehaviour
         euler.y = yAngle;
         buttonVisual.localEulerAngles = euler;
     }
+<<<<<<< Updated upstream
+=======
+
+    private void ResolveAutomaticTargets()
+    {
+        bool targetsAreEmpty = lightComponents == null || lightComponents.Length == 0;
+        if (!autoFindLightsWhenTargetsEmpty || !targetsAreEmpty)
+            return;
+
+        if (automaticLightRoot == null && !string.IsNullOrWhiteSpace(automaticLightRootName))
+        {
+            GameObject rootObject = GameObject.Find(automaticLightRootName);
+            if (rootObject != null)
+                automaticLightRoot = rootObject.transform;
+        }
+
+        if (automaticLightRoot == null)
+        {
+            Debug.LogWarning(
+                $"LightSwitch: Không tìm thấy nhóm đèn '{automaticLightRootName}'.",
+                this);
+            lightComponents = new Light[0];
+            return;
+        }
+
+        lightComponents = automaticLightRoot.GetComponentsInChildren<Light>(true);
+
+        if (controlEmissionUnderAutomaticRoot)
+            CacheEmissionTargets(automaticLightRoot);
+    }
+
+    private void CacheEmissionTargets(Transform root)
+    {
+        emissionTargets.Clear();
+
+        Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+        for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+        {
+            Renderer targetRenderer = renderers[rendererIndex];
+            Material[] materials = targetRenderer.sharedMaterials;
+
+            for (int materialIndex = 0; materialIndex < materials.Length; materialIndex++)
+            {
+                Material material = materials[materialIndex];
+                if (material == null || !material.HasProperty(EmissionColorId))
+                    continue;
+
+                emissionTargets.Add(new EmissionTarget
+                {
+                    Renderer = targetRenderer,
+                    MaterialIndex = materialIndex,
+                    OnColor = material.GetColor(EmissionColorId)
+                });
+            }
+        }
+    }
+
+    private void ApplyEmissionState()
+    {
+        for (int i = 0; i < emissionTargets.Count; i++)
+        {
+            EmissionTarget target = emissionTargets[i];
+            var properties = new MaterialPropertyBlock();
+            target.Renderer.GetPropertyBlock(properties, target.MaterialIndex);
+            properties.SetColor(
+                EmissionColorId,
+                isOn ? target.OnColor : Color.black);
+            target.Renderer.SetPropertyBlock(properties, target.MaterialIndex);
+        }
+    }
+
+    private struct EmissionTarget
+    {
+        public Renderer Renderer;
+        public int MaterialIndex;
+        public Color OnColor;
+    }
+>>>>>>> Stashed changes
 }
