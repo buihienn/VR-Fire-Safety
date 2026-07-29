@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: -2353561579252473944}
   - component: {fileID: 5140576997555375988}
   - component: {fileID: 8719974341244796317}
-  m_Layer: 0
+  - component: {fileID: 8651589946094340624}
+  m_Layer: 3
   m_Name: PrimaryButton_IconAndLabel_UnityUIButton
   m_TagString: QDSUIPrimaryButton
   m_Icon: {fileID: 0}
@@ -82,7 +83,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 0}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: StartMenuUIManager, Assembly-CSharp
+        m_MethodName: ShowStartMenu
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!95 &5140576997555375988
 Animator:
   serializedVersion: 7
@@ -131,6 +144,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &8651589946094340624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243424268127923124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0f052a60439b034d9d33719e5aa57c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  copyJsonMetadata: 0
+  exportFilePrefix: VRFireSafety_Review
 --- !u!1 &832893625572680271
 GameObject:
   m_ObjectHideFlags: 0
@@ -141,7 +168,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4236296434230476906}
   - component: {fileID: 3772476552351266512}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -167,7 +194,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1800, y: 660}
+  m_SizeDelta: {x: 747, y: 800}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3772476552351266512
 MonoBehaviour:
@@ -206,7 +233,7 @@ GameObject:
   - component: {fileID: 6762338879539652668}
   - component: {fileID: 3933894810206658267}
   - component: {fileID: 4953385358649627245}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Elements
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -232,7 +259,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6, y: 8}
+  m_AnchoredPosition: {x: 6, y: 8.6}
   m_SizeDelta: {x: -12, y: -16}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &3933894810206658267
@@ -280,7 +307,7 @@ GameObject:
   - component: {fileID: 5058768552955778770}
   - component: {fileID: 3373378991825200704}
   - component: {fileID: 6101756499587595531}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Subtitle
   m_TagString: QDSUITextSecondaryInvertedColor
   m_Icon: {fileID: 0}
@@ -415,7 +442,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6860911344413419000}
   - component: {fileID: 6189143265567592919}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Content
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -481,7 +508,7 @@ GameObject:
   - component: {fileID: 6969549370637227510}
   - component: {fileID: 319369812052764045}
   - component: {fileID: 265421014618640476}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Background
   m_TagString: QDSUIAccentColor
   m_Icon: {fileID: 0}
@@ -578,7 +605,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56549cdaaf4d81e4387b02698fd3daa0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  borderRadius: {x: 20, y: 20, z: 20, w: 20}
+  borderRadius: {x: 250, y: 250, z: 250, w: 250}
 --- !u!1 &6842874035311489922
 GameObject:
   m_ObjectHideFlags: 0
@@ -590,7 +617,7 @@ GameObject:
   - component: {fileID: 6384598719118635554}
   - component: {fileID: 739955594126349811}
   - component: {fileID: 595206484569908514}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Label
   m_TagString: QDSUITextInvertedColor
   m_Icon: {fileID: 0}
@@ -614,7 +641,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1800, y: 660}
+  m_SizeDelta: {x: 2651, y: 14}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &739955594126349811
 CanvasRenderer:
@@ -644,7 +671,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Label
+  m_text: 'Back
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -671,14 +700,14 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 350
+  m_fontSizeBase: 350
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -709,7 +738,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0.0044269413, w: 0}
+  m_margin: {x: 0, y: 0, z: -6.1935034, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -727,7 +756,7 @@ GameObject:
   - component: {fileID: 952902941670326963}
   - component: {fileID: 2209662681103260112}
   - component: {fileID: 4160192877624802652}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Icon
   m_TagString: QDSUITextInvertedColor
   m_Icon: {fileID: 0}
@@ -751,8 +780,8 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 800, y: 800}
-  m_Pivot: {x: 0, y: 0.5}
+  m_SizeDelta: {x: 400, y: 400}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &952902941670326963
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -781,7 +810,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -879597423983009946, guid: 64f884351318b694f942625580e64a8b, type: 3}
+  m_Sprite: {fileID: 4876779847286912284, guid: 4f3b4a4ae58ad484e9fc92ab68a8ffef, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -845,7 +874,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 160, y: 16}
+  m_SizeDelta: {x: 100, y: 16}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3020810274633798728
 MonoBehaviour:
