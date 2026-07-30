@@ -1,36 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &339980631232096966
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4980315869637912255}
-  m_Layer: 15
-  m_Name: Fire_SpreadPoints
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4980315869637912255
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339980631232096966}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6206085718605303378}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1596743845178934383
 GameObject:
   m_ObjectHideFlags: 0
@@ -41,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7803578771894569161}
   - component: {fileID: 1388893088952792348}
+  - component: {fileID: 900700000000000001}
   m_Layer: 15
   m_Name: GasSystem
   m_TagString: Untagged
@@ -99,6 +69,28 @@ MonoBehaviour:
   vent01: 0
   leakStrength01: 0
   leakActive: 1
+--- !u!114 &900700000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596743845178934383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a703a585767d2164c8efbf75e9b1be7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gasSystem: {fileID: 1388893088952792348}
+  levelOneFlarePrefab: {fileID: 0}
+  explosionPrefab: {fileID: 7722719820172466565, guid: ca1a9a10f53ace74388217c408973173, type: 3}
+  explosionPoint: {fileID: 1606667685097116072}
+  flareGasLevel: 1
+  explosionGasLevel: 2
+  flareLifetime: 3
+  explosionLifetime: 6
+  endMatchOnExplosion: 1
+  debugLog: 0
 --- !u!1 &1922030629938260290
 GameObject:
   m_ObjectHideFlags: 0
@@ -131,7 +123,6 @@ Transform:
   m_Children:
   - {fileID: 7803578771894569161}
   - {fileID: 1606667685097116072}
-  - {fileID: 4980315869637912255}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &773492605514128215
@@ -152,6 +143,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 1388893088952792348}
+  - {fileID: 900700000000000001}
   ForceRemoteRenderTimeframe: 0
 --- !u!1 &5729123036876373773
 GameObject:
@@ -5018,7 +5010,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1606667685097116072}
   m_Layer: 15
-  m_Name: Fire_NozzlePoint
+  m_Name: Explosion_Point
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5033,7 +5025,7 @@ Transform:
   m_GameObject: {fileID: 7815234736192422463}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1.431, y: 0, z: -1.095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5049,6 +5041,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9176499504312786188}
   - component: {fileID: 7662535837134974415}
+  - component: {fileID: 900700000000000002}
   m_Layer: 15
   m_Name: GasZone_Kitchen
   m_TagString: Untagged
@@ -5093,3 +5086,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 3.6196837, y: 3.4951534, z: 9.979584}
   m_Center: {x: 1.1341288, y: 0.9787135, z: -0.03536892}
+--- !u!114 &900700000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7922509942933286374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0abceee497728b645bac780812a9a0e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ignitionController: {fileID: 900700000000000001}

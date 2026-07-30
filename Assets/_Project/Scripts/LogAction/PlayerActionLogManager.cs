@@ -253,6 +253,7 @@ public class PlayerActionLogManager : MonoBehaviour
 
             case GameplayEventType.PlayerEnteredDangerZone:
             case GameplayEventType.PlayerFainted:
+            case GameplayEventType.GasExploded:
             case GameplayEventType.WrongActionPerformed:
                 return PlayerActionResult.Wrong;
 
@@ -283,6 +284,10 @@ public class PlayerActionLogManager : MonoBehaviour
                 return "Da xu ly ro ri gas";
             case GameplayEventType.GasLevelChanged:
                 return "Muc gas thay doi";
+            case GameplayEventType.GasFlareIgnited:
+                return "Gas phung lua";
+            case GameplayEventType.GasExploded:
+                return "No khi gas";
             case GameplayEventType.PlayerEnteredDangerZone:
                 return "Nguoi choi vao vung nguy hiem";
             case GameplayEventType.PlayerExitedDangerZone:

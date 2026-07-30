@@ -11,7 +11,8 @@ public class GameFlowManager : NetworkBehaviour
     {
         Win = 0,
         TimeUp = 1,
-        PlayerFainted = 2
+        PlayerFainted = 2,
+        GasExplosion = 3
     }
 
     [Header("Core References")]
@@ -129,7 +130,7 @@ public class GameFlowManager : NetworkBehaviour
         if (matchEnded &&
             !localEndApplied &&
             EndReasonNet >= (int)EndReason.Win &&
-            EndReasonNet <= (int)EndReason.PlayerFainted)
+            EndReasonNet <= (int)EndReason.GasExplosion)
         {
             ApplyEndLocal((EndReason)EndReasonNet);
         }
@@ -221,10 +222,34 @@ public class GameFlowManager : NetworkBehaviour
         }
     }
 
+    public void ReportGasExplosion()
+    {
+        if (!fusionSpawned)
+        {
+            EndAsGasExplosion();
+            return;
+        }
+
+        if (Object.HasStateAuthority)
+        {
+            EndAsGasExplosion();
+        }
+        else
+        {
+            RPC_RequestGasExplosion();
+        }
+    }
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestPlayerFainted(RpcInfo info = default)
     {
         EndAsPlayerFainted();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestGasExplosion(RpcInfo info = default)
+    {
+        EndAsGasExplosion();
     }
 
     private void EndAsTimeUp()
@@ -240,6 +265,11 @@ public class GameFlowManager : NetworkBehaviour
     private void EndAsPlayerFainted()
     {
         EndMatch(EndReason.PlayerFainted);
+    }
+
+    private void EndAsGasExplosion()
+    {
+        EndMatch(EndReason.GasExplosion);
     }
 
     private void EndMatch(EndReason reason)
@@ -348,6 +378,13 @@ public class GameFlowManager : NetworkBehaviour
                 title = "GAME OVER";
                 body = "Ban da o trong khu vuc gas qua lau va bi o nhiem khi gas.";
                 break;
+
+            case EndReason.GasExplosion:
+                won = false;
+                timeUp = false;
+                title = "GAS EXPLOSION";
+                body = "Nguon lua da kich hoat vu no khi gas trong phong.";
+                break;
         }
     }
 
@@ -367,6 +404,7 @@ public class GameFlowManager : NetworkBehaviour
                 break;
 
             case EndReason.PlayerFainted:
+            case EndReason.GasExplosion:
                 AudioManager.Instance.PlayOneShot("VO_GameOver");
                 break;
         }

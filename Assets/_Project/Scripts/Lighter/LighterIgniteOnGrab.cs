@@ -1,6 +1,7 @@
 using System.Collections;
 using Fusion;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class LighterIgniteOnGrab : NetworkBehaviour
 {
@@ -18,6 +19,10 @@ public class LighterIgniteOnGrab : NetworkBehaviour
     [Header("Optional")]
     [SerializeField] private AudioSource igniteSound;
 
+    [Header("Desktop Test")]
+    [Tooltip("Cho phep phim L bat/tat lua khi test khong co kinh VR.")]
+    [SerializeField] private bool enableDesktopTestInput = true;
+
     [Networked] private bool FireOnNet { get; set; }
 
     private ParticleSystem[] fireParticles;
@@ -26,6 +31,8 @@ public class LighterIgniteOnGrab : NetworkBehaviour
     private bool isFireOnLocal;
     private bool spawned;
     private bool lastFireOnNet;
+
+    public bool IsFireOn => isFireOnLocal;
 
     private void Awake()
     {
@@ -61,6 +68,18 @@ public class LighterIgniteOnGrab : NetworkBehaviour
 
         lastFireOnNet = FireOnNet;
         ApplyFire(FireOnNet, playSound: true);
+    }
+
+    private void Update()
+    {
+        if (!enableDesktopTestInput || !Application.isPlaying)
+            return;
+
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null || !keyboard.lKey.wasPressedThisFrame)
+            return;
+
+        RequestSetFire(!isFireOnLocal);
     }
 
     public void OnGrab()
