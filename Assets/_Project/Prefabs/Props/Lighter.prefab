@@ -5623,3 +5623,4 @@ MonoBehaviour:
   igniteDelay: 1
   keepFireOnAfterRelease: 0
   igniteSound: {fileID: 0}
+  enableDesktopTestInput: 1

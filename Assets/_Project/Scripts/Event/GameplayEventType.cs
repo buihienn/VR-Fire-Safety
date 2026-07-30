@@ -16,5 +16,7 @@ public enum GameplayEventType
     MatchEnded,
     WrongActionPerformed,
     DoorOpened,
-    DoorClosed
+    DoorClosed,
+    GasFlareIgnited,
+    GasExploded
 }
