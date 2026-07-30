@@ -1,8 +1,11 @@
 using System.Collections;
+using System;
 using UnityEngine;
 
 public class GasExplosionEffect : MonoBehaviour
 {
+    public static event Action<Vector3> ExplosionPlayed;
+
     [Header("Effect References")]
     [SerializeField] private ParticleSystem[] particleSystems;
     [SerializeField] private Light explosionLight;
@@ -37,6 +40,7 @@ public class GasExplosionEffect : MonoBehaviour
         if (playRoutine != null)
             StopCoroutine(playRoutine);
 
+        ExplosionPlayed?.Invoke(transform.position);
         playRoutine = StartCoroutine(PlayRoutine());
     }
 
