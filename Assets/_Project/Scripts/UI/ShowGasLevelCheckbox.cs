@@ -10,7 +10,7 @@ public class ShowGasLevelCheckbox : MonoBehaviour
         if (checkbox == null) return;
 
         // Đọc state hiện tại để set UI checkbox
-        checkbox.isOn = GameSettings.ShowGasLevel;
+        checkbox.SetIsOnWithoutNotify(GameSettings.ShowGasLevel);
 
         // Gắn listener
         checkbox.onValueChanged.AddListener(OnCheckboxChanged);
@@ -26,6 +26,7 @@ public class ShowGasLevelCheckbox : MonoBehaviour
     {
         GameSettings.ShowGasLevel = isOn;
         GameSettings.Save();
+        FindFirstObjectByType<HeadCanvasController>()?.RefreshFromSettings();
         Debug.Log($"ShowGasLevel checkbox set to {isOn}");
     }
 }

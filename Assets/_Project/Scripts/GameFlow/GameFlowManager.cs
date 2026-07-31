@@ -20,8 +20,6 @@ public class GameFlowManager : NetworkBehaviour
     [SerializeField] private PlayerGasExposure playerGasExposure;
 
     [Header("UI")]
-    [SerializeField] private GameObject hubGas;
-    [SerializeField] private GameObject timeLabel;
     [SerializeField] private GameObject endPanel;
     [SerializeField] private TMP_Text endTitleText;
     [SerializeField] private TMP_Text endBodyText;
@@ -69,8 +67,6 @@ public class GameFlowManager : NetworkBehaviour
         }
 
         Instance = this;
-
-        ApplySetting();
 
         if (gasSystem == null)
             gasSystem = FindFirstObjectByType<GasSystem>();
@@ -176,17 +172,6 @@ public class GameFlowManager : NetworkBehaviour
             else
                 EndAsTimeUp();
         }
-    }
-
-    public void ApplySetting()
-    {
-        if (timeLabel != null)
-            timeLabel.SetActive(true);
-
-        if (hubGas != null)
-            hubGas.SetActive(GameSettings.ShowGasLevel);
-
-        Debug.Log($"Applied GameSettings: ShowGasLevel={GameSettings.ShowGasLevel}");
     }
 
     private void UpdateTimerUI()
@@ -315,9 +300,6 @@ public class GameFlowManager : NetworkBehaviour
         endReason = body;
 
         GameOverPayload.Set(won, timeUp, title, body);
-
-        if (hubGas != null)
-            hubGas.SetActive(false);
 
         if (endPanel != null)
             endPanel.SetActive(true);

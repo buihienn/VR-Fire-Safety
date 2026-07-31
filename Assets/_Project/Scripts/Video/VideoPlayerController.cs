@@ -348,10 +348,8 @@ public class VideoPlayerController : MonoBehaviour
 
         UpdateTimelineText(time);
 
-        if (!videoPlayer.isPlaying)
-        {
-            videoPlayer.Play();
-        }
+        // Match the Slider PointerUp flow: apply the target time, then play.
+        videoPlayer.Play();
 
         Debug.Log($"[{DebugPrefix}] Review video seek requested: {time:0.00}s");
         NotifyInteraction();

@@ -10,20 +10,10 @@ public class StartMenuUIManager : MonoBehaviour
     [SerializeField] private GameObject reviewLayout;
     [SerializeField] private GameObject reviewVideoListLayout;
     [SerializeField] private GameObject reviewActionLogCanvas;
-    [SerializeField] private GameObject hubGas;
-    [SerializeField] private GameObject timeLabel;
 
     private void Start()
     {
         ShowStartMenu();
-    }
-
-    private void Awake()
-    {
-        if (hubGas != null)
-            hubGas.SetActive(false);
-        if (timeLabel != null)
-            timeLabel.SetActive(false);
     }
 
     public void ShowStartMenu()
