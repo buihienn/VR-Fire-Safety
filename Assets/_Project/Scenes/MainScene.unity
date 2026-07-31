@@ -43256,6 +43256,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1795965075}
   - component: {fileID: 1795965076}
+  - component: {fileID: 1795965077}
+  - component: {fileID: 1795965078}
   m_Layer: 0
   m_Name: EnviromentManager
   m_TagString: Untagged
@@ -43326,6 +43328,37 @@ MonoBehaviour:
   nightFogColor: {r: 0.08, g: 0.09, b: 0.11, a: 1}
   nightFogDensity: 0.01
   clearPayloadOnStart: 1
+--- !u!114 &1795965077
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795965074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  SortKey: 2481365771
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1795965078}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &1795965078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1795965074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b186b998f9c419288308ae5b89a2a17, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!1 &1800735252
 GameObject:
   m_ObjectHideFlags: 0
