@@ -34,6 +34,9 @@ public class GasExplosionEffect : MonoBehaviour
         CacheReferences();
         CacheLightSettings();
 
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayOneShot("GasExplosion");
+
         if (playRoutine != null)
             StopCoroutine(playRoutine);
 

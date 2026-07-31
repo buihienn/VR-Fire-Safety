@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -166,11 +167,28 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
             image.raycastTarget = true;
         }
 
-        marker.onClick.RemoveAllListeners();
-        marker.onClick.AddListener(() =>
+        PlayerActionLogEntry markerAction = action;
+        EventTrigger eventTrigger = marker.GetComponent<EventTrigger>();
+        if (eventTrigger == null)
         {
-            OnMarkerClicked(action);
-        });
+            eventTrigger = marker.gameObject.AddComponent<EventTrigger>();
+        }
+
+        if (eventTrigger.triggers == null)
+        {
+            eventTrigger.triggers = new List<EventTrigger.Entry>();
+        }
+
+        EventTrigger.Entry pointerDown = new EventTrigger.Entry
+        {
+            eventID = EventTriggerType.PointerDown
+        };
+        pointerDown.callback.AddListener(_ => OnMarkerClicked(markerAction));
+        eventTrigger.triggers.Add(pointerDown);
+
+        // Quest controller rays can leave a small marker before PointerUp,
+        // so PointerDown is the reliable activation event for timeline markers.
+        marker.onClick.RemoveAllListeners();
     }
 
     private void OnMarkerClicked(PlayerActionLogEntry action)
@@ -197,6 +215,11 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
         {
             contentLabel.text = action.result.ToString();
         }
+
+        Debug.Log(
+            $"[{DebugPrefix}] Review action detail updated: " +
+            $"Title='{action.title}', Result='{action.result}', " +
+            $"CanvasActive={actionDetailCanvas != null && actionDetailCanvas.activeInHierarchy}");
     }
 
     private Color GetMarkerColor(PlayerActionResult result)

@@ -1,10 +1,15 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GasHUDVR : MonoBehaviour
 {
     [SerializeField] private GasSystem gas;
     [SerializeField] private TMP_Text hudText;
+
+    [Header("Gas System Lookup")]
+    [SerializeField, Min(1)] private int resolveRetryFrames = 120;
 
     [Header("VO")]
     [SerializeField] private bool playVoOnLevelChange = true;
@@ -13,31 +18,103 @@ public class GasHUDVR : MonoBehaviour
     [SerializeField] private string voLevel3 = "VO_GasLevel3";
 
     private int lastLevel = -1;
+    private GasSystem subscribedGas;
+    private Coroutine resolveRoutine;
 
     private void Awake()
     {
-        if (!gas)
-            gas = FindFirstObjectByType<GasSystem>();
+        TryBindGasSystem();
     }
 
     private void OnEnable()
     {
-        if (!gas)
-            gas = FindFirstObjectByType<GasSystem>();
-
-        if (gas)
-        {
-            gas.GasLevelChanged += HandleGasLevelChanged;
-            int level = gas.GasLevel();
-            lastLevel = level;
-            UpdateHud(level);
-        }
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+        StartResolveGasSystem();
     }
 
     private void OnDisable()
     {
-        if (gas)
-            gas.GasLevelChanged -= HandleGasLevelChanged;
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+
+        if (resolveRoutine != null)
+        {
+            StopCoroutine(resolveRoutine);
+            resolveRoutine = null;
+        }
+
+        UnbindGasSystem();
+    }
+
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        StartResolveGasSystem();
+    }
+
+    private void StartResolveGasSystem()
+    {
+        if (resolveRoutine != null)
+            StopCoroutine(resolveRoutine);
+
+        if (TryBindGasSystem())
+        {
+            resolveRoutine = null;
+            return;
+        }
+
+        resolveRoutine = StartCoroutine(ResolveGasSystemRoutine());
+    }
+
+    private IEnumerator ResolveGasSystemRoutine()
+    {
+        for (int i = 0; i < resolveRetryFrames; i++)
+        {
+            yield return null;
+
+            if (TryBindGasSystem())
+            {
+                resolveRoutine = null;
+                yield break;
+            }
+        }
+
+        resolveRoutine = null;
+        Debug.LogWarning(
+            $"[{nameof(GasHUDVR)}] Could not find an active {nameof(GasSystem)} " +
+            $"after {resolveRetryFrames} frames.",
+            this);
+    }
+
+    private bool TryBindGasSystem()
+    {
+        GasSystem target = gas;
+        if (!target)
+            target = FindFirstObjectByType<GasSystem>();
+
+        if (!target)
+            return false;
+
+        if (subscribedGas == target)
+            return true;
+
+        UnbindGasSystem();
+
+        gas = target;
+        subscribedGas = target;
+        subscribedGas.GasLevelChanged += HandleGasLevelChanged;
+
+        int level = subscribedGas.GasLevel();
+        lastLevel = level;
+        UpdateHud(level);
+        return true;
+    }
+
+    private void UnbindGasSystem()
+    {
+        if (subscribedGas)
+            subscribedGas.GasLevelChanged -= HandleGasLevelChanged;
+
+        subscribedGas = null;
+        lastLevel = -1;
     }
 
     private void HandleGasLevelChanged(int level)
