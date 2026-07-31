@@ -70,18 +70,61 @@ public class RandomDayNight : MonoBehaviour
     [SerializeField] private bool clearPayloadOnStart = false;
 
     private bool currentIsNight = true;
+    private bool automaticInitializationSuppressed;
 
     public bool CurrentIsNight => currentIsNight;
 
     private void Start()
     {
+        if (automaticInitializationSuppressed)
+            return;
+
         if (clearPayloadOnStart)
             DayNightPayload.Clear();
 
         ApplyRandomDayNight();
     }
 
+    public void SuppressAutomaticInitialization()
+    {
+        automaticInitializationSuppressed = true;
+    }
+
+    public void InitializeNetworkAuthority(out bool isNight, out int skyboxIndex)
+    {
+        automaticInitializationSuppressed = true;
+
+        if (clearPayloadOnStart)
+            DayNightPayload.Clear();
+
+        isNight = ResolveIsNight();
+        DayNightPayload.Set(isNight);
+        Material[] skyboxes = isNight ? nightSkyboxes : daySkyboxes;
+        skyboxIndex = SelectSkyboxIndex(skyboxes);
+        ApplySkyboxFromArray(skyboxes, isNight, skyboxIndex);
+    }
+
+    public void ApplySynchronizedDayNight(bool isNight, int skyboxIndex)
+    {
+        automaticInitializationSuppressed = true;
+        DayNightPayload.Set(isNight);
+
+        Material[] skyboxes = isNight ? nightSkyboxes : daySkyboxes;
+        ApplySkyboxFromArray(skyboxes, isNight, skyboxIndex);
+    }
+
     public void ApplyRandomDayNight()
+    {
+        bool isNight = ResolveIsNight();
+        currentIsNight = isNight;
+
+        if (isNight)
+            ApplyRandomSkyboxFromArray(nightSkyboxes, true);
+        else
+            ApplyRandomSkyboxFromArray(daySkyboxes, false);
+    }
+
+    private bool ResolveIsNight()
     {
         bool isNight;
         switch (dayNightMode)
@@ -106,14 +149,23 @@ public class RandomDayNight : MonoBehaviour
                 break;
         }
 
-        currentIsNight = isNight;   
-        if (isNight)
-            ApplyRandomSkyboxFromArray(nightSkyboxes, true);
-        else
-            ApplyRandomSkyboxFromArray(daySkyboxes, false);
+        return isNight;
     }
 
     private void ApplyRandomSkyboxFromArray(Material[] skyboxes, bool isNight)
+    {
+        int index = SelectSkyboxIndex(skyboxes);
+        ApplySkyboxFromArray(skyboxes, isNight, index);
+    }
+
+    private int SelectSkyboxIndex(Material[] skyboxes)
+    {
+        return skyboxes == null || skyboxes.Length == 0
+            ? 0
+            : Random.Range(0, skyboxes.Length);
+    }
+
+    private void ApplySkyboxFromArray(Material[] skyboxes, bool isNight, int index)
     {
         if (skyboxes == null || skyboxes.Length == 0)
         {
@@ -121,7 +173,7 @@ public class RandomDayNight : MonoBehaviour
             return;
         }
 
-        int index = Random.Range(0, skyboxes.Length);
+        index = Mathf.Clamp(index, 0, skyboxes.Length - 1);
         Material selectedSkybox = skyboxes[index];
 
         if (selectedSkybox == null)
@@ -130,6 +182,7 @@ public class RandomDayNight : MonoBehaviour
             return;
         }
 
+        currentIsNight = isNight;
         RenderSettings.skybox = selectedSkybox;
 
         if (isNight)
