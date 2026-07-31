@@ -84,7 +84,7 @@ public class LightSwitch : NetworkBehaviour
 
     public void PressButton()
     {
-        RequestLightState(!IsOn);
+        RequestToggleLightState();
     }
 
     public void SetLightState(bool value)
@@ -151,6 +151,37 @@ public class LightSwitch : NetworkBehaviour
             SetLightOnStateAuthority(requestedState);
         else
             RPC_RequestSetLight(requestedState);
+    }
+
+    private void RequestToggleLightState()
+    {
+        if (!fusionSpawned)
+        {
+            ApplyStateInstant(CanAcceptState(!currentState));
+            return;
+        }
+
+        // State Authority performs the toggle from the authoritative value.
+        // This avoids a client repeatedly requesting "On" when IsOnNet has not
+        // reached that client yet, even though the visual RPC already did.
+        if (Object.HasStateAuthority)
+            ToggleLightOnStateAuthority();
+        else
+            RPC_RequestToggleLight();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    private void RPC_RequestToggleLight()
+    {
+        ToggleLightOnStateAuthority();
+    }
+
+    private void ToggleLightOnStateAuthority()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        SetLightOnStateAuthority(!(bool)IsOnNet);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]

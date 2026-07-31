@@ -27,7 +27,8 @@ public class GameFlowManager : NetworkBehaviour
 
     [Header("Match Rules")]
     [SerializeField] private float matchDurationSeconds = 300f;
-    [SerializeField] private float returnDelaySeconds = 5f;
+    [Min(0f)]
+    [SerializeField] private float returnDelaySeconds = 10f;
 
     [Range(0f, 0.2f)]
     [SerializeField] private float gasSafeThreshold01 = 0.01f;
