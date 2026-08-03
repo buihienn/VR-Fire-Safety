@@ -47,11 +47,17 @@ public class GasHUDVR : MonoBehaviour
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        if (!isActiveAndEnabled)
+            return;
+
         StartResolveGasSystem();
     }
 
     private void StartResolveGasSystem()
     {
+        if (!isActiveAndEnabled)
+            return;
+
         if (resolveRoutine != null)
             StopCoroutine(resolveRoutine);
 
