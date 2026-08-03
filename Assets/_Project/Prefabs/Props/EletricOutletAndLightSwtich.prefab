@@ -10592,10 +10592,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sparksFx: {fileID: 7661531405414288543}
   sparkAudio: {fileID: 0}
-  ignitionNode: {fileID: 0}
-  autoFindNearestIfMissing: 1
-  autoFindRadius: 1
-  requiredGasLevelForIgnition: 1
+  enableGasIgnition: 0
+  ignitionController: {fileID: 0}
+  sourceId: KitchenLightSwitch
   playSparkEvenIfCannotIgnite: 1
   debugLog: 0
 --- !u!1 &7686068756178013233

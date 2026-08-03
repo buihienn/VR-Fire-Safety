@@ -609,8 +609,7 @@ public class GasSystem : NetworkBehaviour
 
     public bool CanIgniteByHeat()
     {
-        // Lua/nhiet co the bat som hon spark
-        return GasLevel() >= 1 && HasGasInRoom;
+        return GasLevel() >= 2 && HasGasInRoom;
     }
 
     public bool CanSustainNozzleFire()

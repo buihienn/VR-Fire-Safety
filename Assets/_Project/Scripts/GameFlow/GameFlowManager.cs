@@ -13,7 +13,8 @@ public class GameFlowManager : NetworkBehaviour
         Win = 0,
         TimeUp = 1,
         PlayerFainted = 2,
-        GasExplosion = 3
+        GasExplosion = 3,
+        EmergencyEscape = 4
     }
 
     [Header("Core References")]
@@ -29,6 +30,11 @@ public class GameFlowManager : NetworkBehaviour
     [SerializeField] private float gasSafeThreshold01 = 0.01f;
 
     [SerializeField] private bool requireLeakStopped = true;
+
+    [Header("Emergency Escape Win")]
+    [SerializeField] private HouseEscapeZone emergencyEscapeZone;
+    [Min(0)]
+    [SerializeField] private int emergencyEscapeMinimumGasLevel = 2;
 
     [Header("Disable Scripts When End")]
     [SerializeField] private UnityEngine.Behaviour[] behavioursToDisableOnEnd;
@@ -68,6 +74,9 @@ public class GameFlowManager : NetworkBehaviour
 
         if (playerGasExposure == null)
             playerGasExposure = FindFirstObjectByType<PlayerGasExposure>();
+
+        if (emergencyEscapeZone == null)
+            emergencyEscapeZone = FindFirstObjectByType<HouseEscapeZone>();
     }
 
     private void Start()
@@ -115,7 +124,7 @@ public class GameFlowManager : NetworkBehaviour
         if (matchEnded &&
             !localEndApplied &&
             EndReasonNet >= (int)EndReason.Win &&
-            EndReasonNet <= (int)EndReason.GasExplosion)
+            EndReasonNet <= (int)EndReason.EmergencyEscape)
         {
             ApplyEndLocal((EndReason)EndReasonNet);
         }
@@ -137,6 +146,12 @@ public class GameFlowManager : NetworkBehaviour
 
     private void ProcessMatch(float deltaTime)
     {
+        if (CheckEmergencyEscapeWinCondition())
+        {
+            EndAsEmergencyEscape();
+            return;
+        }
+
         if (CheckWinCondition())
         {
             EndAsWin();
@@ -233,6 +248,11 @@ public class GameFlowManager : NetworkBehaviour
         EndMatch(EndReason.GasExplosion);
     }
 
+    private void EndAsEmergencyEscape()
+    {
+        EndMatch(EndReason.EmergencyEscape);
+    }
+
     private void EndMatch(EndReason reason)
     {
         if (!fusionSpawned)
@@ -248,7 +268,7 @@ public class GameFlowManager : NetworkBehaviour
             return;
 
         MatchEndedNet = true;
-        PlayerWonNet = reason == EndReason.Win;
+        PlayerWonNet = reason == EndReason.Win || reason == EndReason.EmergencyEscape;
         EndReasonNet = (int)reason;
 
         RPC_ApplyEndMatch((int)reason);
@@ -334,6 +354,13 @@ public class GameFlowManager : NetworkBehaviour
                 title = "GAS EXPLOSION";
                 body = "Nguon lua da kich hoat vu no khi gas trong phong.";
                 break;
+
+            case EndReason.EmergencyEscape:
+                won = true;
+                timeUp = false;
+                title = "YOU WIN";
+                body = "Tat ca nguoi choi da thoat khoi ngoi nha va goi PCCC 114.";
+                break;
         }
     }
 
@@ -357,6 +384,10 @@ public class GameFlowManager : NetworkBehaviour
                 break;
             case EndReason.GasExplosion:
                 AudioManager.Instance.PlayOneShot("VO_GasExplosion");
+                break;
+
+            case EndReason.EmergencyEscape:
+                AudioManager.Instance.PlayOneShot("VO_EmergencyEscape114");
                 break;
         }
     }
@@ -382,6 +413,18 @@ public class GameFlowManager : NetworkBehaviour
         bool firesResolved = AreAllFiresResolved();
 
         return gasSafe && leakStopped && firesResolved;
+    }
+
+    private bool CheckEmergencyEscapeWinCondition()
+    {
+        if (gasSystem == null || emergencyEscapeZone == null)
+            return false;
+
+        if (gasSystem.GasLevel() < emergencyEscapeMinimumGasLevel)
+            return false;
+
+        NetworkRunner activeRunner = fusionSpawned ? Runner : null;
+        return emergencyEscapeZone.HaveAllActivePlayersEscaped(activeRunner);
     }
 
     private bool IsGasSafe()
@@ -432,5 +475,12 @@ public class GameFlowManager : NetworkBehaviour
     {
         if (!matchEnded)
             EndAsPlayerFainted();
+    }
+
+    [ContextMenu("Force Emergency Escape Win")]
+    private void ForceEmergencyEscapeWin()
+    {
+        if (!matchEnded)
+            EndAsEmergencyEscape();
     }
 }
