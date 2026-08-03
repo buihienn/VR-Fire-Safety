@@ -4,6 +4,7 @@
 #
 .utmp/
 /.codex_work/
+/outputs/
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
