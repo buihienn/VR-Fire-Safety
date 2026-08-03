@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
-import com.unity3d.player.UnityPlayerGameActivity;
 
 public class ProjectionPermissionActivity extends Activity {
     private static final int REQUEST_MEDIA_PROJECTION = 2701;
@@ -59,17 +58,6 @@ public class ProjectionPermissionActivity extends Activity {
             ScreenRecordService.sendUnityMessage(unityCallbackObject, "OnScreenRecordPermissionDenied", "");
         }
 
-        returnToUnityActivity();
-    }
-
-    private void returnToUnityActivity() {
-        Intent unityIntent = new Intent(this, UnityPlayerGameActivity.class);
-        unityIntent.addFlags(
-                Intent.FLAG_ACTIVITY_REORDER_TO_FRONT |
-                Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-        startActivity(unityIntent);
         finish();
-        overridePendingTransition(0, 0);
     }
 }

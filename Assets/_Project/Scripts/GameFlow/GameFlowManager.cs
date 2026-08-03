@@ -6,6 +6,7 @@ using UnityEngine;
 public class GameFlowManager : NetworkBehaviour
 {
     public static GameFlowManager Instance { get; private set; }
+    public float RemainingSeconds => Mathf.Max(0f, remainingSeconds);
 
     private enum EndReason
     {
@@ -18,12 +19,6 @@ public class GameFlowManager : NetworkBehaviour
     [Header("Core References")]
     [SerializeField] private GasSystem gasSystem;
     [SerializeField] private PlayerGasExposure playerGasExposure;
-
-    [Header("UI")]
-    [SerializeField] private GameObject endPanel;
-    [SerializeField] private TMP_Text endTitleText;
-    [SerializeField] private TMP_Text endBodyText;
-    [SerializeField] private TMP_Text timerText;
 
     [Header("Match Rules")]
     [SerializeField] private float matchDurationSeconds = 300f;
@@ -81,11 +76,6 @@ public class GameFlowManager : NetworkBehaviour
 
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlayOneShot("VO_StartGame");
-
-        if (endPanel != null)
-            endPanel.SetActive(false);
-
-        UpdateTimerUI();
     }
 
     public override void Spawned()
@@ -101,7 +91,6 @@ public class GameFlowManager : NetworkBehaviour
         }
 
         remainingSeconds = RemainingSecondsNet;
-        UpdateTimerUI();
     }
 
     private void Update()
@@ -120,7 +109,6 @@ public class GameFlowManager : NetworkBehaviour
         remainingSeconds = RemainingSecondsNet;
         matchEnded = MatchEndedNet;
         playerWon = PlayerWonNet;
-        UpdateTimerUI();
 
         // RPC xử lý trường hợp realtime. Nhánh này bảo đảm Client vào trễ vẫn
         // áp dụng màn hình kết thúc từ trạng thái Networked hiện tại.
@@ -163,8 +151,6 @@ public class GameFlowManager : NetworkBehaviour
         if (fusionSpawned && Object.HasStateAuthority)
             RemainingSecondsNet = remainingSeconds;
 
-        UpdateTimerUI();
-
         if (remainingSeconds <= 0f)
         {
             if (CheckWinCondition())
@@ -172,17 +158,6 @@ public class GameFlowManager : NetworkBehaviour
             else
                 EndAsTimeUp();
         }
-    }
-
-    private void UpdateTimerUI()
-    {
-        if (timerText == null) return;
-
-        int total = Mathf.CeilToInt(remainingSeconds);
-        int minutes = total / 60;
-        int seconds = total % 60;
-
-        timerText.text = $"TIME: {minutes:00}:{seconds:00}";
     }
 
     public void HandlePlayerFainted()
@@ -301,15 +276,6 @@ public class GameFlowManager : NetworkBehaviour
 
         GameOverPayload.Set(won, timeUp, title, body);
 
-        if (endPanel != null)
-            endPanel.SetActive(true);
-
-        if (endTitleText != null)
-            endTitleText.text = title;
-
-        if (endBodyText != null)
-            endBodyText.text = body;
-
         if (behavioursToDisableOnEnd != null)
         {
             for (int i = 0; i < behavioursToDisableOnEnd.Length; i++)
@@ -387,8 +353,10 @@ public class GameFlowManager : NetworkBehaviour
                 break;
 
             case EndReason.PlayerFainted:
-            case EndReason.GasExplosion:
                 AudioManager.Instance.PlayOneShot("VO_GameOver");
+                break;
+            case EndReason.GasExplosion:
+                AudioManager.Instance.PlayOneShot("VO_GasExplosion");
                 break;
         }
     }
