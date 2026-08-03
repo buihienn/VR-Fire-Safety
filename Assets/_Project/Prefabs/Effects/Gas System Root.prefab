@@ -82,11 +82,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gasSystem: {fileID: 1388893088952792348}
-  levelOneFlarePrefab: {fileID: 0}
+  levelOneFlarePrefab: {fileID: 8461927346512801001, guid: 334a29f7d24f49cda3901e25e08d429d, type: 3}
   explosionPrefab: {fileID: 7722719820172466565, guid: ca1a9a10f53ace74388217c408973173, type: 3}
   explosionPoint: {fileID: 1606667685097116072}
-  flareGasLevel: 1
-  explosionGasLevel: 2
+  flareGasLevel: 2
+  explosionGasLevel: 3
   flareLifetime: 3
   explosionLifetime: 6
   endMatchOnExplosion: 1

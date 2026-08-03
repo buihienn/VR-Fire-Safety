@@ -6,8 +6,8 @@ public class GasIgnitionController : NetworkBehaviour
     private enum IgnitionOutcome
     {
         None = 0,
-        Flare = 1,
-        Explosion = 2
+        Fire = 1,
+        ExplosionAndFire = 2
     }
 
     [Header("References")]
@@ -18,10 +18,10 @@ public class GasIgnitionController : NetworkBehaviour
 
     [Header("Gas Rules")]
     [Range(0, 3)]
-    [SerializeField] private int flareGasLevel = 1;
+    [SerializeField] private int flareGasLevel = 2;
 
     [Range(0, 3)]
-    [SerializeField] private int explosionGasLevel = 2;
+    [SerializeField] private int explosionGasLevel = 3;
 
     [Header("Effect Lifetime")]
     [SerializeField, Min(0.1f)] private float flareLifetime = 3f;
@@ -67,9 +67,11 @@ public class GasIgnitionController : NetworkBehaviour
         if (outcome == IgnitionOutcome.None)
             return false;
 
-        if (outcome == IgnitionOutcome.Explosion)
+        if (outcome == IgnitionOutcome.ExplosionAndFire)
         {
-            if (HasExplosionTriggered())
+            // The first successful gas ignition locks the outcome. If Level 2
+            // already produced a fire, rising to Level 3 must not explode later.
+            if (HasExplosionTriggered() || HasFlareTriggered())
                 return false;
 
             SetExplosionTriggered();
@@ -82,15 +84,18 @@ public class GasIgnitionController : NetworkBehaviour
             SetFlareTriggered();
         }
 
-        Vector3 effectPosition =
-            outcome == IgnitionOutcome.Explosion && explosionPoint != null
-                ? explosionPoint.position
-                : ignitionPosition;
+        FlameNode nearestNode = IgniteNearestFlameNode(ignitionPosition);
+        Vector3 firePosition = nearestNode != null
+            ? nearestNode.transform.position
+            : ignitionPosition;
+        Vector3 explosionPosition = explosionPoint != null
+            ? explosionPoint.position
+            : ignitionPosition;
 
-        PlayOutcomeForEveryone(outcome, effectPosition, gasLevel);
+        PlayOutcomeForEveryone(outcome, firePosition, explosionPosition);
         RaiseOutcomeEvent(outcome, gasLevel, sourceId);
 
-        if (outcome == IgnitionOutcome.Explosion &&
+        if (outcome == IgnitionOutcome.ExplosionAndFire &&
             endMatchOnExplosion &&
             GameFlowManager.Instance != null)
         {
@@ -108,16 +113,35 @@ public class GasIgnitionController : NetworkBehaviour
         return true;
     }
 
+    public bool RequestIgnite(Vector3 ignitionPosition, string sourceId)
+    {
+        ResolveGasSystem();
+
+        if (!fusionSpawned || Object == null || Object.HasStateAuthority)
+            return TryIgnite(ignitionPosition, sourceId);
+
+        RPC_RequestIgnite(ignitionPosition);
+        return true;
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
+    private void RPC_RequestIgnite(Vector3 ignitionPosition, RpcInfo info = default)
+    {
+        TryIgnite(
+            ignitionPosition,
+            $"Player_{info.Source.PlayerId}");
+    }
+
     private IgnitionOutcome EvaluateOutcome(int gasLevel)
     {
         int acceptedExplosionLevel = Mathf.Clamp(explosionGasLevel, 0, 3);
         int acceptedFlareLevel = Mathf.Clamp(flareGasLevel, 0, acceptedExplosionLevel);
 
         if (gasLevel >= acceptedExplosionLevel)
-            return IgnitionOutcome.Explosion;
+            return IgnitionOutcome.ExplosionAndFire;
 
         if (gasLevel >= acceptedFlareLevel && gasSystem.HasGasInRoom)
-            return IgnitionOutcome.Flare;
+            return IgnitionOutcome.Fire;
 
         return IgnitionOutcome.None;
     }
@@ -150,51 +174,55 @@ public class GasIgnitionController : NetworkBehaviour
 
     private void PlayOutcomeForEveryone(
         IgnitionOutcome outcome,
-        Vector3 position,
-        int gasLevel)
+        Vector3 firePosition,
+        Vector3 explosionPosition)
     {
         if (fusionSpawned)
         {
-            RPC_PlayOutcome((int)outcome, position, gasLevel);
+            RPC_PlayOutcome(
+                (int)outcome,
+                firePosition,
+                explosionPosition);
             return;
         }
 
-        PlayOutcomeLocal(outcome, position);
+        PlayOutcomeLocal(outcome, firePosition, explosionPosition);
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_PlayOutcome(int outcomeValue, Vector3 position, int gasLevel)
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
+    private void RPC_PlayOutcome(
+        int outcomeValue,
+        Vector3 firePosition,
+        Vector3 explosionPosition)
     {
-        PlayOutcomeLocal((IgnitionOutcome)outcomeValue, position);
+        PlayOutcomeLocal(
+            (IgnitionOutcome)outcomeValue,
+            firePosition,
+            explosionPosition);
     }
 
-    private void PlayOutcomeLocal(IgnitionOutcome outcome, Vector3 position)
+    private void PlayOutcomeLocal(
+        IgnitionOutcome outcome,
+        Vector3 firePosition,
+        Vector3 explosionPosition)
     {
         switch (outcome)
         {
-            case IgnitionOutcome.Flare:
-                if (levelOneFlarePrefab != null)
-                {
-                    GameObject flare = Instantiate(
-                        levelOneFlarePrefab,
-                        position,
-                        Quaternion.identity);
-                    Destroy(flare, flareLifetime);
-                }
-                else if (debugLog)
-                {
-                    Debug.LogWarning(
-                        "[GasIgnitionController] Level One Flare Prefab is not assigned.",
-                        this);
-                }
+            case IgnitionOutcome.Fire:
+                PlayFlareLocal(firePosition);
+
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.PlayOneShot("VO_GasFlareIgnited");
                 break;
 
-            case IgnitionOutcome.Explosion:
+            case IgnitionOutcome.ExplosionAndFire:
+                PlayFlareLocal(firePosition);
+
                 if (explosionPrefab != null)
                 {
                     GasExplosionEffect explosion = Instantiate(
                         explosionPrefab,
-                        position,
+                        explosionPosition,
                         Quaternion.identity);
                     Destroy(explosion.gameObject, explosionLifetime);
                 }
@@ -208,12 +236,70 @@ public class GasIgnitionController : NetworkBehaviour
         }
     }
 
+    private void PlayFlareLocal(Vector3 position)
+    {
+        if (levelOneFlarePrefab != null)
+        {
+            GameObject flare = Instantiate(
+                levelOneFlarePrefab,
+                position,
+                Quaternion.identity);
+            Destroy(flare, flareLifetime);
+        }
+        else if (debugLog)
+        {
+            Debug.LogWarning(
+                "[GasIgnitionController] Gas flare prefab is not assigned.",
+                this);
+        }
+    }
+
+    private FlameNode IgniteNearestFlameNode(Vector3 ignitionPosition)
+    {
+        FlameNode nearestNode = null;
+        float nearestDistanceSqr = float.MaxValue;
+
+        foreach (FlameNode node in FlameNode.All)
+        {
+            if (node == null || !node.gameObject.activeInHierarchy)
+                continue;
+
+            float distanceSqr =
+                (node.transform.position - ignitionPosition).sqrMagnitude;
+
+            if (distanceSqr >= nearestDistanceSqr)
+                continue;
+
+            nearestNode = node;
+            nearestDistanceSqr = distanceSqr;
+        }
+
+        if (nearestNode == null)
+        {
+            if (debugLog)
+            {
+                Debug.LogWarning(
+                    "[GasIgnitionController] No active FlameNode was found.",
+                    this);
+            }
+
+            return null;
+        }
+
+        if (FireManager.Instance != null)
+            FireManager.Instance.RequestIgnite(nearestNode);
+        else
+            nearestNode.ForceIgnite();
+
+        return nearestNode;
+    }
+
     private void RaiseOutcomeEvent(
         IgnitionOutcome outcome,
         int gasLevel,
         string sourceId)
     {
-        GameplayEventType eventType = outcome == IgnitionOutcome.Explosion
+        GameplayEventType eventType = outcome == IgnitionOutcome.ExplosionAndFire
             ? GameplayEventType.GasExploded
             : GameplayEventType.GasFlareIgnited;
 
