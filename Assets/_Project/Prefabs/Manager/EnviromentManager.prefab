@@ -1,0 +1,114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1530031247606338624
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7009925519720698888}
+  - component: {fileID: 8327051288900082658}
+  - component: {fileID: 8512643210423641277}
+  - component: {fileID: 7996183185922958859}
+  m_Layer: 0
+  m_Name: EnviromentManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7009925519720698888
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530031247606338624}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8327051288900082658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530031247606338624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bac28293c011bf842a88f1b3eed9ddb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  daySkyboxes:
+  - {fileID: 2100000, guid: 2d796ced94d61438fbab81b194038162, type: 2}
+  nightSkyboxes:
+  - {fileID: 2100000, guid: 9af23ba5fa5364ff598888460e0e2759, type: 2}
+  directionalLight: {fileID: 0}
+  updateEnvironment: 1
+  forceDarkNightUntilRoomLightsOn: 1
+  nightObjectVisibility: 0.2
+  dayAmbientMode: 3
+  dayAmbientColor: {r: 0.8, g: 0.8666667, b: 1, a: 1}
+  dayAmbientSkyColor: {r: 0.72, g: 0.72, b: 0.72, a: 1}
+  dayAmbientEquatorColor: {r: 0.72, g: 0.72, b: 0.72, a: 1}
+  dayAmbientGroundColor: {r: 0.72, g: 0.72, b: 0.72, a: 1}
+  dayAmbientIntensity: 0.002
+  dayReflectionMode: 0
+  dayCustomReflection: {fileID: 0}
+  dayReflectionIntensity: 1
+  dayReflectionBounces: 1
+  dayFog: 0
+  dayFogColor: {r: 0.85, g: 0.88, b: 0.92, a: 1}
+  dayFogDensity: 0.002
+  nightAmbientMode: 3
+  nightAmbientColor: {r: 0.12, g: 0.14, b: 0.18, a: 1}
+  nightAmbientSkyColor: {r: 0.12, g: 0.14, b: 0.18, a: 1}
+  nightAmbientEquatorColor: {r: 0.12, g: 0.14, b: 0.18, a: 1}
+  nightAmbientGroundColor: {r: 0.12, g: 0.14, b: 0.18, a: 1}
+  nightAmbientIntensity: 0.2
+  nightReflectionMode: 0
+  nightCustomReflection: {fileID: 0}
+  nightReflectionIntensity: 0.2
+  nightReflectionBounces: 1
+  nightFog: 1
+  nightFogColor: {r: 0.08, g: 0.09, b: 0.11, a: 1}
+  nightFogDensity: 0.01
+--- !u!114 &8512643210423641277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530031247606338624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 2939733267
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 7996183185922958859}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &7996183185922958859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530031247606338624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b186b998f9c419288308ae5b89a2a17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  environmentManager: {fileID: 8327051288900082658}
