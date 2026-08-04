@@ -2534,7 +2534,6 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 2d796ced94d61438fbab81b194038162, type: 2}
   nightSkyboxes:
   - {fileID: 2100000, guid: 9af23ba5fa5364ff598888460e0e2759, type: 2}
-  dayNightMode: 1
   directionalLight: {fileID: 1657965519}
   updateEnvironment: 1
   dayAmbientMode: 3
@@ -2563,7 +2562,6 @@ MonoBehaviour:
   nightFog: 1
   nightFogColor: {r: 0.08, g: 0.09, b: 0.11, a: 1}
   nightFogDensity: 0.01
-  clearPayloadOnStart: 1
 --- !u!1 &1800735252
 GameObject:
   m_ObjectHideFlags: 0

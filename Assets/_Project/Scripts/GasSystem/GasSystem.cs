@@ -73,10 +73,13 @@ public class GasSystem : NetworkBehaviour
     [Tooltip("Van mo max + co leak + khong thong gio: tu gas01 = 0 len 1 mat khoang nay")]
     public float secondsToFullAtMaxLeak = 60f;
 
-    [Tooltip("Moi 1 vent mo max se hut gas theo toc do nay. Nhieu vent cong don that su")]
+    [Tooltip("Voi 1 opening mo hoan toan, sau thoi gian nay luong gas hien co giam khoang 63%.")]
     public float secondsToClearWithFullVent = 90f;
 
-    [Tooltip("Khong con leak, khong mo cua: gas tu tan rat cham")]
+    [Tooltip("Gioi han hieu qua thong gio khi nhieu opening cung mo. 1.5 = opening thu hai chi tang them toi da 50%.")]
+    [Min(1f)] [SerializeField] private float maximumCombinedVentilation01 = 1.5f;
+
+    [Tooltip("Khong con leak, khong mo cua: sau thoi gian nay luong gas hien co tu giam khoang 63%.")]
     public float secondsToClearNaturally = 480f;
 
     [Header("Read Only")]
@@ -87,6 +90,9 @@ public class GasSystem : NetworkBehaviour
 
     [Tooltip("Tong muc thong gio cong don tu cac vent, co the > 1")]
     public float vent01 = 0f;
+
+    [Tooltip("Muc thong gio thuc te sau khi ap dung gioi han cong don.")]
+    [SerializeField] private float effectiveVentilation01 = 0f;
 
     [Tooltip("Do manh leak hien tai, da tinh theo van chinh")]
     [Range(0f, 1f)] public float leakStrength01 = 0f;
@@ -100,6 +106,7 @@ public class GasSystem : NetworkBehaviour
     public bool LeakActive => leakActive;
     public bool HasGasInRoom => gas01 > 0.001f;
     public float AcceptedMainValveOpen01 => mainValveOpen01;
+    public float EffectiveVentilation01 => effectiveVentilation01;
 
     public event Action<int> GasLevelChanged;
     public int CurrentGasLevel => currentGasLevel;
@@ -199,16 +206,25 @@ public class GasSystem : NetworkBehaviour
             ? leakStrength01 / Mathf.Max(0.01f, secondsToFullAtMaxLeak)
             : 0f;
 
-        float ventDrainRate01PerSec = vent01 > 0f
-            ? vent01 / Mathf.Max(0.01f, secondsToClearWithFullVent)
+        effectiveVentilation01 = Mathf.Min(
+            Mathf.Max(0f, vent01),
+            Mathf.Max(1f, maximumCombinedVentilation01));
+
+        // Ventilation removes a fraction of the gas currently in the room.
+        // This prevents a low concentration from being cleared unrealistically fast.
+        float ventDrainRate01PerSec = effectiveVentilation01 > 0f
+            ? gas01 * effectiveVentilation01 / Mathf.Max(0.01f, secondsToClearWithFullVent)
             : 0f;
 
         float naturalDrainRate01PerSec = !leakActive
-            ? 1f / Mathf.Max(0.01f, secondsToClearNaturally)
+            ? gas01 / Mathf.Max(0.01f, secondsToClearNaturally)
             : 0f;
 
         gas01 += (fillRate01PerSec - ventDrainRate01PerSec - naturalDrainRate01PerSec) * deltaTime;
         gas01 = Mathf.Clamp01(gas01);
+
+        if (!leakActive && gas01 < 0.001f)
+            gas01 = 0f;
 
         if (writeToNetwork)
             WriteNetworkGasState();
@@ -641,6 +657,9 @@ public class GasSystem : NetworkBehaviour
 
         if (secondsToClearWithFullVent < 0.01f)
             secondsToClearWithFullVent = 0.01f;
+
+        if (maximumCombinedVentilation01 < 1f)
+            maximumCombinedVentilation01 = 1f;
 
         if (secondsToClearNaturally < 0.01f)
             secondsToClearNaturally = 0.01f;

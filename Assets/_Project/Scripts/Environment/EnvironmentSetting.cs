@@ -1,22 +1,12 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
-public class RandomDayNight : MonoBehaviour
+public class EnvironmentSetting : MonoBehaviour
 {
-    private enum DayNightMode
-    {
-        Random,
-        Day,
-        Night,
-        Payload
-    }
-
     [Header("Skybox")]
     [SerializeField] private Material[] daySkyboxes;
     [SerializeField] private Material[] nightSkyboxes;
-
-    [Header("Day/Night Mode")]
-    [SerializeField] private DayNightMode dayNightMode = DayNightMode.Random;
 
     [Header("Lighting")]
     [SerializeField] private Light directionalLight;
@@ -66,9 +56,6 @@ public class RandomDayNight : MonoBehaviour
     [SerializeField] private Color nightFogColor = new Color(0.08f, 0.09f, 0.11f);
     [SerializeField] private float nightFogDensity = 0.01f;
 
-    [Header("Clear Payload On Start")]
-    [SerializeField] private bool clearPayloadOnStart = false;
-
     private bool currentIsNight = true;
     private bool automaticInitializationSuppressed;
 
@@ -76,13 +63,18 @@ public class RandomDayNight : MonoBehaviour
 
     private void Start()
     {
+        DayNightSetting setting = GameSettings.DayNight;
+        Debug.Log(
+            $"[{nameof(EnvironmentSetting)}] Scene initialization | " +
+            $"Scene={SceneManager.GetActiveScene().name} | " +
+            $"GameSettings.DayNight={setting} | IsNight={setting == DayNightSetting.Night} | " +
+            $"AutomaticInitializationSuppressed={automaticInitializationSuppressed}",
+            this);
+
         if (automaticInitializationSuppressed)
             return;
 
-        if (clearPayloadOnStart)
-            DayNightPayload.Clear();
-
-        ApplyRandomDayNight();
+        ApplyDayNightFromSettings();
     }
 
     public void SuppressAutomaticInitialization()
@@ -94,11 +86,14 @@ public class RandomDayNight : MonoBehaviour
     {
         automaticInitializationSuppressed = true;
 
-        if (clearPayloadOnStart)
-            DayNightPayload.Clear();
+        DayNightSetting setting = GameSettings.DayNight;
+        isNight = setting == DayNightSetting.Night;
 
-        isNight = ResolveIsNight();
-        DayNightPayload.Set(isNight);
+        Debug.Log(
+            $"[{nameof(EnvironmentSetting)}] Network authority read GameSettings | " +
+            $"Scene={SceneManager.GetActiveScene().name} | GameSettings.DayNight={setting} | IsNight={isNight}",
+            this);
+
         Material[] skyboxes = isNight ? nightSkyboxes : daySkyboxes;
         skyboxIndex = SelectSkyboxIndex(skyboxes);
         ApplySkyboxFromArray(skyboxes, isNight, skyboxIndex);
@@ -107,49 +102,37 @@ public class RandomDayNight : MonoBehaviour
     public void ApplySynchronizedDayNight(bool isNight, int skyboxIndex)
     {
         automaticInitializationSuppressed = true;
-        DayNightPayload.Set(isNight);
+        DayNightSetting previousSetting = GameSettings.DayNight;
+        GameSettings.DayNight = isNight
+            ? DayNightSetting.Night
+            : DayNightSetting.Day;
+
+        Debug.Log(
+            $"[{nameof(EnvironmentSetting)}] Network client applied synchronized environment | " +
+            $"Scene={SceneManager.GetActiveScene().name} | ReceivedIsNight={isNight} | " +
+            $"SkyboxIndex={skyboxIndex} | GameSettingsBefore={previousSetting} | " +
+            $"GameSettingsAfter={GameSettings.DayNight}",
+            this);
 
         Material[] skyboxes = isNight ? nightSkyboxes : daySkyboxes;
         ApplySkyboxFromArray(skyboxes, isNight, skyboxIndex);
     }
 
-    public void ApplyRandomDayNight()
+    public void ApplyDayNightFromSettings()
     {
-        bool isNight = ResolveIsNight();
+        DayNightSetting setting = GameSettings.DayNight;
+        bool isNight = setting == DayNightSetting.Night;
         currentIsNight = isNight;
+
+        Debug.Log(
+            $"[{nameof(EnvironmentSetting)}] Applying environment from GameSettings | " +
+            $"Scene={SceneManager.GetActiveScene().name} | GameSettings.DayNight={setting} | IsNight={isNight}",
+            this);
 
         if (isNight)
             ApplyRandomSkyboxFromArray(nightSkyboxes, true);
         else
             ApplyRandomSkyboxFromArray(daySkyboxes, false);
-    }
-
-    private bool ResolveIsNight()
-    {
-        bool isNight;
-        switch (dayNightMode)
-        {
-            case DayNightMode.Payload:
-                if (DayNightPayload.HasValue)
-                    isNight = DayNightPayload.IsNight;
-                else
-                    isNight = Random.value > 0.5f;
-                break;
-            case DayNightMode.Day:
-                isNight = false;
-                DayNightPayload.Set(isNight);
-                break;
-            case DayNightMode.Night:
-                isNight = true;
-                DayNightPayload.Set(isNight);
-                break;
-            default:
-                isNight = Random.value > 0.5f;
-                DayNightPayload.Set(isNight);
-                break;
-        }
-
-        return isNight;
     }
 
     private void ApplyRandomSkyboxFromArray(Material[] skyboxes, bool isNight)
@@ -169,7 +152,10 @@ public class RandomDayNight : MonoBehaviour
     {
         if (skyboxes == null || skyboxes.Length == 0)
         {
-            Debug.LogWarning($"RandomDayNight: Không có skybox cho mode {(isNight ? "Night" : "Day")}.");
+            Debug.LogWarning(
+                $"[{nameof(EnvironmentSetting)}] No skybox configured | " +
+                $"Scene={SceneManager.GetActiveScene().name} | Environment={(isNight ? "Night" : "Day")}",
+                this);
             return;
         }
 
@@ -178,7 +164,10 @@ public class RandomDayNight : MonoBehaviour
 
         if (selectedSkybox == null)
         {
-            Debug.LogWarning($"RandomDayNight: Skybox tại index {index} đang null.");
+            Debug.LogWarning(
+                $"[{nameof(EnvironmentSetting)}] Skybox is null | " +
+                $"Scene={SceneManager.GetActiveScene().name} | Index={index}",
+                this);
             return;
         }
 
@@ -250,7 +239,12 @@ public class RandomDayNight : MonoBehaviour
         if (updateEnvironment)
             DynamicGI.UpdateEnvironment();
 
-        Debug.Log($"RandomDayNight: {(isNight ? "Night" : "Day")} - {selectedSkybox.name}");
+        Debug.Log(
+            $"[{nameof(EnvironmentSetting)}] Environment applied | " +
+            $"Scene={SceneManager.GetActiveScene().name} | GameSettings.DayNight={GameSettings.DayNight} | " +
+            $"AppliedEnvironment={(isNight ? "Night" : "Day")} | SkyboxIndex={index} | " +
+            $"Skybox={selectedSkybox.name} | MatchesGameSettings={GameSettings.IsNight == isNight}",
+            this);
     }
 
     private static void ApplyEnvironmentLighting(
