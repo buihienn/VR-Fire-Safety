@@ -25,7 +25,7 @@ public class LightSwitch : NetworkBehaviour
     [Header("Gas Safety")]
     [Tooltip("Đèn chỉ được phép bật khi gas level không vượt quá giá trị này.")]
     [Range(0, 3)]
-    [SerializeField] private int maximumOperatingGasLevel = 1;
+    [SerializeField] private int maximumOperatingGasLevel = 3;
 
     [Header("Debug")]
     [SerializeField] private bool fusionSpawned;
@@ -157,7 +157,10 @@ public class LightSwitch : NetworkBehaviour
     {
         if (!fusionSpawned)
         {
-            ApplyStateInstant(CanAcceptState(!currentState));
+            if (!CanOperateAtCurrentGasLevel())
+                return;
+
+            ApplyStateInstant(!currentState);
             return;
         }
 
@@ -179,6 +182,8 @@ public class LightSwitch : NetworkBehaviour
     private void ToggleLightOnStateAuthority()
     {
         if (!Object.HasStateAuthority)
+            return;
+        if (!CanOperateAtCurrentGasLevel())
             return;
 
         SetLightOnStateAuthority(!(bool)IsOnNet);

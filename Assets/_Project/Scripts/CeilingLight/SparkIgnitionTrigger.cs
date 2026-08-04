@@ -9,6 +9,8 @@ public class SparkIgnitionTrigger : MonoBehaviour
     [Header("Gas Ignition")]
     [SerializeField] private bool enableGasIgnition;
     [SerializeField] private GasIgnitionController ignitionController;
+    [Tooltip("When assigned, only this FlameNode may be ignited by this spark source.")]
+    [SerializeField] private FlameNode ignitionNode;
     [SerializeField] private string sourceId = "KitchenLightSwitch";
 
     [Header("Options")]
@@ -21,8 +23,9 @@ public class SparkIgnitionTrigger : MonoBehaviour
         if (playSparkEvenIfCannotIgnite)
             PlaySparkFx();
 
-        // Sfx
-        AudioManager.Instance.PlayOneShot("Spark");
+        // The ignition request must still run when no AudioManager exists.
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayOneShot("Spark");
 
         if (enableGasIgnition)
             TryIgniteFromSpark();
@@ -52,6 +55,14 @@ public class SparkIgnitionTrigger : MonoBehaviour
             return;
         }
 
-        ignitionController.RequestIgnite(transform.position, sourceId);
+        bool hasDedicatedNode = ignitionNode != null;
+        Vector3 ignitionPosition = hasDedicatedNode
+            ? ignitionNode.transform.position
+            : transform.position;
+
+        ignitionController.RequestIgnite(
+            ignitionPosition,
+            sourceId,
+            requireExactFlameTarget: hasDedicatedNode);
     }
 }

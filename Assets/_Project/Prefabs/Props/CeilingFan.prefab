@@ -386,6 +386,11 @@ MonoBehaviour:
   - 300
   - 400
   - 500
+  sparkIgnitionTrigger: {fileID: 0}
+  maximumOperatingGasLevel: 1
+  fusionSpawned: 0
+  isGrabbed: 0
+  currentStepIndex: 0
 --- !u!114 &7172977760562470739
 MonoBehaviour:
   m_ObjectHideFlags: 0
