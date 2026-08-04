@@ -10454,7 +10454,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6728918119116995539}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.46390373, y: 0.46390373, z: 0.5336603, w: 0.5336603}
+  m_LocalRotation: {x: 0.5336603, y: 0.5336603, z: 0.46390373, w: 0.46390373}
   m_LocalPosition: {x: -0.0005255127, y: 0.023099823, z: 0.00991333}
   m_LocalScale: {x: 0.00015892391, y: 0.00025664142, z: 0.00016761178}
   m_ConstrainProportionsScale: 0
@@ -10462,7 +10462,7 @@ Transform:
   - {fileID: 9090549592409237530}
   - {fileID: 4560002993403798173}
   m_Father: {fileID: 3207958791502609844}
-  m_LocalEulerAnglesHint: {x: 0, y: 82, z: 90}
+  m_LocalEulerAnglesHint: {x: 0, y: 98, z: 90}
 --- !u!33 &6033839286712606619
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -10566,8 +10566,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buttonVisual: {fileID: 8825561269597917549}
-  offAngle: 82
-  onAngle: 98
+  offAngle: 98
+  onAngle: 82
   lightComponents: []
   lightObjects: []
   lightGroupRoot: {fileID: 0}
@@ -10575,7 +10575,7 @@ MonoBehaviour:
   fallbackLightGroupName: CeilingLightGroup
   controlEmissionUnderLightGroup: 1
   startOn: 0
-  maximumOperatingGasLevel: 1
+  maximumOperatingGasLevel: 3
   fusionSpawned: 0
   currentState: 0
 --- !u!114 &1142714776248453492
@@ -10594,6 +10594,7 @@ MonoBehaviour:
   sparkAudio: {fileID: 0}
   enableGasIgnition: 0
   ignitionController: {fileID: 0}
+  ignitionNode: {fileID: 0}
   sourceId: KitchenLightSwitch
   playSparkEvenIfCannotIgnite: 1
   debugLog: 0

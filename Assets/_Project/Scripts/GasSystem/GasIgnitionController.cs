@@ -54,7 +54,10 @@ public class GasIgnitionController : NetworkBehaviour
         ResolveGasSystem();
     }
 
-    public bool TryIgnite(Vector3 ignitionPosition, string sourceId)
+    public bool TryIgnite(
+        Vector3 ignitionPosition,
+        string sourceId,
+        bool requireExactFlameTarget = false)
     {
         ResolveGasSystem();
 
@@ -84,7 +87,15 @@ public class GasIgnitionController : NetworkBehaviour
             SetFlareTriggered();
         }
 
-        FlameNode nearestNode = IgniteNearestFlameNode(ignitionPosition);
+        // Dedicated appliance nodes are a Level 2 fire origin. At Level 3 the
+        // gas explosion handles the outcome without lighting that node first.
+        FlameNode nearestNode = null;
+        if (outcome == IgnitionOutcome.Fire || !requireExactFlameTarget)
+        {
+            nearestNode = IgniteNearestFlameNode(
+                ignitionPosition,
+                requireExactFlameTarget);
+        }
         Vector3 firePosition = nearestNode != null
             ? nearestNode.transform.position
             : ignitionPosition;
@@ -113,23 +124,33 @@ public class GasIgnitionController : NetworkBehaviour
         return true;
     }
 
-    public bool RequestIgnite(Vector3 ignitionPosition, string sourceId)
+    public bool RequestIgnite(
+        Vector3 ignitionPosition,
+        string sourceId,
+        bool requireExactFlameTarget = false)
     {
         ResolveGasSystem();
 
         if (!fusionSpawned || Object == null || Object.HasStateAuthority)
-            return TryIgnite(ignitionPosition, sourceId);
+            return TryIgnite(
+                ignitionPosition,
+                sourceId,
+                requireExactFlameTarget);
 
-        RPC_RequestIgnite(ignitionPosition);
+        RPC_RequestIgnite(ignitionPosition, requireExactFlameTarget);
         return true;
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
-    private void RPC_RequestIgnite(Vector3 ignitionPosition, RpcInfo info = default)
+    private void RPC_RequestIgnite(
+        Vector3 ignitionPosition,
+        bool requireExactFlameTarget,
+        RpcInfo info = default)
     {
         TryIgnite(
             ignitionPosition,
-            $"Player_{info.Source.PlayerId}");
+            $"Player_{info.Source.PlayerId}",
+            requireExactFlameTarget);
     }
 
     private IgnitionOutcome EvaluateOutcome(int gasLevel)
@@ -254,7 +275,9 @@ public class GasIgnitionController : NetworkBehaviour
         }
     }
 
-    private FlameNode IgniteNearestFlameNode(Vector3 ignitionPosition)
+    private FlameNode IgniteNearestFlameNode(
+        Vector3 ignitionPosition,
+        bool requireExactFlameTarget)
     {
         FlameNode nearestNode = null;
         float nearestDistanceSqr = float.MaxValue;
@@ -266,6 +289,16 @@ public class GasIgnitionController : NetworkBehaviour
 
             float distanceSqr =
                 (node.transform.position - ignitionPosition).sqrMagnitude;
+
+            // Dedicated appliance sparks send the exact target position. This
+            // prevents that spark from falling back to a different FlameNode.
+            if (requireExactFlameTarget && distanceSqr > 0.0001f)
+                continue;
+
+            // Nodes that reject spread are reserved for their assigned source
+            // and are ignored by generic sources such as a lighter or phone.
+            if (!requireExactFlameTarget && !node.AllowIgniteFromSpread)
+                continue;
 
             if (distanceSqr >= nearestDistanceSqr)
                 continue;

@@ -135,7 +135,7 @@ public class FanSwitch : NetworkBehaviour
         if (requestedStep == lastRequestedStep)
             return;
 
-        bool attemptingToTurnOn = GetAcceptedStep() <= 0 && requestedStep > 0;
+        bool attemptingToTurnOn = lastRequestedStep <= 0 && requestedStep > 0;
         if (attemptingToTurnOn && sparkIgnitionTrigger != null)
             sparkIgnitionTrigger.TriggerSpark();
 
