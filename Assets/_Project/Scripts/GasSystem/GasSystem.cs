@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class GasSystem : NetworkBehaviour
 {
@@ -73,11 +74,12 @@ public class GasSystem : NetworkBehaviour
     [Tooltip("Van mo max + co leak + khong thong gio: tu gas01 = 0 len 1 mat khoang nay")]
     public float secondsToFullAtMaxLeak = 60f;
 
-    [Tooltip("Voi 1 opening mo hoan toan, sau thoi gian nay luong gas hien co giam khoang 63%.")]
-    public float secondsToClearWithFullVent = 90f;
+    [Tooltip("Thoi gian de gas giam tu 1 ve 0 khi co dung 1 opening mo hoan toan va khong con leak.")]
+    public float secondsToClearWithFullVent = 20f;
 
-    [Tooltip("Gioi han hieu qua thong gio khi nhieu opening cung mo. 1.5 = opening thu hai chi tang them toi da 50%.")]
-    [Min(1f)] [SerializeField] private float maximumCombinedVentilation01 = 1.5f;
+    [FormerlySerializedAs("maximumCombinedVentilation01")]
+    [Tooltip("He so thong gio khi ca 2 opening deu mo hoan toan. 1.25 = nhanh hon 25% so voi 1 opening.")]
+    [Range(1f, 2f)] [SerializeField] private float twoOpeningsVentilationMultiplier = 1.25f;
 
     [Tooltip("Khong con leak, khong mo cua: sau thoi gian nay luong gas hien co tu giam khoang 63%.")]
     public float secondsToClearNaturally = 480f;
@@ -206,17 +208,23 @@ public class GasSystem : NetworkBehaviour
             ? leakStrength01 / Mathf.Max(0.01f, secondsToFullAtMaxLeak)
             : 0f;
 
-        effectiveVentilation01 = Mathf.Min(
-            Mathf.Max(0f, vent01),
-            Mathf.Max(1f, maximumCombinedVentilation01));
+        float totalOpening01 = Mathf.Max(0f, vent01);
+        float firstOpening01 = Mathf.Min(totalOpening01, 1f);
+        float secondOpening01 = Mathf.Clamp01(totalOpening01 - 1f);
 
-        // Ventilation removes a fraction of the gas currently in the room.
-        // This prevents a low concentration from being cleared unrealistically fast.
+        // The first opening contributes 1.0x. The second opening gradually adds
+        // only the remaining amount needed to reach the configured multiplier.
+        effectiveVentilation01 = firstOpening01 +
+            secondOpening01 * (twoOpeningsVentilationMultiplier - 1f);
+
+        // Linear drain gives an exact clear time: 1 / 20 = 0.05 gas per second.
         float ventDrainRate01PerSec = effectiveVentilation01 > 0f
-            ? gas01 * effectiveVentilation01 / Mathf.Max(0.01f, secondsToClearWithFullVent)
+            ? effectiveVentilation01 / Mathf.Max(0.01f, secondsToClearWithFullVent)
             : 0f;
 
-        float naturalDrainRate01PerSec = !leakActive
+        // Do not add natural dissipation while a vent is active; otherwise the
+        // configured 20-second clear time would become shorter than requested.
+        float naturalDrainRate01PerSec = !leakActive && effectiveVentilation01 <= 0f
             ? gas01 / Mathf.Max(0.01f, secondsToClearNaturally)
             : 0f;
 
@@ -658,8 +666,10 @@ public class GasSystem : NetworkBehaviour
         if (secondsToClearWithFullVent < 0.01f)
             secondsToClearWithFullVent = 0.01f;
 
-        if (maximumCombinedVentilation01 < 1f)
-            maximumCombinedVentilation01 = 1f;
+        twoOpeningsVentilationMultiplier = Mathf.Clamp(
+            twoOpeningsVentilationMultiplier,
+            1f,
+            2f);
 
         if (secondsToClearNaturally < 0.01f)
             secondsToClearNaturally = 0.01f;

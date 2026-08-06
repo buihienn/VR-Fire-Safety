@@ -1,9 +1,11 @@
 using System;
+using System.Collections;
 using System.Reflection;
 using Fusion;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class LobbyNetworkSceneStart : MonoBehaviour
 {
@@ -15,6 +17,10 @@ public class LobbyNetworkSceneStart : MonoBehaviour
     [Header("Authority")]
     [SerializeField] private bool requireSharedModeMasterClient = true;
 
+    [Header("Try Again")]
+    [SerializeField] private Button tryAgainButton;
+    [SerializeField, Min(0f)] private float recordingStopTimeoutSeconds = 10f;
+
     [Header("Events")]
     [SerializeField] private UnityEvent onStartRequested;
     [SerializeField] private UnityEvent<string> onStartFailed;
@@ -23,6 +29,26 @@ public class LobbyNetworkSceneStart : MonoBehaviour
     [SerializeField] private string connectedRoomToken;
     [SerializeField] private int activePlayerCount;
     [SerializeField] private bool isSharedModeMasterClient;
+
+    public bool IsTryAgainBusy => tryAgainRequested;
+
+    private bool tryAgainRequested;
+
+    private void Awake()
+    {
+        if (tryAgainButton == null && gameObject.name == "TryAgainButton")
+        {
+            tryAgainButton = GetComponent<Button>();
+        }
+    }
+
+    private void Update()
+    {
+        if (tryAgainButton != null)
+        {
+            tryAgainButton.interactable = CanTryAgainForRoom();
+        }
+    }
 
     public void ConfigureGameScene(int buildIndex)
     {
@@ -69,6 +95,117 @@ public class LobbyNetworkSceneStart : MonoBehaviour
         {
             Fail($"Could not call Fusion scene load for '{resolvedScene}'. Check the Fusion version and NetworkRunner scene manager.");
         }
+    }
+
+    public bool CanTryAgainForRoom()
+    {
+        if (tryAgainRequested)
+        {
+            return false;
+        }
+
+        NetworkRunner runner = GetActiveRunner();
+        if (runner == null || !runner.IsRunning || !runner.IsSharedModeMasterClient)
+        {
+            return false;
+        }
+
+        QuestScreenRecordingManager recordingManager = QuestScreenRecordingManager.Instance;
+        return recordingManager == null || (!recordingManager.IsRecording && !recordingManager.IsStopping);
+    }
+
+    public void TryAgain()
+    {
+        if (tryAgainRequested)
+        {
+            return;
+        }
+
+        NetworkRunner runner = GetActiveRunner();
+        if (runner == null)
+        {
+            Fail("No active Fusion NetworkRunner. The room is no longer available.");
+            return;
+        }
+
+        if (!runner.IsRunning)
+        {
+            Fail("The Fusion NetworkRunner is not running.");
+            return;
+        }
+
+        if (!runner.IsSharedModeMasterClient)
+        {
+            Fail("Only the Shared Mode Master Client can start another attempt.");
+            return;
+        }
+
+        tryAgainRequested = true;
+        if (tryAgainButton != null)
+        {
+            tryAgainButton.interactable = false;
+        }
+
+        StartCoroutine(TryAgainRoutine(runner));
+    }
+
+    private IEnumerator TryAgainRoutine(NetworkRunner runner)
+    {
+        QuestScreenRecordingManager recordingManager = QuestScreenRecordingManager.Instance;
+        if (recordingManager != null && recordingManager.IsRecording && !recordingManager.IsStopping)
+        {
+            recordingManager.StopRecording();
+        }
+
+        float waitStartTime = Time.realtimeSinceStartup;
+        while (recordingManager != null && (recordingManager.IsRecording || recordingManager.IsStopping))
+        {
+            if (recordingStopTimeoutSeconds > 0f &&
+                Time.realtimeSinceStartup - waitStartTime >= recordingStopTimeoutSeconds)
+            {
+                CancelTryAgain("Timed out while waiting for the previous recording to stop.");
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        if (runner == null || !runner.IsRunning)
+        {
+            CancelTryAgain("The Fusion NetworkRunner stopped before MainScene could be reloaded.");
+            yield break;
+        }
+
+        if (!runner.IsSharedModeMasterClient)
+        {
+            CancelTryAgain("This player is no longer the Shared Mode Master Client.");
+            yield break;
+        }
+
+        GameOverPayload.Clear();
+
+        SceneRef sceneRef = ResolveGameSceneRef(out string resolvedScene);
+        if (sceneRef == SceneRef.None)
+        {
+            CancelTryAgain($"Could not resolve game scene '{gameSceneNameOrPath}' or build index {gameSceneBuildIndex}.");
+            yield break;
+        }
+
+        if (!TryLoadSceneWithRunner(runner, sceneRef))
+        {
+            CancelTryAgain($"Could not reload gameplay scene '{resolvedScene}' through Fusion.");
+        }
+    }
+
+    private void CancelTryAgain(string message)
+    {
+        tryAgainRequested = false;
+        if (tryAgainButton != null)
+        {
+            tryAgainButton.interactable = CanTryAgainForRoom();
+        }
+
+        Fail(message);
     }
 
     private SceneRef ResolveGameSceneRef(out string resolvedScene)
