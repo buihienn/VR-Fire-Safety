@@ -359,7 +359,7 @@ public class GameFlowManager : NetworkBehaviour
                 won = true;
                 timeUp = false;
                 title = "YOU WIN";
-                body = "Tat ca nguoi choi da thoat khoi ngoi nha va goi PCCC 114.";
+                body = "Ban da chay thoat khoi khu vuc nguy hiem va goi cuu ho den tro giup.";
                 break;
         }
     }
@@ -374,20 +374,17 @@ public class GameFlowManager : NetworkBehaviour
             case EndReason.Win:
                 AudioManager.Instance.PlayOneShot("VO_GameWin");
                 break;
-
             case EndReason.TimeUp:
                 AudioManager.Instance.PlayOneShot("VO_TimeUp");
                 break;
-
             case EndReason.PlayerFainted:
                 AudioManager.Instance.PlayOneShot("VO_GameOver");
                 break;
             case EndReason.GasExplosion:
                 AudioManager.Instance.PlayOneShot("VO_GasExplosion");
                 break;
-
             case EndReason.EmergencyEscape:
-                AudioManager.Instance.PlayOneShot("VO_EmergencyEscape114");
+                AudioManager.Instance.PlayOneShot("VO_EmergencyEscape");
                 break;
         }
     }

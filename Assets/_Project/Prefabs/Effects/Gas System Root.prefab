@@ -60,8 +60,8 @@ MonoBehaviour:
   level2Threshold: 0.35
   level3Threshold: 0.7
   secondsToFullAtMaxLeak: 60
-  secondsToClearWithFullVent: 90
-  maximumCombinedVentilation01: 1.5
+  secondsToClearWithFullVent: 20
+  twoOpeningsVentilationMultiplier: 1.25
   secondsToClearNaturally: 480
   knobLeak: 0
   leakPresent: 0

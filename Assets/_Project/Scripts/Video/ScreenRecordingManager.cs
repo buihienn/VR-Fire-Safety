@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 public class QuestScreenRecordingManager : MonoBehaviour
 {
     private const string DebugPrefix = "Record review debug";
+    private const string LatestRecordingFileName = "review_latest.mp4";
 
     public static QuestScreenRecordingManager Instance { get; private set; }
     public event Action<string> RecordingStarted;
@@ -35,11 +36,12 @@ public class QuestScreenRecordingManager : MonoBehaviour
     public bool HasRecordingReady => !IsRecording && !waitingForStopCallback && !string.IsNullOrEmpty(LastRecordingPath);
     public bool IsStopping => waitingForStopCallback;
     public string DebugState =>
-        $"IsRecording={IsRecording}, WaitingForStopCallback={waitingForStopCallback}, HasRecordingReady={HasRecordingReady}, LastRecordingPath={LastRecordingPath}, GameplaySceneName={gameplaySceneName}, EndGameSceneName={endGameSceneName}";
+        $"IsRecording={IsRecording}, WaitingForStopCallback={waitingForStopCallback}, PendingStartAfterStop={pendingStartAfterStop}, HasRecordingReady={HasRecordingReady}, LastRecordingPath={LastRecordingPath}, GameplaySceneName={gameplaySceneName}, EndGameSceneName={endGameSceneName}";
 
     private bool waitingForStopCallback;
     private float recordingElapsedTime;
     private bool hasDebugStopTriggered;
+    private bool pendingStartAfterStop;
 
     private void Awake()
     {
@@ -81,6 +83,13 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
     public void StartRecording()
     {
+        if (waitingForStopCallback)
+        {
+            pendingStartAfterStop = true;
+            Debug.Log($"[{DebugPrefix}] StartRecording queued until the previous recording stops. {DebugState}");
+            return;
+        }
+
         if (IsRecording)
         {
             Debug.Log($"[{DebugPrefix}] StartRecording ignored because recording is already active. {DebugState}");
@@ -90,9 +99,10 @@ public class QuestScreenRecordingManager : MonoBehaviour
         recordingElapsedTime = 0f;
         hasDebugStopTriggered = false;
 
-        string fileName = "review_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".mp4";
+        pendingStartAfterStop = false;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
+        string fileName = LatestRecordingFileName;
         Debug.Log($"[{DebugPrefix}] StartRecording requested on Android. Output file name: {fileName}");
 
         using AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -108,6 +118,8 @@ public class QuestScreenRecordingManager : MonoBehaviour
             fps,
             bitrate,
             gameObject.name);
+
+        DeletePreviousJsonLog(LastRecordingPath);
 
         IsRecording = true;
         Debug.Log($"[{DebugPrefix}] StartRecording permission flow launched. {DebugState}");
@@ -175,6 +187,12 @@ public class QuestScreenRecordingManager : MonoBehaviour
         Debug.Log($"[{DebugPrefix}] Screen recording stopped: {LastRecordingPath}");
         NotifyRecordingReady();
         TryAttachLastRecordingToVideoPlayer();
+
+        if (pendingStartAfterStop)
+        {
+            pendingStartAfterStop = false;
+            StartRecording();
+        }
     }
 
     public void OnScreenRecordPermissionDenied(string message)
@@ -197,6 +215,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
         if (startRecordingOnSceneLoaded && scene.name == gameplaySceneName)
         {
+            GameOverPayload.Clear();
             Debug.Log($"[{DebugPrefix}] Gameplay scene reached, starting recording.");
             StartRecording();
             return;
@@ -314,6 +333,28 @@ public class QuestScreenRecordingManager : MonoBehaviour
         }
 
         return Path.Combine(Application.dataPath, editorFallbackVideoPath);
+    }
+
+    private static void DeletePreviousJsonLog(string videoPath)
+    {
+        if (string.IsNullOrEmpty(videoPath))
+        {
+            return;
+        }
+
+        string jsonPath = Path.ChangeExtension(videoPath, ".json");
+        try
+        {
+            if (File.Exists(jsonPath))
+            {
+                File.Delete(jsonPath);
+                Debug.Log($"[{DebugPrefix}] Deleted previous JSON log before starting the latest attempt: {jsonPath}");
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"[{DebugPrefix}] Could not delete previous JSON log '{jsonPath}': {exception.Message}");
+        }
     }
 
     private void OnDestroy()

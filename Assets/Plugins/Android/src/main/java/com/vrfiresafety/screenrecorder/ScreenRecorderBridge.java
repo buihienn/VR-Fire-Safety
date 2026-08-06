@@ -40,6 +40,9 @@ public final class ScreenRecorderBridge {
         }
 
         File outputFile = new File(replayDir, safeFileName);
+        if (outputFile.exists()) {
+            outputFile.delete();
+        }
 
         Intent intent = new Intent(activity, ProjectionPermissionActivity.class);
         intent.putExtra(ScreenRecordService.EXTRA_OUTPUT_PATH, outputFile.getAbsolutePath());
@@ -84,6 +87,31 @@ public final class ScreenRecorderBridge {
         return exportVideoWithPublicFile(sourceFile, safeFileName);
     }
 
+    public static String exportJsonToMovies(Context context, String sourcePath, String exportFileName) {
+        if (sourcePath == null || sourcePath.trim().isEmpty()) {
+            return "";
+        }
+
+        File sourceFile = new File(sourcePath);
+        if (!sourceFile.exists()) {
+            return "";
+        }
+
+        String safeFileName = exportFileName;
+        if (safeFileName == null || safeFileName.trim().isEmpty()) {
+            safeFileName = sourceFile.getName();
+        }
+        if (!safeFileName.endsWith(".json")) {
+            safeFileName += ".json";
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            return exportJsonWithMediaStore(context, sourceFile, safeFileName);
+        }
+
+        return exportJsonWithPublicFile(sourceFile, safeFileName);
+    }
+
     private static String exportVideoWithMediaStore(Context context, File sourceFile, String fileName) {
         ContentResolver resolver = context.getContentResolver();
         ContentValues values = new ContentValues();
@@ -116,6 +144,56 @@ public final class ScreenRecorderBridge {
     }
 
     private static String exportVideoWithPublicFile(File sourceFile, String fileName) {
+        File moviesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+        File exportDirectory = new File(moviesDirectory, "VRFireSafety/Replays");
+        if (!exportDirectory.exists()) {
+            exportDirectory.mkdirs();
+        }
+
+        File exportFile = new File(exportDirectory, fileName);
+        try (InputStream input = new FileInputStream(sourceFile);
+             OutputStream output = new FileOutputStream(exportFile)) {
+            copyStream(input, output);
+            return exportFile.getAbsolutePath();
+        } catch (Exception exception) {
+            return "";
+        }
+    }
+
+    private static String exportJsonWithMediaStore(Context context, File sourceFile, String fileName) {
+        ContentResolver resolver = context.getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+        values.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/VRFireSafety/Replays");
+        values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+
+        Uri collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        Uri uri = resolver.insert(collection, values);
+        if (uri == null) {
+            return "";
+        }
+
+        try (InputStream input = new FileInputStream(sourceFile);
+             OutputStream output = resolver.openOutputStream(uri)) {
+            if (output == null) {
+                resolver.delete(uri, null, null);
+                return "";
+            }
+
+            copyStream(input, output);
+
+            values.clear();
+            values.put(MediaStore.MediaColumns.IS_PENDING, 0);
+            resolver.update(uri, values, null, null);
+            return uri.toString();
+        } catch (Exception exception) {
+            resolver.delete(uri, null, null);
+            return "";
+        }
+    }
+
+    private static String exportJsonWithPublicFile(File sourceFile, String fileName) {
         File moviesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
         File exportDirectory = new File(moviesDirectory, "VRFireSafety/Replays");
         if (!exportDirectory.exists()) {
