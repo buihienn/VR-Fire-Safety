@@ -68,5 +68,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   zoneCollider: {fileID: 589341491688924514}
   singlePlayerPositionSource: {fileID: 0}
+  requiredStayDurationSeconds: 5
+  networkPlayerHeightOffset: 1
   playersInsideCount: 0
   activePlayerCount: 0
+  currentStayDurationSeconds: 0

@@ -146,7 +146,7 @@ public class GameFlowManager : NetworkBehaviour
 
     private void ProcessMatch(float deltaTime)
     {
-        if (CheckEmergencyEscapeWinCondition())
+        if (CheckEmergencyEscapeWinCondition(deltaTime))
         {
             EndAsEmergencyEscape();
             return;
@@ -412,16 +412,19 @@ public class GameFlowManager : NetworkBehaviour
         return gasSafe && leakStopped && firesResolved;
     }
 
-    private bool CheckEmergencyEscapeWinCondition()
+    private bool CheckEmergencyEscapeWinCondition(float deltaTime)
     {
         if (gasSystem == null || emergencyEscapeZone == null)
             return false;
 
         if (gasSystem.GasLevel() < emergencyEscapeMinimumGasLevel)
+        {
+            emergencyEscapeZone.ResetProgress();
             return false;
+        }
 
         NetworkRunner activeRunner = fusionSpawned ? Runner : null;
-        return emergencyEscapeZone.HaveAllActivePlayersEscaped(activeRunner);
+        return emergencyEscapeZone.HaveAllActivePlayersEscaped(activeRunner, deltaTime);
     }
 
     private bool IsGasSafe()
