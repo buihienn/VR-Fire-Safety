@@ -7,9 +7,21 @@ public class HouseEscapeZone : MonoBehaviour
     [SerializeField] private BoxCollider zoneCollider;
     [SerializeField] private Transform singlePlayerPositionSource;
 
+    [Header("Escape Rules")]
+    [Min(0f)]
+    [SerializeField] private float requiredStayDurationSeconds = 5f;
+    [Min(0f)]
+    [SerializeField] private float networkPlayerHeightOffset = 1f;
+
     [Header("Runtime Debug")]
     [SerializeField] private int playersInsideCount;
     [SerializeField] private int activePlayerCount;
+    [SerializeField] private float currentStayDurationSeconds;
+
+    public float RequiredStayDurationSeconds => requiredStayDurationSeconds;
+    public float CurrentStayDurationSeconds => currentStayDurationSeconds;
+    public bool AreAllActivePlayersInside =>
+        activePlayerCount > 0 && playersInsideCount == activePlayerCount;
 
     private void Awake()
     {
@@ -21,13 +33,16 @@ public class HouseEscapeZone : MonoBehaviour
         ResolveCollider();
     }
 
-    public bool HaveAllActivePlayersEscaped(NetworkRunner runner)
+    public bool HaveAllActivePlayersEscaped(NetworkRunner runner, float deltaTime)
     {
         if (zoneCollider == null)
+        {
+            ResetProgress();
             return false;
+        }
 
         if (runner == null || !runner.IsRunning)
-            return HasSinglePlayerEscaped();
+            return UpdateStayProgress(HasSinglePlayerInside(), deltaTime);
 
         int playersInside = 0;
         int activePlayers = 0;
@@ -37,23 +52,30 @@ public class HouseEscapeZone : MonoBehaviour
             activePlayers++;
 
             NetworkObject playerObject = runner.GetPlayerObject(player);
-            if (playerObject != null && IsInside(playerObject.transform.position))
+            if (playerObject == null)
+                continue;
+
+            Vector3 samplePosition =
+                playerObject.transform.position + Vector3.up * networkPlayerHeightOffset;
+
+            if (IsInside(samplePosition))
                 playersInside++;
         }
 
         activePlayerCount = activePlayers;
         playersInsideCount = playersInside;
 
-        return activePlayerCount > 0 && playersInsideCount == activePlayerCount;
+        return UpdateStayProgress(AreAllActivePlayersInside, deltaTime);
     }
 
     public void ResetProgress()
     {
         playersInsideCount = 0;
         activePlayerCount = 0;
+        currentStayDurationSeconds = 0f;
     }
 
-    private bool HasSinglePlayerEscaped()
+    private bool HasSinglePlayerInside()
     {
         Transform positionSource = singlePlayerPositionSource;
         if (positionSource == null && Camera.main != null)
@@ -61,7 +83,25 @@ public class HouseEscapeZone : MonoBehaviour
 
         activePlayerCount = positionSource != null ? 1 : 0;
         playersInsideCount = positionSource != null && IsInside(positionSource.position) ? 1 : 0;
-        return activePlayerCount > 0 && playersInsideCount == activePlayerCount;
+        return AreAllActivePlayersInside;
+    }
+
+    private bool UpdateStayProgress(bool allPlayersInside, float deltaTime)
+    {
+        if (!allPlayersInside)
+        {
+            currentStayDurationSeconds = 0f;
+            return false;
+        }
+
+        if (requiredStayDurationSeconds <= 0f)
+            return true;
+
+        currentStayDurationSeconds = Mathf.Min(
+            requiredStayDurationSeconds,
+            currentStayDurationSeconds + Mathf.Max(0f, deltaTime));
+
+        return currentStayDurationSeconds >= requiredStayDurationSeconds;
     }
 
     private bool IsInside(Vector3 worldPosition)
