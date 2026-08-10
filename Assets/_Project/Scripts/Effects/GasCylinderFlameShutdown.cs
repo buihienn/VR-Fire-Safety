@@ -178,7 +178,10 @@ public class GasCylinderFlameShutdown : MonoBehaviour
         if (node == null) return;
 
         if (FireManager.Instance != null)
-            FireManager.Instance.RequestExtinguish(node, ForceExtinguishAmount);
+            FireManager.Instance.RequestExtinguish(
+                node,
+                ForceExtinguishAmount,
+                FireExtinguishSource.GasSupplyShutdown);
         else
             node.Extinguish();
     }

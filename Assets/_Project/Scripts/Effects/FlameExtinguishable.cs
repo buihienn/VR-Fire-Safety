@@ -83,7 +83,10 @@ public class FlameExtinguishable : MonoBehaviour
         {
             // Multiplayer path: Client/Host request goes through FireManager.
             // Host will decide whether the flame is extinguished and sync it.
-            FireManager.Instance.RequestExtinguish(flameNode, amount);
+            FireManager.Instance.RequestExtinguish(
+                flameNode,
+                amount,
+                FireExtinguishSource.FireExtinguisher);
         }
         else
         {

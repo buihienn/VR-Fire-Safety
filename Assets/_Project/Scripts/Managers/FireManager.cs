@@ -4,6 +4,13 @@ using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
+public enum FireExtinguishSource
+{
+    Unknown = 0,
+    FireExtinguisher = 1,
+    GasSupplyShutdown = 2
+}
+
 public class FireManager : NetworkBehaviour
 {
     public static FireManager Instance { get; private set; }
@@ -270,7 +277,10 @@ public class FireManager : NetworkBehaviour
     // EXTINGUISH FROM CLIENT/HOST
     // =========================
 
-    public void RequestExtinguish(FlameNode node, float amount)
+    public void RequestExtinguish(
+        FlameNode node,
+        float amount,
+        FireExtinguishSource source = FireExtinguishSource.Unknown)
     {
         if (node == null) return;
 
@@ -283,27 +293,48 @@ public class FireManager : NetworkBehaviour
         if (!fusionSpawned)
         {
             if (!allowLocalFallbackBeforeFusionSpawned) return;
-            ApplyExtinguish(nodeIndex, amount, "Local");
+            ApplyExtinguish(nodeIndex, amount, "Local", source);
             return;
         }
 
         if (Object.HasStateAuthority)
         {
-            ApplyExtinguish(nodeIndex, amount, PlayerToActorId(Runner.LocalPlayer));
+            ApplyExtinguish(
+                nodeIndex,
+                amount,
+                PlayerToActorId(Runner.LocalPlayer),
+                source);
         }
         else
         {
-            RPC_RequestExtinguish(nodeIndex, amount);
+            RPC_RequestExtinguish(nodeIndex, amount, (int)source);
         }
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestExtinguish(int nodeIndex, float amount, RpcInfo info = default)
+    private void RPC_RequestExtinguish(
+        int nodeIndex,
+        float amount,
+        int sourceValue,
+        RpcInfo info = default)
     {
-        ApplyExtinguish(nodeIndex, amount, PlayerToActorId(info.Source));
+        FireExtinguishSource source = System.Enum.IsDefined(
+            typeof(FireExtinguishSource), sourceValue)
+            ? (FireExtinguishSource)sourceValue
+            : FireExtinguishSource.Unknown;
+
+        ApplyExtinguish(
+            nodeIndex,
+            amount,
+            PlayerToActorId(info.Source),
+            source);
     }
 
-    private void ApplyExtinguish(int nodeIndex, float amount, string actorId)
+    private void ApplyExtinguish(
+        int nodeIndex,
+        float amount,
+        string actorId,
+        FireExtinguishSource source)
     {
         if (!IsValidNode(nodeIndex)) return;
 
@@ -326,11 +357,15 @@ public class FireManager : NetworkBehaviour
             GameplayEventType.FireExtinguished,
             actorId,
             node.FlameId,
-            nodeIndex
+            source
         );
 
         if (logFireEvents)
-            Debug.Log($"[FireManager] {actorId} extinguished {node.FlameId}", this);
+        {
+            Debug.Log(
+                $"[FireManager] {actorId} extinguished {node.FlameId} with source {source}",
+                this);
+        }
     }
 
     // =========================
@@ -449,7 +484,11 @@ public class FireManager : NetworkBehaviour
             if (flameNodes[i] == null) continue;
             if (!flameNodes[i].IsBurning) continue;
 
-            ApplyExtinguish(i, 999999f, "Host");
+            ApplyExtinguish(
+                i,
+                999999f,
+                "Host",
+                FireExtinguishSource.Unknown);
         }
     }
 

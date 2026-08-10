@@ -101,6 +101,43 @@ public class GasSystem : NetworkBehaviour
 
     public bool leakActive = false;
 
+    [Header("Runtime Debug (Read Only)")]
+    [SerializeField] private int debugGasLevel;
+    [SerializeField] private float debugGasBeforeStep;
+    [SerializeField] private float debugGasAfterStep;
+    [SerializeField] private float debugFillRate01PerSec;
+    [SerializeField] private float debugVentDrainRate01PerSec;
+    [SerializeField] private float debugNaturalDrainRate01PerSec;
+    [SerializeField] private float debugNetChangeRate01PerSec;
+    [SerializeField] private float debugLastDeltaTime;
+    [SerializeField] private bool debugFusionSpawned;
+    [SerializeField] private bool debugHasStateAuthority;
+    [SerializeField] private bool[] debugOpeningRegistered = new bool[4];
+    [SerializeField] private float[] debugOpeningAngles = new float[4];
+    [SerializeField] private float[] debugOpeningOpen01 = new float[4];
+
+    [Tooltip("So lan SimulateGas chay trong cua so do gan nhat (khoang 0.5 giay thuc).")]
+    [SerializeField] private int debugSimulationStepsPerSample;
+
+    [Tooltip("Tong deltaTime mo phong trong cua so do gan nhat.")]
+    [SerializeField] private float debugSimulatedSecondsPerSample;
+
+    [Tooltip("Thoi gian thuc cua cua so do gan nhat.")]
+    [SerializeField] private float debugRealSecondsPerSample;
+
+    [Tooltip("simulated / real. Binh thuong gan 1; lon hon 1 cho thay mo phong dang chay nhanh/lap.")]
+    [SerializeField] private float debugSimulationTimeRatio;
+
+    [SerializeField] private float debugGasAtSampleStart;
+    [SerializeField] private float debugGasAtSampleEnd;
+
+    [Header("Runtime Debug Output")]
+    [Tooltip("Ghi snapshot Runtime Debug ra Unity Console/Android logcat sau moi cua so lay mau.")]
+    [SerializeField] private bool debugWriteToConsole = false;
+
+    [Tooltip("Chi ghi Console khi co opening dang tao thong gio.")]
+    [SerializeField] private bool debugConsoleOnlyWhileVentilating = true;
+
     public bool HoseLeak => hoseLeak;
     public bool KnobLeak => knobLeak;
     public bool LeakPresent => leakPresent;
@@ -123,6 +160,11 @@ public class GasSystem : NetworkBehaviour
     private readonly bool[] openingRegistered = new bool[4];
     private readonly bool[] openingIsWindow = new bool[4];
     private readonly bool[] openingWasOpen = new bool[4];
+    private const float RuntimeDebugSampleSeconds = 0.5f;
+    private int debugAccumulatedSimulationSteps;
+    private float debugAccumulatedSimulatedSeconds;
+    private float debugSampleStartRealTime;
+    private float debugAccumulatedGasStart;
 
     private void Awake()
     {
@@ -199,6 +241,8 @@ public class GasSystem : NetworkBehaviour
 
     private void SimulateGas(float deltaTime, bool writeToNetwork)
     {
+        float gasBeforeSimulation = gas01;
+
         UpdateKnobLeak();
         UpdateVentilation();
         UpdateDerivedLeakState();
@@ -234,10 +278,121 @@ public class GasSystem : NetworkBehaviour
         if (!leakActive && gas01 < 0.001f)
             gas01 = 0f;
 
+        UpdateRuntimeDebug(
+            gasBeforeSimulation,
+            gas01,
+            deltaTime,
+            fillRate01PerSec,
+            ventDrainRate01PerSec,
+            naturalDrainRate01PerSec);
+
         if (writeToNetwork)
             WriteNetworkGasState();
 
         RefreshGasLevel();
+    }
+
+    private void UpdateRuntimeDebug(
+        float gasBefore,
+        float gasAfter,
+        float deltaTime,
+        float fillRate,
+        float ventDrainRate,
+        float naturalDrainRate)
+    {
+        debugGasLevel = GasLevel();
+        debugGasBeforeStep = gasBefore;
+        debugGasAfterStep = gasAfter;
+        debugFillRate01PerSec = fillRate;
+        debugVentDrainRate01PerSec = ventDrainRate;
+        debugNaturalDrainRate01PerSec = naturalDrainRate;
+        debugNetChangeRate01PerSec = fillRate - ventDrainRate - naturalDrainRate;
+        debugLastDeltaTime = deltaTime;
+        debugFusionSpawned = fusionSpawned;
+        debugHasStateAuthority = !fusionSpawned || (Object != null && Object.HasStateAuthority);
+
+        EnsureRuntimeDebugArrays();
+        for (int i = 0; i < openingRegistered.Length; i++)
+        {
+            debugOpeningRegistered[i] = openingRegistered[i];
+            debugOpeningAngles[i] = openingAngleCache[i];
+            debugOpeningOpen01[i] = GetOpeningOpen01(i);
+        }
+
+        float now = Time.unscaledTime;
+        if (debugAccumulatedSimulationSteps == 0)
+        {
+            debugAccumulatedGasStart = gasBefore;
+            debugSampleStartRealTime = now;
+        }
+
+        debugAccumulatedSimulationSteps++;
+        debugAccumulatedSimulatedSeconds += Mathf.Max(0f, deltaTime);
+
+        float realSeconds = Mathf.Max(0f, now - debugSampleStartRealTime);
+        if (realSeconds < RuntimeDebugSampleSeconds)
+            return;
+
+        debugSimulationStepsPerSample = debugAccumulatedSimulationSteps;
+        debugSimulatedSecondsPerSample = debugAccumulatedSimulatedSeconds;
+        debugRealSecondsPerSample = realSeconds;
+        debugSimulationTimeRatio = realSeconds > 0.0001f
+            ? debugAccumulatedSimulatedSeconds / realSeconds
+            : 0f;
+        debugGasAtSampleStart = debugAccumulatedGasStart;
+        debugGasAtSampleEnd = gasAfter;
+
+        debugAccumulatedSimulationSteps = 0;
+        debugAccumulatedSimulatedSeconds = 0f;
+
+        WriteRuntimeDebugToConsole();
+    }
+
+    private void EnsureRuntimeDebugArrays()
+    {
+        if (debugOpeningRegistered == null || debugOpeningRegistered.Length != 4)
+            debugOpeningRegistered = new bool[4];
+
+        if (debugOpeningAngles == null || debugOpeningAngles.Length != 4)
+            debugOpeningAngles = new float[4];
+
+        if (debugOpeningOpen01 == null || debugOpeningOpen01.Length != 4)
+            debugOpeningOpen01 = new float[4];
+    }
+
+    private void WriteRuntimeDebugToConsole()
+    {
+        if (!debugWriteToConsole)
+            return;
+
+        if (fusionSpawned && (Object == null || !Object.HasStateAuthority))
+            return;
+
+        if (debugConsoleOnlyWhileVentilating && effectiveVentilation01 <= 0f)
+            return;
+
+        Debug.Log(
+            $"[GasVentDebug] gas={debugGasAtSampleStart:F4}->{debugGasAtSampleEnd:F4} " +
+            $"level={debugGasLevel} rawVent={vent01:F3} effectiveVent={effectiveVentilation01:F3} " +
+            $"activeOpenings={activeOpenings} " +
+            $"rates(fill={debugFillRate01PerSec:F4}/s, vent=-{debugVentDrainRate01PerSec:F4}/s, " +
+            $"natural=-{debugNaturalDrainRate01PerSec:F4}/s, net={debugNetChangeRate01PerSec:F4}/s) " +
+            $"steps={debugSimulationStepsPerSample} simulated={debugSimulatedSecondsPerSample:F3}s " +
+            $"real={debugRealSecondsPerSample:F3}s ratio={debugSimulationTimeRatio:F3} " +
+            $"fusion={debugFusionSpawned} authority={debugHasStateAuthority} " +
+            $"slots=[0:{FormatOpeningDebug(0)}, 1:{FormatOpeningDebug(1)}, " +
+            $"2:{FormatOpeningDebug(2)}, 3:{FormatOpeningDebug(3)}] " +
+            $"leakActive={leakActive} leakStrength={leakStrength01:F3}",
+            this);
+    }
+
+    private string FormatOpeningDebug(int slot)
+    {
+        if (slot < 0 || slot >= debugOpeningRegistered.Length || !debugOpeningRegistered[slot])
+            return "off";
+
+        char type = openingIsWindow[slot] ? 'W' : 'D';
+        return $"{type},angle={debugOpeningAngles[slot]:F1},open01={debugOpeningOpen01[slot]:F2}";
     }
 
     private void UpdateDerivedLeakState()

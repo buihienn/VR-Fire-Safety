@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public enum PlayerActionResult
 {
-    Correct,
-    Wrong,
-    Neutral
+    Correct = 0,
+    Incorrect = 1
 }
 
 [Serializable]
@@ -23,6 +23,8 @@ public class PlayerActionLogEntry
     public string actorId;
     public string targetId;
     public string sceneName;
+    public int gasLevel;
+    public int scoreDelta;
 }
 
 [Serializable]
@@ -31,6 +33,9 @@ public class PlayerActionLogSession
     public string sessionId;
     public string videoPath;
     public string createdAt;
+    public int totalScore;
+    public int correctActionCount;
+    public int incorrectActionCount;
     public List<PlayerActionLogEntry> actions = new List<PlayerActionLogEntry>();
 }
 
@@ -43,14 +48,15 @@ public class PlayerActionLogManager : MonoBehaviour
     [SerializeField] private bool dontDestroyOnLoad = false;
     [SerializeField] private bool saveActiveSessionOnDestroy = true;
     [SerializeField] private bool logToConsole = true;
-    [SerializeField] private bool listenToGameplayEvents = true;
+    [FormerlySerializedAs("listenToGameplayEvents")]
+    [SerializeField] private bool listenToEvaluatedActions = true;
 
     public string CurrentJsonPath { get; private set; }
     public bool IsSessionActive { get; private set; }
 
     private PlayerActionLogSession currentSession;
     private float sessionStartTime;
-    private bool subscribedToGameplayEvents;
+    private bool subscribedToEvaluatedActions;
 
     private void Awake()
     {
@@ -66,42 +72,54 @@ public class PlayerActionLogManager : MonoBehaviour
         {
             DontDestroyOnLoad(gameObject);
         }
+
+        GameplayActionEvaluator evaluator = GetComponent<GameplayActionEvaluator>();
+        if (evaluator == null)
+            evaluator = gameObject.AddComponent<GameplayActionEvaluator>();
+
+        evaluator.ResetEvaluationState();
     }
 
     private void OnEnable()
     {
-        if (!listenToGameplayEvents || subscribedToGameplayEvents)
+        if (!listenToEvaluatedActions || subscribedToEvaluatedActions)
         {
             return;
         }
 
-        GameplayEventBus.OnEvent += OnGameplayEvent;
-        subscribedToGameplayEvents = true;
+        GameplayActionEvaluationBus.OnActionEvaluated += OnActionEvaluated;
+        subscribedToEvaluatedActions = true;
 
         if (logToConsole)
         {
-            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Subscribed to GameplayEventBus.");
+            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Subscribed to evaluated gameplay actions.");
         }
     }
 
     private void OnDisable()
     {
-        if (!subscribedToGameplayEvents)
+        if (!subscribedToEvaluatedActions)
         {
             return;
         }
 
-        GameplayEventBus.OnEvent -= OnGameplayEvent;
-        subscribedToGameplayEvents = false;
+        GameplayActionEvaluationBus.OnActionEvaluated -= OnActionEvaluated;
+        subscribedToEvaluatedActions = false;
 
         if (logToConsole)
         {
-            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Unsubscribed from GameplayEventBus.");
+            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Unsubscribed from evaluated gameplay actions.");
         }
     }
 
     public void BeginSession(string videoPath)
     {
+        GameplayActionEvaluator evaluator = GetComponent<GameplayActionEvaluator>();
+        if (evaluator != null)
+        {
+            evaluator.ResetEvaluationState();
+        }
+
         string sessionId = Path.GetFileNameWithoutExtension(videoPath);
         if (string.IsNullOrEmpty(sessionId))
         {
@@ -159,12 +177,7 @@ public class PlayerActionLogManager : MonoBehaviour
 
     public void LogWrongAction(string actionId, string title, string description = "")
     {
-        LogAction(actionId, title, description, PlayerActionResult.Wrong);
-    }
-
-    public void LogNeutralAction(string actionId, string title, string description = "")
-    {
-        LogAction(actionId, title, description, PlayerActionResult.Neutral);
+        LogAction(actionId, title, description, PlayerActionResult.Incorrect);
     }
 
     public void LogAction(string actionId, string title, string description, PlayerActionResult result)
@@ -175,40 +188,42 @@ public class PlayerActionLogManager : MonoBehaviour
             return;
         }
 
-        AddActionEntry(null, actionId, title, description, result, null, null);
+        AddActionEntry(
+            null, actionId, title, description, result,
+            null, null, gasLevel: 0, scoreDelta: 0);
     }
 
-    private void OnGameplayEvent(GameplayEvent gameplayEvent)
+    private void OnActionEvaluated(EvaluatedGameplayAction action)
     {
         if (logToConsole)
         {
             Debug.Log(
-                $"[{DebugPrefix}] [PlayerActionLogManager] Received event {gameplayEvent.Type} | Actor={gameplayEvent.ActorId} | Target={gameplayEvent.TargetId} | SessionActive={IsSessionActive}");
+                $"[{DebugPrefix}] [PlayerActionLogManager] Received evaluated action {action.actionId} " +
+                $"| Result={action.result} | Actor={action.actorId} | SessionActive={IsSessionActive}");
         }
 
         if (!IsSessionActive || currentSession == null)
         {
             if (logToConsole)
             {
-                Debug.LogWarning($"[{DebugPrefix}] [PlayerActionLogManager] Event {gameplayEvent.Type} ignored because no action log session is active.");
+                Debug.LogWarning(
+                    $"[{DebugPrefix}] [PlayerActionLogManager] Evaluated action {action.actionId} " +
+                    "ignored because no action log session is active.");
             }
 
             return;
         }
 
-        PlayerActionResult result = GetResultForGameplayEvent(gameplayEvent.Type);
-        string actionId = gameplayEvent.Type.ToString();
-        string title = GetTitleForGameplayEvent(gameplayEvent.Type);
-        string description = CreateDescription(gameplayEvent);
-
         AddActionEntry(
-            gameplayEvent.Type.ToString(),
-            actionId,
-            title,
-            description,
-            result,
-            gameplayEvent.ActorId,
-            gameplayEvent.TargetId);
+            action.sourceEventType,
+            action.actionId,
+            action.title,
+            action.feedback,
+            action.result,
+            action.actorId,
+            action.targetId,
+            action.gasLevel,
+            action.scoreDelta);
     }
 
     private void AddActionEntry(
@@ -218,7 +233,9 @@ public class PlayerActionLogManager : MonoBehaviour
         string description,
         PlayerActionResult result,
         string actorId,
-        string targetId)
+        string targetId,
+        int gasLevel,
+        int scoreDelta)
     {
         PlayerActionLogEntry entry = new PlayerActionLogEntry
         {
@@ -230,84 +247,23 @@ public class PlayerActionLogManager : MonoBehaviour
             result = result,
             actorId = actorId,
             targetId = targetId,
-            sceneName = SceneManager.GetActiveScene().name
+            sceneName = SceneManager.GetActiveScene().name,
+            gasLevel = gasLevel,
+            scoreDelta = scoreDelta
         };
 
         currentSession.actions.Add(entry);
+
+        if (result == PlayerActionResult.Correct)
+            currentSession.correctActionCount++;
+        else
+            currentSession.incorrectActionCount++;
 
         if (logToConsole)
         {
             Debug.Log(
                 $"[{DebugPrefix}] [PlayerActionLogManager] Action logged #{currentSession.actions.Count} [{entry.result}] {entry.time:0.00}s - {entry.title} | EventType={entry.eventType} | Actor={entry.actorId} | Target={entry.targetId} | Scene={entry.sceneName}");
         }
-    }
-
-    private PlayerActionResult GetResultForGameplayEvent(GameplayEventType type)
-    {
-        switch (type)
-        {
-            case GameplayEventType.FireExtinguished:
-            case GameplayEventType.GasLeakStopped:
-            case GameplayEventType.ValveClosed:
-                return PlayerActionResult.Correct;
-
-            case GameplayEventType.PlayerEnteredDangerZone:
-            case GameplayEventType.PlayerFainted:
-            case GameplayEventType.GasExploded:
-            case GameplayEventType.WrongActionPerformed:
-                return PlayerActionResult.Wrong;
-
-            default:
-                return PlayerActionResult.Neutral;
-        }
-    }
-
-    private string GetTitleForGameplayEvent(GameplayEventType type)
-    {
-        switch (type)
-        {
-            case GameplayEventType.ValveClosed:
-                return "Dong van gas";
-            case GameplayEventType.ValveOpened:
-                return "Mo van gas";
-            case GameplayEventType.WindowOpened:
-                return "Mo cua so";
-            case GameplayEventType.WindowClosed:
-                return "Dong cua so";
-            case GameplayEventType.FireIgnited:
-                return "Lua bat dau chay";
-            case GameplayEventType.FireExtinguished:
-                return "Dap tat dam chay";
-            case GameplayEventType.GasLeakStarted:
-                return "Ro ri gas bat dau";
-            case GameplayEventType.GasLeakStopped:
-                return "Da xu ly ro ri gas";
-            case GameplayEventType.GasLevelChanged:
-                return "Muc gas thay doi";
-            case GameplayEventType.GasFlareIgnited:
-                return "Gas phung lua";
-            case GameplayEventType.GasExploded:
-                return "No khi gas";
-            case GameplayEventType.PlayerEnteredDangerZone:
-                return "Nguoi choi vao vung nguy hiem";
-            case GameplayEventType.PlayerExitedDangerZone:
-                return "Nguoi choi roi vung nguy hiem";
-            case GameplayEventType.PlayerFainted:
-                return "Nguoi choi bi ngat";
-            case GameplayEventType.MatchStarted:
-                return "Bat dau man choi";
-            case GameplayEventType.MatchEnded:
-                return "Ket thuc man choi";
-            case GameplayEventType.WrongActionPerformed:
-                return "Thuc hien hanh dong sai";
-            default:
-                return type.ToString();
-        }
-    }
-
-    private string CreateDescription(GameplayEvent gameplayEvent)
-    {
-        return $"Actor={gameplayEvent.ActorId}, Target={gameplayEvent.TargetId}";
     }
 
     public void SaveSession()
@@ -322,6 +278,8 @@ public class PlayerActionLogManager : MonoBehaviour
         {
             Directory.CreateDirectory(directoryPath);
         }
+
+        currentSession.totalScore = ScoreManager.LastScore;
 
         string json = JsonUtility.ToJson(currentSession, true);
         File.WriteAllText(CurrentJsonPath, json);

@@ -34,6 +34,7 @@ public class PlayerGasExposure : MonoBehaviour
 
     private Collider exposureCollider;
     private readonly Dictionary<GasSystem, int> overlappingGasSystems = new();
+    private bool wasInGasZone;
     private bool wasInDanger;
 
     private void Awake()
@@ -59,10 +60,28 @@ public class PlayerGasExposure : MonoBehaviour
         if (!isLocalExposure)
             return;
 
+        currentGasLevel = currentGas ? currentGas.GasLevel() : 0;
+
+        bool inGasZone =
+            insideGasZone &&
+            currentGas != null &&
+            currentGasLevel >= 1;
+
+        if (inGasZone != wasInGasZone)
+        {
+            GameplayEventBus.Raise(
+                inGasZone
+                    ? GameplayEventType.PlayerEnteredGasZone
+                    : GameplayEventType.PlayerExitedGasZone,
+                actorId: GetActorId(),
+                targetId: currentGas != null ? currentGas.gameObject.name : "GasZone",
+                payload: currentGasLevel);
+
+            wasInGasZone = inGasZone;
+        }
+
         if (fainted)
             return;
-
-        currentGasLevel = currentGas ? currentGas.GasLevel() : 0;
 
         bool inDanger =
             insideGasZone &&
@@ -219,6 +238,7 @@ public class PlayerGasExposure : MonoBehaviour
         currentGasLevel = 0;
         faintProgress01 = 0f;
         fainted = false;
+        wasInGasZone = false;
         wasInDanger = false;
     }
 

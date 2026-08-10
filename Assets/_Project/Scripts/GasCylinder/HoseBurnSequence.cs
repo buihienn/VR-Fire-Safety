@@ -276,7 +276,10 @@ public class HoseBurnSequence : MonoBehaviour
 
         if (FireManager.Instance != null)
         {
-            FireManager.Instance.RequestExtinguish(node, ForceExtinguishAmount);
+            FireManager.Instance.RequestExtinguish(
+                node,
+                ForceExtinguishAmount,
+                FireExtinguishSource.GasSupplyShutdown);
         }
         else
         {

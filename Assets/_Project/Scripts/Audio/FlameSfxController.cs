@@ -9,12 +9,7 @@ public class FlameSfxController : MonoBehaviour
     [SerializeField] private float visibleBurnThreshold = 0.02f;
     [SerializeField] private bool checkOnUpdate = true;
 
-    [Header("Events")]
-    [SerializeField] private bool raiseFireExtinguishedEvent = true;
-    [SerializeField] private string actorId = "Player";
-
     private bool isFireLoopPlaying;
-    private bool wasAnyActiveFire;
 
     private void Start()
     {
@@ -30,14 +25,6 @@ public class FlameSfxController : MonoBehaviour
     public void SyncFireLoopSfx()
     {
         bool hasActiveFire = HasAnyActiveFire();
-
-        if (raiseFireExtinguishedEvent && wasAnyActiveFire && !hasActiveFire)
-        {
-            GameplayEventBus.Raise(
-                GameplayEventType.FireExtinguished,
-                actorId: actorId,
-                targetId: gameObject.name);
-        }
 
         if (hasActiveFire)
         {
@@ -65,8 +52,6 @@ public class FlameSfxController : MonoBehaviour
                 }
             }
         }
-
-        wasAnyActiveFire = hasActiveFire;
     }
 
     private bool HasAnyActiveFire()

@@ -71,6 +71,8 @@ MonoBehaviour:
   effectiveVentilation01: 0
   leakStrength01: 0
   leakActive: 1
+  debugWriteToConsole: 1
+  debugConsoleOnlyWhileVentilating: 1
 --- !u!114 &900700000000000001
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -27,6 +27,7 @@ public class SafetyPinDetachOnPull : NetworkBehaviour
     private bool isRemoved;
     private bool fusionSpawned;
     private bool removalVisualsApplied;
+    private bool removalEventRaisedLocally;
 
     private Collider[] allColliders;
     private Renderer[] allRenderers;
@@ -131,6 +132,8 @@ public class SafetyPinDetachOnPull : NetworkBehaviour
     {
         if (IsRemoved) return;
 
+        RaiseRemovalEventOnce();
+
         if (!fusionSpawned)
         {
             ApplyRemovalLocally(true);
@@ -141,6 +144,19 @@ public class SafetyPinDetachOnPull : NetworkBehaviour
             RemoveOnStateAuthority();
         else
             RPC_RequestRemove();
+    }
+
+    private void RaiseRemovalEventOnce()
+    {
+        if (removalEventRaisedLocally)
+            return;
+
+        removalEventRaisedLocally = true;
+
+        GameplayEventBus.Raise(
+            GameplayEventType.ExtinguisherSafetyPinPulled,
+            actorId: GameplayEventActorId.FromRunner(Runner),
+            targetId: smokeUse != null ? smokeUse.gameObject.name : gameObject.name);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]

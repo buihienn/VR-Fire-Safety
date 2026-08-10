@@ -136,8 +136,17 @@ public class FanSwitch : NetworkBehaviour
             return;
 
         bool attemptingToTurnOn = lastRequestedStep <= 0 && requestedStep > 0;
-        if (attemptingToTurnOn && sparkIgnitionTrigger != null)
-            sparkIgnitionTrigger.TriggerSpark();
+        if (attemptingToTurnOn)
+        {
+            GameplayEventBus.Raise(
+                GameplayEventType.FanTurnOnAttempted,
+                actorId: GameplayEventActorId.FromRunner(Runner),
+                targetId: gameObject.name,
+                payload: GasSystem.Instance != null ? GasSystem.Instance.GasLevel() : 0);
+
+            if (sparkIgnitionTrigger != null)
+                sparkIgnitionTrigger.TriggerSpark();
+        }
 
         lastRequestedStep = requestedStep;
         RequestSetStep(requestedStep);

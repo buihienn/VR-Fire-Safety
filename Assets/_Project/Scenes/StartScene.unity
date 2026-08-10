@@ -6225,6 +6225,7 @@ MonoBehaviour:
   disableGravityForPlayerRigidbodies: 1
   makePlayerRigidbodiesKinematic: 1
   headBlockingResumeDelaySeconds: 0.25
+  playerRigRoot: {fileID: 0}
 --- !u!1001 &1914056572
 PrefabInstance:
   m_ObjectHideFlags: 0
