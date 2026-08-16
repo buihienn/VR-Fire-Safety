@@ -84,6 +84,19 @@ public class LightSwitch : NetworkBehaviour
 
     public void PressButton()
     {
+        int gasLevel = GasSystem.Instance != null
+            ? GasSystem.Instance.GasLevel()
+            : 0;
+
+        if (gasLevel >= 1)
+        {
+            GameplayEventBus.Raise(
+                GameplayEventType.LightSwitchOperated,
+                actorId: GameplayEventActorId.FromRunner(Runner),
+                targetId: gameObject.name,
+                payload: gasLevel);
+        }
+
         RequestToggleLightState();
     }
 

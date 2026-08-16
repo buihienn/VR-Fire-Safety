@@ -51,6 +51,7 @@ public sealed class NetworkDoubleLeafOpening : NetworkBehaviour
     private bool gasOpeningRegistered;
     private float lastReportedGasOpen01 = float.NegativeInfinity;
     private float nextGasReportTime;
+    private string openingActorId = "Player";
 
     public OpeningState State => fusionSpawned ? StateNet : localState;
     public float Open01 => fusionSpawned ? Mathf.Clamp01(Open01Net) : localOpen01;
@@ -151,12 +152,16 @@ public sealed class NetworkDoubleLeafOpening : NetworkBehaviour
 
         if (!fusionSpawned)
         {
-            BeginOpeningLocal();
+            BeginOpeningLocal("LocalPlayer");
             return;
         }
 
         if (Object.HasStateAuthority)
-            BeginOpeningOnStateAuthority(reportedHandleAngle);
+        {
+            BeginOpeningOnStateAuthority(
+                reportedHandleAngle,
+                GameplayEventActorId.FromRunner(Runner));
+        }
         else
             RPC_RequestOpen(reportedHandleAngle);
     }
@@ -164,10 +169,14 @@ public sealed class NetworkDoubleLeafOpening : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority, Channel = RpcChannel.Reliable)]
     private void RPC_RequestOpen(float reportedHandleAngle, RpcInfo info = default)
     {
-        BeginOpeningOnStateAuthority(Mathf.Abs(reportedHandleAngle));
+        BeginOpeningOnStateAuthority(
+            Mathf.Abs(reportedHandleAngle),
+            GameplayEventActorId.FromPlayerRef(info.Source));
     }
 
-    private void BeginOpeningOnStateAuthority(float reportedHandleAngle)
+    private void BeginOpeningOnStateAuthority(
+        float reportedHandleAngle,
+        string actorId)
     {
         if (!Object.HasStateAuthority || StateNet != OpeningState.Closed)
             return;
@@ -175,16 +184,18 @@ public sealed class NetworkDoubleLeafOpening : NetworkBehaviour
         if (reportedHandleAngle + 0.01f < minimumAcceptedHandleAngle)
             return;
 
+        openingActorId = NormalizeActorId(actorId);
         StateNet = OpeningState.Opening;
         Open01Net = Mathf.Clamp01(Open01Net);
         ApplyAcceptedState(StateNet, Open01Net);
     }
 
-    private void BeginOpeningLocal()
+    private void BeginOpeningLocal(string actorId)
     {
         if (localState != OpeningState.Closed)
             return;
 
+        openingActorId = NormalizeActorId(actorId);
         localState = OpeningState.Opening;
         ApplyAcceptedState(localState, localOpen01);
     }
@@ -275,10 +286,18 @@ public sealed class NetworkDoubleLeafOpening : NetworkBehaviour
         gasSystem.SetOpeningAngle(
             networkSlot,
             open01 * gasFullOpenAngle,
-            isWindow);
+            isWindow,
+            openingActorId);
 
         lastReportedGasOpen01 = open01;
         nextGasReportTime = Time.unscaledTime + gasReportInterval;
+    }
+
+    private static string NormalizeActorId(string actorId)
+    {
+        return string.IsNullOrWhiteSpace(actorId)
+            ? "Player"
+            : actorId.Trim();
     }
 
     private void UpdateDebugState(OpeningState state, float open01)

@@ -7,6 +7,7 @@ public class GameFlowManager : NetworkBehaviour
 {
     public static GameFlowManager Instance { get; private set; }
     public float RemainingSeconds => Mathf.Max(0f, remainingSeconds);
+    public bool IsMatchEnded => matchEnded || (fusionSpawned && MatchEndedNet);
 
     private enum EndReason
     {
@@ -286,6 +287,16 @@ public class GameFlowManager : NetworkBehaviour
         if (localEndApplied)
             return;
 
+        if (reason == EndReason.EmergencyEscape)
+        {
+            GameplayEventBus.Raise(
+                GameplayEventType.PlayerEscapedHouse,
+                actorId: GameplayEventActorId.FromRunner(fusionSpawned ? Runner : null),
+                targetId: emergencyEscapeZone != null
+                    ? emergencyEscapeZone.gameObject.name
+                    : "HouseEscapeZone");
+        }
+
         localEndApplied = true;
         matchEnded = true;
 
@@ -417,11 +428,12 @@ public class GameFlowManager : NetworkBehaviour
         if (gasSystem == null || emergencyEscapeZone == null)
             return false;
 
-        if (gasSystem.GasLevel() < emergencyEscapeMinimumGasLevel)
-        {
-            emergencyEscapeZone.ResetProgress();
-            return false;
-        }
+        // Temporarily disabled: entering the Escape Zone no longer requires gas level 2.
+        // if (gasSystem.GasLevel() < emergencyEscapeMinimumGasLevel)
+        // {
+        //     emergencyEscapeZone.ResetProgress();
+        //     return false;
+        // }
 
         NetworkRunner activeRunner = fusionSpawned ? Runner : null;
         return emergencyEscapeZone.HaveAllActivePlayersEscaped(activeRunner, deltaTime);

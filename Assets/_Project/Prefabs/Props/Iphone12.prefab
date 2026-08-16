@@ -1331,6 +1331,7 @@ GameObject:
   - component: {fileID: 3789647221575617526}
   - component: {fileID: 2155621330474769829}
   - component: {fileID: 6154087027420183841}
+  - component: {fileID: 6346078621739896766}
   m_Layer: 0
   m_Name: Iphone12
   m_TagString: Untagged
@@ -1381,7 +1382,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockId: e9b4b64f-1c7e-4dff-8f3c-ce409bdc3951
-  instanceId: 66907ce8-6a5c-4459-af9f-a04a004daf01
+  instanceId: ffa01c10-75fb-4a26-8bfa-0cb77a773ad9
   version: 1
   installationRoutineCheckpoint:
     _installationRoutineId: 54548176-30f4-4a4a-8057-340a383c6102
@@ -1591,6 +1592,7 @@ MonoBehaviour:
   lights:
   - {fileID: 4077929802208694547}
   turnOffOnStart: 1
+  heldItemId: PhoneFlashlight
 --- !u!114 &6154087027420183841
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1601,14 +1603,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8e9dd3b70d84fd4aa82b017850ec3ad, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   sourceId: PhoneFlashlight
   ignitionPoint: {fileID: 6466987288446596174}
   activationMode: 2
   manualActive: 0
   activeObject: {fileID: 7922230190793232764}
   particles: []
+--- !u!114 &6346078621739896766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7292494883290137409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 3
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1 &7922230190793232764
 GameObject:
   m_ObjectHideFlags: 0

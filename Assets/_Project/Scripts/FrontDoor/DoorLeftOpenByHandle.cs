@@ -177,7 +177,7 @@ public class DoorLeftOpenByHandle : MonoBehaviour
             if (!_wasOpen && isOpen)
             {
                 GameplayEventBus.Raise(
-                    GameplayEventType.WindowOpened,
+                    GameplayEventType.DoorOpened,
                     actorId: actorId,
                     targetId: gameObject.name);
             }

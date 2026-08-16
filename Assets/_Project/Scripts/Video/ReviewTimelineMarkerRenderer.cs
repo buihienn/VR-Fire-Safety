@@ -32,7 +32,6 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
     [Header("Marker Colors")]
     [SerializeField] private Color correctColor = new Color(0.1f, 0.8f, 0.25f, 1f);
     [SerializeField] private Color wrongColor = new Color(0.95f, 0.15f, 0.15f, 1f);
-    [SerializeField] private Color neutralColor = new Color(1f, 0.8f, 0.15f, 1f);
 
     private readonly List<GameObject> spawnedMarkers = new List<GameObject>();
     private PlayerActionLogSession loadedSession;
@@ -213,7 +212,9 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
 
         if (contentLabel != null)
         {
-            contentLabel.text = action.result.ToString();
+            contentLabel.text = string.IsNullOrWhiteSpace(action.description)
+                ? action.result.ToString()
+                : action.description;
         }
 
         Debug.Log(
@@ -228,10 +229,10 @@ public class ReviewTimelineMarkerRenderer : MonoBehaviour
         {
             case PlayerActionResult.Correct:
                 return correctColor;
-            case PlayerActionResult.Wrong:
+            case PlayerActionResult.Incorrect:
                 return wrongColor;
             default:
-                return neutralColor;
+                return wrongColor;
         }
     }
 

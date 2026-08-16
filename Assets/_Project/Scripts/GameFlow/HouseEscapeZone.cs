@@ -77,13 +77,19 @@ public class HouseEscapeZone : MonoBehaviour
 
     private bool HasSinglePlayerInside()
     {
-        Transform positionSource = singlePlayerPositionSource;
-        if (positionSource == null && Camera.main != null)
-            positionSource = Camera.main.transform;
+        Transform positionSource = GetLocalPositionSource();
 
         activePlayerCount = positionSource != null ? 1 : 0;
         playersInsideCount = positionSource != null && IsInside(positionSource.position) ? 1 : 0;
         return AreAllActivePlayersInside;
+    }
+
+    private Transform GetLocalPositionSource()
+    {
+        if (singlePlayerPositionSource != null)
+            return singlePlayerPositionSource;
+
+        return Camera.main != null ? Camera.main.transform : null;
     }
 
     private bool UpdateStayProgress(bool allPlayersInside, float deltaTime)

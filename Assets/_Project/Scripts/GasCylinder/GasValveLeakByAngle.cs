@@ -42,8 +42,8 @@ public class GasValveLeakByAngle : NetworkBehaviour
     [Networked] private float ValveOpen01Net { get; set; }
 
     private bool wasClosed;
-    private static bool hasRaisedCloseInScene;
-    private static bool hasRaisedOpenInScene;
+    private bool hasRaisedCloseInScene;
+    private bool hasRaisedOpenInScene;
 
     private float lastSentValveOpen01 = -999f;
     private float nextSendTime;

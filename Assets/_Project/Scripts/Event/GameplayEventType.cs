@@ -9,6 +9,8 @@ public enum GameplayEventType
     GasLeakStarted,
     GasLeakStopped,
     GasLevelChanged,
+    PlayerEnteredGasZone,
+    PlayerExitedGasZone,
     PlayerEnteredDangerZone,
     PlayerExitedDangerZone,
     PlayerFainted,
@@ -18,5 +20,20 @@ public enum GameplayEventType
     DoorOpened,
     DoorClosed,
     GasFlareIgnited,
-    GasExploded
+    GasExploded,
+    GateOpened,
+    LightTurnOnAttempted,
+    FanTurnOnAttempted,
+    ExtinguisherSafetyPinPulled,
+    PlayerEscapedHouse,
+    HeldItemGrabbed,
+    HeldItemReleased,
+    HeldItemActivated,
+    HeldItemDeactivated,
+
+    // Scoring-specific events. Appended to preserve serialized enum values.
+    PlayerMovedOutOfGasZone,
+    LightSwitchOperated,
+    FanControlOperated,
+    FireExtinguisherApplied
 }

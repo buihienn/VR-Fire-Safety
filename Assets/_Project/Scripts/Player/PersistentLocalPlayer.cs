@@ -29,8 +29,16 @@ public class PersistentLocalPlayer : MonoBehaviour
     [SerializeField] private bool makePlayerRigidbodiesKinematic = true;
     [SerializeField, Min(0f)] private float headBlockingResumeDelaySeconds = 0.25f;
 
+    [Header("VR Rig Reset")]
+    [Tooltip("Root transform moved by the Meta locomotion system. If empty, the OVRCameraRig is found automatically.")]
+    [SerializeField] private Transform playerRigRoot;
+
     private static PersistentLocalPlayer instance;
     private Coroutine sceneReadyRoutine;
+    private Vector3 initialPlayerRigLocalPosition;
+    private Quaternion initialPlayerRigLocalRotation;
+    private Vector3 initialPlayerRigLocalScale;
+    private bool hasInitialPlayerRigPose;
 
     private void Awake()
     {
@@ -41,6 +49,7 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
 
         instance = this;
+        CacheInitialPlayerRigPose();
         DontDestroyOnLoad(gameObject);
     }
 
@@ -125,16 +134,66 @@ public class PersistentLocalPlayer : MonoBehaviour
         UnityCharacterController[] characterControllers = GetComponentsInChildren<UnityCharacterController>(true);
         SetCharacterControllersEnabled(characterControllers, false);
 
-        transform.SetPositionAndRotation(spawnPosition, marker.rotation);
-        Physics.SyncTransforms();
-
         MetaCharacterController[] metaCharacterControllers = GetComponentsInChildren<MetaCharacterController>(true);
-        ResetMetaCharacterControllers(metaCharacterControllers, spawnPosition, marker.rotation);
+        ApplySpawnPose(spawnPosition, marker.rotation, metaCharacterControllers, metaLocomotors);
 
         StabilizePlayerRigidbodies();
         ResetHeadBlockingAfterTeleport();
 
-        StartCoroutine(ReenableControllersAfterTeleport(characterControllers, metaLocomotors, metaCharacterControllers, spawnPosition));
+        StartCoroutine(ReenableControllersAfterTeleport(
+            characterControllers,
+            metaLocomotors,
+            metaCharacterControllers,
+            spawnPosition,
+            marker.rotation));
+    }
+
+    private void CacheInitialPlayerRigPose()
+    {
+        if (playerRigRoot == null)
+        {
+            OVRCameraRig cameraRig = GetComponentInChildren<OVRCameraRig>(true);
+            if (cameraRig != null)
+            {
+                playerRigRoot = cameraRig.transform;
+            }
+        }
+
+        if (playerRigRoot == null || playerRigRoot == transform)
+        {
+            return;
+        }
+
+        initialPlayerRigLocalPosition = playerRigRoot.localPosition;
+        initialPlayerRigLocalRotation = playerRigRoot.localRotation;
+        initialPlayerRigLocalScale = playerRigRoot.localScale;
+        hasInitialPlayerRigPose = true;
+    }
+
+    private void RestoreInitialPlayerRigPose()
+    {
+        if (!hasInitialPlayerRigPose || playerRigRoot == null)
+        {
+            return;
+        }
+
+        playerRigRoot.SetLocalPositionAndRotation(initialPlayerRigLocalPosition, initialPlayerRigLocalRotation);
+        playerRigRoot.localScale = initialPlayerRigLocalScale;
+    }
+
+    private void ApplySpawnPose(
+        Vector3 feetPosition,
+        Quaternion rotation,
+        MetaCharacterController[] metaCharacterControllers,
+        MetaFirstPersonLocomotor[] metaLocomotors)
+    {
+        RestoreInitialPlayerRigPose();
+        transform.SetPositionAndRotation(feetPosition, rotation);
+        Physics.SyncTransforms();
+
+        ResetMetaCharacterControllers(metaCharacterControllers, feetPosition, rotation);
+        ResetMetaLocomotorsToCharacter(metaLocomotors);
+        Physics.SyncTransforms();
     }
 
     private Vector3 SnapPositionToGround(Vector3 position)
@@ -219,22 +278,32 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
     }
 
+    private static void ResetMetaLocomotorsToCharacter(MetaFirstPersonLocomotor[] locomotors)
+    {
+        foreach (MetaFirstPersonLocomotor locomotor in locomotors)
+        {
+            if (locomotor != null)
+            {
+                locomotor.ResetPlayerToCharacter();
+            }
+        }
+    }
+
     private IEnumerator ReenableControllersAfterTeleport(
         UnityCharacterController[] characterControllers,
         MetaFirstPersonLocomotor[] metaLocomotors,
         MetaCharacterController[] metaCharacterControllers,
-        Vector3 feetPosition)
+        Vector3 feetPosition,
+        Quaternion rotation)
     {
         yield return null;
 
-        Physics.SyncTransforms();
-        ResetMetaCharacterControllers(metaCharacterControllers, feetPosition, transform.rotation);
+        ApplySpawnPose(feetPosition, rotation, metaCharacterControllers, metaLocomotors);
 
         yield return new WaitForFixedUpdate();
 
-        Physics.SyncTransforms();
         SetCharacterControllersEnabled(characterControllers, true);
-        ResetMetaCharacterControllers(metaCharacterControllers, feetPosition, transform.rotation);
+        ApplySpawnPose(feetPosition, rotation, metaCharacterControllers, metaLocomotors);
         SetMetaLocomotorsMovement(metaLocomotors, true);
     }
 

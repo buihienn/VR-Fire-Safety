@@ -19,6 +19,9 @@ public class LighterIgniteOnGrab : NetworkBehaviour
     [Header("Optional")]
     [SerializeField] private AudioSource igniteSound;
 
+    [Header("Gameplay Event")]
+    [SerializeField] private string heldItemId = "Lighter";
+
     [Header("Desktop Test")]
     [Tooltip("Cho phep phim L bat/tat lua khi test khong co kinh VR.")]
     [SerializeField] private bool enableDesktopTestInput = true;
@@ -84,7 +87,11 @@ public class LighterIgniteOnGrab : NetworkBehaviour
 
     public void OnGrab()
     {
+        bool wasGrabbed = isGrabbed;
         isGrabbed = true;
+
+        if (!wasGrabbed)
+            RaiseHeldItemEvent(GameplayEventType.HeldItemGrabbed);
 
         if (spawned && requestAuthorityOnGrab && Object != null && !Object.HasStateAuthority)
             Object.RequestStateAuthority();
@@ -100,7 +107,11 @@ public class LighterIgniteOnGrab : NetworkBehaviour
 
     public void OnRelease()
     {
+        bool wasGrabbed = isGrabbed;
         isGrabbed = false;
+
+        if (wasGrabbed)
+            RaiseHeldItemEvent(GameplayEventType.HeldItemReleased);
 
         if (igniteRoutine != null)
         {
@@ -109,7 +120,12 @@ public class LighterIgniteOnGrab : NetworkBehaviour
         }
 
         if (!keepFireOnAfterRelease)
+        {
+            if (isFireOnLocal)
+                RaiseHeldItemEvent(GameplayEventType.HeldItemDeactivated);
+
             RequestSetFire(false);
+        }
     }
 
     private IEnumerator IgniteAfterDelay()
@@ -178,6 +194,14 @@ public class LighterIgniteOnGrab : NetworkBehaviour
         bool wasFireOn = isFireOnLocal;
         isFireOnLocal = active;
 
+        if (isGrabbed && active != wasFireOn)
+        {
+            RaiseHeldItemEvent(
+                active
+                    ? GameplayEventType.HeldItemActivated
+                    : GameplayEventType.HeldItemDeactivated);
+        }
+
         if (fireEffectObject != null)
             fireEffectObject.SetActive(active);
 
@@ -196,5 +220,13 @@ public class LighterIgniteOnGrab : NetworkBehaviour
 
         if (active && !wasFireOn && playSound && igniteSound != null)
             igniteSound.Play();
+    }
+
+    private void RaiseHeldItemEvent(GameplayEventType eventType)
+    {
+        GameplayEventBus.Raise(
+            eventType,
+            actorId: GameplayEventActorId.FromRunner(Runner),
+            targetId: string.IsNullOrWhiteSpace(heldItemId) ? gameObject.name : heldItemId);
     }
 }

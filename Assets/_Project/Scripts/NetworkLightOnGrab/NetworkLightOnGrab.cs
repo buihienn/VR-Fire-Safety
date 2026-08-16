@@ -6,10 +6,16 @@ public class NetworkLightOnGrab : NetworkBehaviour
     [SerializeField] private Light[] lights;
     [SerializeField] private bool turnOffOnStart = true;
 
+    [Header("Gameplay Event")]
+    [Tooltip("Stable item id written to the action log. Falls back to the GameObject name when empty.")]
+    [SerializeField] private string heldItemId;
+
     [Networked] private bool LightOn { get; set; }
 
     private bool spawned;
     private bool lastLightOn;
+    private bool isHeldLocally;
+    private bool isActiveFromLocalInteraction;
 
     private void Awake()
     {
@@ -43,12 +49,44 @@ public class NetworkLightOnGrab : NetworkBehaviour
 
     public void OnGrabbed()
     {
+        if (!isHeldLocally)
+        {
+            isHeldLocally = true;
+            RaiseHeldItemEvent(GameplayEventType.HeldItemGrabbed);
+        }
+
+        if (!isActiveFromLocalInteraction)
+        {
+            isActiveFromLocalInteraction = true;
+            RaiseHeldItemEvent(GameplayEventType.HeldItemActivated);
+        }
+
         SetLight(true);
     }
 
     public void OnReleased()
     {
+        if (isActiveFromLocalInteraction)
+        {
+            isActiveFromLocalInteraction = false;
+            RaiseHeldItemEvent(GameplayEventType.HeldItemDeactivated);
+        }
+
+        if (isHeldLocally)
+        {
+            isHeldLocally = false;
+            RaiseHeldItemEvent(GameplayEventType.HeldItemReleased);
+        }
+
         SetLight(false);
+    }
+
+    private void RaiseHeldItemEvent(GameplayEventType eventType)
+    {
+        GameplayEventBus.Raise(
+            eventType,
+            actorId: GameplayEventActorId.FromRunner(Runner),
+            targetId: string.IsNullOrWhiteSpace(heldItemId) ? gameObject.name : heldItemId);
     }
 
     private void SetLight(bool value)

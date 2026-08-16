@@ -34,6 +34,7 @@ public class FanSwitch : NetworkBehaviour
     private Grabbable grabbable;
     private Quaternion initialLocalRotation;
     private int lastRequestedStep = -1;
+    private bool unsafeOperationRaisedThisGrab;
 
     private void Awake()
     {
@@ -103,11 +104,13 @@ public class FanSwitch : NetworkBehaviour
             case PointerEventType.Select:
                 isGrabbed = true;
                 lastRequestedStep = GetAcceptedStep();
+                unsafeOperationRaisedThisGrab = false;
                 break;
 
             case PointerEventType.Unselect:
                 isGrabbed = false;
                 lastRequestedStep = GetAcceptedStep();
+                unsafeOperationRaisedThisGrab = false;
                 SnapKnobToStep(lastRequestedStep);
                 break;
         }
@@ -135,9 +138,27 @@ public class FanSwitch : NetworkBehaviour
         if (requestedStep == lastRequestedStep)
             return;
 
+        int gasLevel = GasSystem.Instance != null
+            ? GasSystem.Instance.GasLevel()
+            : 0;
+
+        if (gasLevel >= 1 && !unsafeOperationRaisedThisGrab)
+        {
+            GameplayEventBus.Raise(
+                GameplayEventType.FanControlOperated,
+                actorId: GameplayEventActorId.FromRunner(Runner),
+                targetId: gameObject.name,
+                payload: gasLevel);
+
+            unsafeOperationRaisedThisGrab = true;
+        }
+
         bool attemptingToTurnOn = lastRequestedStep <= 0 && requestedStep > 0;
-        if (attemptingToTurnOn && sparkIgnitionTrigger != null)
-            sparkIgnitionTrigger.TriggerSpark();
+        if (attemptingToTurnOn)
+        {
+            if (sparkIgnitionTrigger != null)
+                sparkIgnitionTrigger.TriggerSpark();
+        }
 
         lastRequestedStep = requestedStep;
         RequestSetStep(requestedStep);

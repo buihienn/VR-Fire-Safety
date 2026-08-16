@@ -4,74 +4,131 @@ using UnityEngine;
 
 public class ScoreManager : MonoBehaviour
 {
+    private const string DebugPrefix = "Record review debug";
+
+    [Header("Score")]
+    [Min(1)]
+    [SerializeField] private int maxScore = GameplayScoreRuleValues.MaximumPositiveScore;
     [SerializeField] private int totalScore;
-    [SerializeField] private List<ScoreRule> rules = new();
+    [SerializeField] private int earnedScore;
+    [SerializeField] private int penaltyScore;
+    [SerializeField] private int correctActionCount;
+    [SerializeField] private int incorrectActionCount;
+
+    [Header("Debug")]
     [SerializeField] private bool logScoreChanges = true;
 
     public int TotalScore => totalScore;
+    public int EarnedScore => earnedScore;
+    public int PenaltyScore => penaltyScore;
+    public int CorrectActionCount => correctActionCount;
+    public int IncorrectActionCount => incorrectActionCount;
     public event Action<int> ScoreChanged;
 
     public static int LastScore { get; private set; }
 
-    private void Start() {
+    private readonly HashSet<string> awardedCorrectActions =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    private void Awake()
+    {
         ResetScore();
     }
 
     private void OnEnable()
     {
-        GameplayEventBus.OnEvent += HandleGameplayEvent;
+        GameplayActionEvaluationBus.OnActionEvaluated += HandleEvaluatedAction;
     }
 
     private void OnDisable()
     {
-        GameplayEventBus.OnEvent -= HandleGameplayEvent;
-    }
-
-    private void Reset()
-    {
-        rules = new List<ScoreRule>
-        {
-            new ScoreRule { EventType = GameplayEventType.ValveClosed, ScoreDelta = 15 },
-            new ScoreRule { EventType = GameplayEventType.WindowOpened, ScoreDelta = 10 },
-            new ScoreRule { EventType = GameplayEventType.FireExtinguished, ScoreDelta = 20 },
-            new ScoreRule { EventType = GameplayEventType.PlayerEnteredDangerZone, ScoreDelta = -5 },
-            new ScoreRule { EventType = GameplayEventType.WrongActionPerformed, ScoreDelta = -10 }
-        };
+        GameplayActionEvaluationBus.OnActionEvaluated -= HandleEvaluatedAction;
     }
 
     public void ResetScore()
     {
-        SetScore(0);
+        earnedScore = 0;
+        penaltyScore = 0;
+        correctActionCount = 0;
+        incorrectActionCount = 0;
+        awardedCorrectActions.Clear();
+
+        totalScore = 0;
+        LastScore = 0;
+        ScoreChanged?.Invoke(totalScore);
     }
 
     public void AddScore(int value)
     {
-        SetScore(totalScore + value);
+        if (value >= 0)
+            earnedScore += value;
+        else
+            penaltyScore += Mathf.Abs(value);
+
+        RecalculateScore();
     }
 
-    private void HandleGameplayEvent(GameplayEvent gameplayEvent)
+    private void HandleEvaluatedAction(EvaluatedGameplayAction action)
     {
-        for (int i = 0; i < rules.Count; i++)
-        {
-            ScoreRule rule = rules[i];
-            if (rule == null) continue;
-            if (rule.EventType != gameplayEvent.Type) continue;
-
-            AddScore(rule.ScoreDelta);
+        if (action == null)
             return;
+
+        if (GameFlowManager.Instance != null &&
+            GameFlowManager.Instance.IsMatchEnded &&
+            !string.Equals(action.actionId, "LeaveGasArea", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (action.result == PlayerActionResult.Correct)
+        {
+            if (!awardedCorrectActions.Add(action.actionId))
+            {
+                if (logScoreChanges)
+                {
+                    Debug.Log(
+                        $"[{DebugPrefix}] [ScoreManager] Correct action {action.actionId} " +
+                        "was already awarded; score unchanged.",
+                        this);
+                }
+
+                return;
+            }
+
+            earnedScore += Mathf.Max(0, action.scoreDelta);
+            correctActionCount++;
         }
+        else
+        {
+            penaltyScore += Mathf.Abs(action.scoreDelta);
+            incorrectActionCount++;
+        }
+
+        RecalculateScore();
+    }
+
+    private void RecalculateScore()
+    {
+        // Keep the positive ceiling defined by the rubric, while allowing a
+        // negative final result so unsafe actions retain their full penalty.
+        SetScore(Mathf.Min(earnedScore - penaltyScore, maxScore));
     }
 
     private void SetScore(int value)
     {
-        if (totalScore == value) return;
-
+        bool changed = totalScore != value;
         totalScore = value;
         LastScore = totalScore;
 
-        ScoreChanged?.Invoke(totalScore);
+        if (changed)
+            ScoreChanged?.Invoke(totalScore);
 
         if (logScoreChanges)
-            Debug.Log($"[ScoreManager] Score changed: {totalScore}", this);
+        {
+            Debug.Log(
+                $"[{DebugPrefix}] [ScoreManager] Score={totalScore}/{maxScore} " +
+                $"| Earned={earnedScore} | Penalty={penaltyScore} " +
+                $"| Correct={correctActionCount} | Incorrect={incorrectActionCount}",
+                this);
+        }
     }
+
 }
