@@ -53884,7 +53884,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd8bcd8cede554e4bacb93963ff5f2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxScore: 100
+  maxScore: 310
   totalScore: 0
   earnedScore: 0
   penaltyScore: 0

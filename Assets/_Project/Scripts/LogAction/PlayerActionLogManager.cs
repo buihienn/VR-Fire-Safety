@@ -114,6 +114,11 @@ public class PlayerActionLogManager : MonoBehaviour
 
     public void BeginSession(string videoPath)
     {
+        BeginSession(videoPath, Time.realtimeSinceStartup);
+    }
+
+    public void BeginSession(string videoPath, float timelineStartRealtime)
+    {
         GameplayActionEvaluator evaluator = GetComponent<GameplayActionEvaluator>();
         if (evaluator != null)
         {
@@ -134,12 +139,16 @@ public class PlayerActionLogManager : MonoBehaviour
         };
 
         CurrentJsonPath = CreateJsonPath(videoPath, sessionId);
-        sessionStartTime = Time.realtimeSinceStartup;
+        sessionStartTime = timelineStartRealtime >= 0f
+            ? timelineStartRealtime
+            : Time.realtimeSinceStartup;
         IsSessionActive = true;
 
         if (logToConsole)
         {
-            Debug.Log($"[{DebugPrefix}] [PlayerActionLogManager] Player action log session started: {CurrentJsonPath}");
+            Debug.Log(
+                $"[{DebugPrefix}] [PlayerActionLogManager] Player action log session started: " +
+                $"{CurrentJsonPath} | TimelineStartRealtime={sessionStartTime:0.000}");
         }
     }
 

@@ -53,15 +53,26 @@ public class GameplayActionLogSessionController : MonoBehaviour
             return;
         }
 
-        string videoPath = GetCurrentRecordingPath();
-        if (attachCurrentRecordingVideo && !string.IsNullOrEmpty(videoPath))
+        QuestScreenRecordingManager recordingManager = QuestScreenRecordingManager.Instance;
+        if (attachCurrentRecordingVideo && recordingManager != null && !recordingManager.IsCaptureActive)
         {
-            actionLogManager.BeginSession(videoPath);
+            Log("Waiting for the native recording-start callback before beginning the action log session.");
+            return;
+        }
+
+        string videoPath = GetCurrentRecordingPath();
+        if (attachCurrentRecordingVideo && recordingManager != null && !string.IsNullOrEmpty(videoPath))
+        {
+            actionLogManager.BeginSession(
+                videoPath,
+                recordingManager.RecordingStartedRealtime);
+            ResetScoreForSynchronizedSession();
             Log("Gameplay action log session started with recording path: " + videoPath);
         }
         else
         {
             actionLogManager.BeginSession();
+            ResetScoreForSynchronizedSession();
             Log("Gameplay action log session started without recording path.");
         }
 
@@ -90,7 +101,13 @@ public class GameplayActionLogSessionController : MonoBehaviour
 
         if (!sessionStarted)
         {
-            actionLogManager.BeginSession(videoPath);
+            QuestScreenRecordingManager recordingManager = QuestScreenRecordingManager.Instance;
+            float recordingStartRealtime = recordingManager != null
+                ? recordingManager.RecordingStartedRealtime
+                : Time.realtimeSinceStartup;
+
+            actionLogManager.BeginSession(videoPath, recordingStartRealtime);
+            ResetScoreForSynchronizedSession();
             sessionStarted = true;
             sessionSaved = false;
             Log("Recording started before log session, beginning session with path: " + videoPath);
@@ -109,6 +126,15 @@ public class GameplayActionLogSessionController : MonoBehaviour
         }
 
         return QuestScreenRecordingManager.Instance.LastRecordingPath;
+    }
+
+    private static void ResetScoreForSynchronizedSession()
+    {
+        ScoreManager scoreManager = FindFirstObjectByType<ScoreManager>();
+        if (scoreManager != null)
+        {
+            scoreManager.ResetScore();
+        }
     }
 
     private void OnDisable()

@@ -17,8 +17,6 @@ public class HouseEscapeZone : MonoBehaviour
     [SerializeField] private int playersInsideCount;
     [SerializeField] private int activePlayerCount;
     [SerializeField] private float currentStayDurationSeconds;
-    [SerializeField] private float localEscapeStayDurationSeconds;
-    [SerializeField] private bool localEscapeEventRaised;
 
     public float RequiredStayDurationSeconds => requiredStayDurationSeconds;
     public float CurrentStayDurationSeconds => currentStayDurationSeconds;
@@ -33,11 +31,6 @@ public class HouseEscapeZone : MonoBehaviour
     private void OnValidate()
     {
         ResolveCollider();
-    }
-
-    private void Update()
-    {
-        UpdateLocalEscapeEvent(Time.deltaTime);
     }
 
     public bool HaveAllActivePlayersEscaped(NetworkRunner runner, float deltaTime)
@@ -89,31 +82,6 @@ public class HouseEscapeZone : MonoBehaviour
         activePlayerCount = positionSource != null ? 1 : 0;
         playersInsideCount = positionSource != null && IsInside(positionSource.position) ? 1 : 0;
         return AreAllActivePlayersInside;
-    }
-
-    private void UpdateLocalEscapeEvent(float deltaTime)
-    {
-        if (localEscapeEventRaised || zoneCollider == null)
-            return;
-
-        Transform positionSource = GetLocalPositionSource();
-        if (positionSource == null || !IsInside(positionSource.position))
-        {
-            localEscapeStayDurationSeconds = 0f;
-            return;
-        }
-
-        localEscapeStayDurationSeconds += Mathf.Max(0f, deltaTime);
-        if (localEscapeStayDurationSeconds < requiredStayDurationSeconds)
-            return;
-
-        localEscapeEventRaised = true;
-
-        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
-        GameplayEventBus.Raise(
-            GameplayEventType.PlayerEscapedHouse,
-            actorId: GameplayEventActorId.FromRunner(runner),
-            targetId: gameObject.name);
     }
 
     private Transform GetLocalPositionSource()

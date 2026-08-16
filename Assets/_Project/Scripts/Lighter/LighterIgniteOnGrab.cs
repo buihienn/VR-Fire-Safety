@@ -91,12 +91,7 @@ public class LighterIgniteOnGrab : NetworkBehaviour
         isGrabbed = true;
 
         if (!wasGrabbed)
-        {
             RaiseHeldItemEvent(GameplayEventType.HeldItemGrabbed);
-
-            if (isFireOnLocal)
-                RaiseHeldItemEvent(GameplayEventType.HeldItemActivated);
-        }
 
         if (spawned && requestAuthorityOnGrab && Object != null && !Object.HasStateAuthority)
             Object.RequestStateAuthority();

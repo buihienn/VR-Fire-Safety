@@ -33,10 +33,12 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
     public string LastRecordingPath { get; private set; }
     public bool IsRecording { get; private set; }
+    public bool IsCaptureActive { get; private set; }
+    public float RecordingStartedRealtime { get; private set; } = -1f;
     public bool HasRecordingReady => !IsRecording && !waitingForStopCallback && !string.IsNullOrEmpty(LastRecordingPath);
     public bool IsStopping => waitingForStopCallback;
     public string DebugState =>
-        $"IsRecording={IsRecording}, WaitingForStopCallback={waitingForStopCallback}, PendingStartAfterStop={pendingStartAfterStop}, HasRecordingReady={HasRecordingReady}, LastRecordingPath={LastRecordingPath}, GameplaySceneName={gameplaySceneName}, EndGameSceneName={endGameSceneName}";
+        $"IsRecording={IsRecording}, IsCaptureActive={IsCaptureActive}, WaitingForStopCallback={waitingForStopCallback}, PendingStartAfterStop={pendingStartAfterStop}, HasRecordingReady={HasRecordingReady}, LastRecordingPath={LastRecordingPath}, GameplaySceneName={gameplaySceneName}, EndGameSceneName={endGameSceneName}";
 
     private bool waitingForStopCallback;
     private float recordingElapsedTime;
@@ -66,7 +68,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
     private void Update()
     {
-        if (!stopAfterDebugDelay || !IsRecording || waitingForStopCallback || hasDebugStopTriggered)
+        if (!stopAfterDebugDelay || !IsCaptureActive || waitingForStopCallback || hasDebugStopTriggered)
         {
             return;
         }
@@ -98,6 +100,8 @@ public class QuestScreenRecordingManager : MonoBehaviour
 
         recordingElapsedTime = 0f;
         hasDebugStopTriggered = false;
+        IsCaptureActive = false;
+        RecordingStartedRealtime = -1f;
 
         pendingStartAfterStop = false;
 
@@ -126,6 +130,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
 #else
         LastRecordingPath = ResolveEditorFallbackPath();
         IsRecording = true;
+        MarkCaptureStarted();
         NotifyRecordingStarted();
         Debug.Log($"[{DebugPrefix}] Editor fallback recording started: {LastRecordingPath}");
 #endif
@@ -155,6 +160,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
         Debug.Log($"[{DebugPrefix}] Android stopRecording command sent. Waiting for OnScreenRecordStopped callback.");
 #else
         IsRecording = false;
+        IsCaptureActive = false;
         waitingForStopCallback = false;
         Debug.Log($"[{DebugPrefix}] Editor fallback recording stopped: {LastRecordingPath}");
         NotifyRecordingReady();
@@ -169,6 +175,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
         IsRecording = true;
         recordingElapsedTime = 0f;
         hasDebugStopTriggered = false;
+        MarkCaptureStarted();
         NotifyRecordingStarted();
         Debug.Log($"[{DebugPrefix}] Screen recording started: {videoPath}");
     }
@@ -183,6 +190,7 @@ public class QuestScreenRecordingManager : MonoBehaviour
         }
 
         IsRecording = false;
+        IsCaptureActive = false;
         waitingForStopCallback = false;
         Debug.Log($"[{DebugPrefix}] Screen recording stopped: {LastRecordingPath}");
         NotifyRecordingReady();
@@ -198,6 +206,8 @@ public class QuestScreenRecordingManager : MonoBehaviour
     public void OnScreenRecordPermissionDenied(string message)
     {
         IsRecording = false;
+        IsCaptureActive = false;
+        RecordingStartedRealtime = -1f;
         waitingForStopCallback = false;
         Debug.LogWarning($"[{DebugPrefix}] Screen recording permission denied. {DebugState}");
     }
@@ -205,6 +215,8 @@ public class QuestScreenRecordingManager : MonoBehaviour
     public void OnScreenRecordFailed(string error)
     {
         IsRecording = false;
+        IsCaptureActive = false;
+        RecordingStartedRealtime = -1f;
         waitingForStopCallback = false;
         Debug.LogError($"[{DebugPrefix}] Screen recording failed: {error}. {DebugState}");
     }
@@ -318,6 +330,12 @@ public class QuestScreenRecordingManager : MonoBehaviour
         }
 
         RecordingStarted?.Invoke(LastRecordingPath);
+    }
+
+    private void MarkCaptureStarted()
+    {
+        IsCaptureActive = true;
+        RecordingStartedRealtime = Time.realtimeSinceStartup;
     }
 
     private string ResolveEditorFallbackPath()

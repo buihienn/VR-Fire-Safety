@@ -75,7 +75,7 @@ public class GasSystem : NetworkBehaviour
     public float secondsToFullAtMaxLeak = 60f;
 
     [Tooltip("Thoi gian de gas giam tu 1 ve 0 khi co dung 1 opening mo hoan toan va khong con leak.")]
-    public float secondsToClearWithFullVent = 20f;
+    public float secondsToClearWithFullVent = 40f;
 
     [FormerlySerializedAs("maximumCombinedVentilation01")]
     [Tooltip("He so thong gio khi ca 2 opening deu mo hoan toan. 1.25 = nhanh hon 25% so voi 1 opening.")]
@@ -261,13 +261,13 @@ public class GasSystem : NetworkBehaviour
         effectiveVentilation01 = firstOpening01 +
             secondOpening01 * (twoOpeningsVentilationMultiplier - 1f);
 
-        // Linear drain gives an exact clear time: 1 / 20 = 0.05 gas per second.
+        // Linear drain gives an exact clear time: 1 / 40 = 0.025 gas per second.
         float ventDrainRate01PerSec = effectiveVentilation01 > 0f
             ? effectiveVentilation01 / Mathf.Max(0.01f, secondsToClearWithFullVent)
             : 0f;
 
         // Do not add natural dissipation while a vent is active; otherwise the
-        // configured 20-second clear time would become shorter than requested.
+        // configured 40-second clear time would become shorter than requested.
         float naturalDrainRate01PerSec = !leakActive && effectiveVentilation01 <= 0f
             ? gas01 / Mathf.Max(0.01f, secondsToClearNaturally)
             : 0f;
@@ -560,29 +560,62 @@ public class GasSystem : NetworkBehaviour
 
     public void SetOpeningAngle(int slot, float angle, bool isWindow)
     {
+        SetOpeningAngle(slot, angle, isWindow, null);
+    }
+
+    public void SetOpeningAngle(
+        int slot,
+        float angle,
+        bool isWindow,
+        string actorId)
+    {
         if (!IsValidOpeningSlot(slot)) return;
 
         angle = NormalizeOpeningAngle(angle);
 
         if (!fusionSpawned)
         {
-            ApplyOpeningAngle(slot, angle, isWindow);
+            ApplyOpeningAngle(
+                slot,
+                angle,
+                isWindow,
+                string.IsNullOrWhiteSpace(actorId) ? "LocalPlayer" : actorId);
             return;
         }
 
         if (Object.HasStateAuthority)
-            ApplyOpeningAngle(slot, angle, isWindow);
+        {
+            ApplyOpeningAngle(
+                slot,
+                angle,
+                isWindow,
+                string.IsNullOrWhiteSpace(actorId)
+                    ? GameplayEventActorId.FromRunner(Runner)
+                    : actorId);
+        }
         else
             RPC_RequestSetOpeningAngle(slot, angle, isWindow);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestSetOpeningAngle(int slot, float angle, bool isWindow)
+    private void RPC_RequestSetOpeningAngle(
+        int slot,
+        float angle,
+        bool isWindow,
+        RpcInfo info = default)
     {
-        ApplyOpeningAngle(slot, angle, isWindow);
+        ApplyOpeningAngle(
+            slot,
+            angle,
+            isWindow,
+            GameplayEventActorId.FromPlayerRef(info.Source));
     }
 
-    private void ApplyOpeningAngle(int slot, float angle, bool isWindow)
+    private void ApplyOpeningAngle(
+        int slot,
+        float angle,
+        bool isWindow,
+        string actorId)
     {
         if (!IsValidOpeningSlot(slot)) return;
 
@@ -599,7 +632,7 @@ public class GasSystem : NetworkBehaviour
                 isWindow
                     ? (isOpen ? GameplayEventType.WindowOpened : GameplayEventType.WindowClosed)
                     : (isOpen ? GameplayEventType.DoorOpened : GameplayEventType.DoorClosed),
-                actorId: "Player",
+                actorId: string.IsNullOrWhiteSpace(actorId) ? "Player" : actorId,
                 targetId: $"Opening_{slot}",
                 payload: openingAngleCache[slot]);
         }

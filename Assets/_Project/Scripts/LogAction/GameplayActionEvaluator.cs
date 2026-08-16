@@ -17,6 +17,27 @@ public class EvaluatedGameplayAction
     public float eventTime;
 }
 
+public static class GameplayScoreRuleValues
+{
+    public const int CloseGasValve = 100;
+    public const int LeaveGasArea = 90;
+    public const int OpenVentilation = 80;
+    public const int ParticipateInFireExtinguishing = 40;
+
+    public const int OperateLightSwitch = -100;
+    public const int OperateFanControl = -90;
+    public const int ActivateLighter = -100;
+    public const int HoldPhone = -60;
+    public const int CloseVentilation = -50;
+    public const int FaintInGasArea = -40;
+
+    public const int MaximumPositiveScore =
+        CloseGasValve +
+        LeaveGasArea +
+        OpenVentilation +
+        ParticipateInFireExtinguishing;
+}
+
 public static class GameplayActionEvaluationBus
 {
     private const string DebugPrefix = "Record review debug";
@@ -42,21 +63,17 @@ public class GameplayActionEvaluator : MonoBehaviour
 {
     private const string PhoneFlashlightId = "PhoneFlashlight";
     private const string LighterId = "Lighter";
-    private const string ExplosionProofFlashlightId = "ExplosionProofFlashlight";
 
     [Header("Debug")]
     [SerializeField] private bool logIgnoredEvents;
 
-    private readonly Dictionary<string, HashSet<string>> heldItemsByActor =
-        new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
-
-    private readonly Dictionary<string, HashSet<string>> activeItemsByActor =
-        new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
-
     private readonly Dictionary<string, GasZoneState> gasZoneByActor =
         new Dictionary<string, GasZoneState>(StringComparer.OrdinalIgnoreCase);
 
-    private readonly HashSet<string> activeConditionLatches =
+    private readonly HashSet<string> openedVentTargets =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    private readonly HashSet<string> extinguisherParticipants =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     private readonly HashSet<string> evaluatedOneShotActions =
@@ -74,51 +91,49 @@ public class GameplayActionEvaluator : MonoBehaviour
 
     public void ResetEvaluationState()
     {
-        heldItemsByActor.Clear();
-        activeItemsByActor.Clear();
         gasZoneByActor.Clear();
-        activeConditionLatches.Clear();
+        openedVentTargets.Clear();
+        extinguisherParticipants.Clear();
         evaluatedOneShotActions.Clear();
     }
 
     private void HandleGameplayEvent(GameplayEvent gameplayEvent)
     {
+        if (GameFlowManager.Instance != null &&
+            GameFlowManager.Instance.IsMatchEnded &&
+            gameplayEvent.Type != GameplayEventType.PlayerEscapedHouse)
+            return;
+
         string actorId = NormalizeActorId(gameplayEvent.ActorId);
 
         switch (gameplayEvent.Type)
         {
             case GameplayEventType.HeldItemGrabbed:
-                SetItemState(heldItemsByActor, actorId, gameplayEvent.TargetId, true);
-                TryEvaluateHeldItemInGas(actorId, gameplayEvent.TargetId, gameplayEvent);
-                return;
-
-            case GameplayEventType.HeldItemReleased:
-                SetItemState(heldItemsByActor, actorId, gameplayEvent.TargetId, false);
-                ClearConditionLatch(actorId, gameplayEvent.TargetId);
+                EvaluatePhoneGrab(gameplayEvent, actorId);
                 return;
 
             case GameplayEventType.HeldItemActivated:
-                SetItemState(activeItemsByActor, actorId, gameplayEvent.TargetId, true);
-                TryEvaluateHeldItemInGas(actorId, gameplayEvent.TargetId, gameplayEvent);
-                return;
-
-            case GameplayEventType.HeldItemDeactivated:
-                SetItemState(activeItemsByActor, actorId, gameplayEvent.TargetId, false);
-                ClearConditionLatch(actorId, gameplayEvent.TargetId);
+                EvaluateLighterActivation(gameplayEvent, actorId);
                 return;
 
             case GameplayEventType.PlayerEnteredGasZone:
                 SetGasZoneState(actorId, true, ResolveGasLevel(gameplayEvent));
-                EvaluateAllHeldItems(actorId, gameplayEvent);
                 return;
 
             case GameplayEventType.PlayerExitedGasZone:
                 SetGasZoneState(actorId, false, ResolveGasLevel(gameplayEvent));
-                ClearActorConditionLatches(actorId);
+                return;
+
+            case GameplayEventType.PlayerMovedOutOfGasZone:
+                SetGasZoneState(actorId, false, ResolveGasLevel(gameplayEvent));
                 return;
 
             case GameplayEventType.GasLevelChanged:
                 UpdateActiveGasLevels(ResolveGasLevel(gameplayEvent));
+                return;
+
+            case GameplayEventType.FireExtinguisherApplied:
+                RegisterExtinguisherParticipant(actorId);
                 return;
         }
 
@@ -131,157 +146,257 @@ public class GameplayActionEvaluator : MonoBehaviour
 
         switch (gameplayEvent.Type)
         {
-            case GameplayEventType.PlayerEscapedHouse:
-                PublishOneShot(
-                    gameplayEvent, actorId, "ExitHouse", "Thoát ra ngoài",
-                    "Bạn đã rời khỏi khu vực xảy ra sự cố.",
-                    PlayerActionResult.Correct, 15, gasLevel);
-                break;
-
             case GameplayEventType.ValveClosed:
                 PublishOneShot(
-                    gameplayEvent, actorId, "CloseMainGasValve", "Khóa bình gas",
-                    "Khóa bình gas giúp ngăn khí gas tiếp tục rò rỉ.",
-                    PlayerActionResult.Correct, 20, gasLevel);
+                    gameplayEvent, actorId,
+                    "CloseMainGasValve",
+                    "Khóa van bình gas",
+                    "Người chơi đã đưa van bình gas về trạng thái đóng, ngăn khí gas tiếp tục thoát ra.",
+                    PlayerActionResult.Correct,
+                    GameplayScoreRuleValues.CloseGasValve,
+                    gasLevel);
+                break;
+
+            case GameplayEventType.PlayerEscapedHouse:
+                PublishOneShot(
+                    gameplayEvent, actorId,
+                    "LeaveGasArea",
+                    "Thoát khỏi khu vực khí gas",
+                    "Người chơi đã đi vào vùng thoát hiểm và hoàn thành màn chơi với kết quả chiến thắng.",
+                    PlayerActionResult.Correct,
+                    GameplayScoreRuleValues.LeaveGasArea,
+                    gasLevel);
                 break;
 
             case GameplayEventType.WindowOpened:
-                PublishOneShot(
-                    gameplayEvent, actorId, "OpenWindow", "Mở cửa sổ",
-                    "Mở cửa sổ giúp khí gas thoát ra ngoài.",
-                    PlayerActionResult.Correct, 10, gasLevel);
-                break;
-
             case GameplayEventType.DoorOpened:
-                PublishOneShot(
-                    gameplayEvent, actorId, "OpenFrontDoor", "Mở cửa trước",
-                    "Mở cửa trước giúp thông thoáng không gian và tạo lối thoát.",
-                    PlayerActionResult.Correct, 10, gasLevel);
+                RecordVentOpened(gameplayEvent);
+
+                if (IsGasPresent(gameplayEvent))
+                {
+                    PublishOneShot(
+                        gameplayEvent, actorId,
+                        "OpenVentilation",
+                        "Mở cửa để thông gió",
+                        "Người chơi đã mở cửa chính hoặc cửa sổ khi trong phòng còn khí gas.",
+                        PlayerActionResult.Correct,
+                        GameplayScoreRuleValues.OpenVentilation,
+                        gasLevel);
+                }
+                else
+                {
+                    LogIgnored(gameplayEvent, "ventilation was opened when no gas was present");
+                }
                 break;
 
-            case GameplayEventType.GateOpened:
-                PublishOneShot(
-                    gameplayEvent, actorId, "OpenEntranceGate", "Mở cửa rào",
-                    "Mở cửa rào giúp tạo lối di chuyển ra khỏi khu vực sự cố.",
-                    PlayerActionResult.Correct, 5, gasLevel);
-                break;
-
-            case GameplayEventType.ExtinguisherSafetyPinPulled:
-                PublishOneShot(
-                    gameplayEvent, actorId, "PullExtinguisherSafetyPin", "Mở chốt bình chữa cháy",
-                    "Mở chốt an toàn là bước cần thiết trước khi sử dụng bình chữa cháy.",
-                    PlayerActionResult.Correct, 10, gasLevel);
+            case GameplayEventType.WindowClosed:
+            case GameplayEventType.DoorClosed:
+                EvaluateVentClosed(gameplayEvent, actorId, gasLevel);
                 break;
 
             case GameplayEventType.FireExtinguished:
                 if (IsFireExtinguisherSource(gameplayEvent.Payload))
+                    RegisterExtinguisherParticipant(actorId);
+
+                TryPublishFireExtinguishingCompletion(gameplayEvent, gasLevel);
+                break;
+
+            case GameplayEventType.LightSwitchOperated:
+            case GameplayEventType.LightTurnOnAttempted:
+                if (gasLevel >= 1)
                 {
                     PublishOneShot(
-                        gameplayEvent, actorId, "ExtinguishFireWithExtinguisher",
-                        "Dập lửa bằng bình chữa cháy",
-                        "Bạn đã sử dụng bình chữa cháy để dập tắt đám cháy.",
-                        PlayerActionResult.Correct, 20, gasLevel);
+                        gameplayEvent, actorId,
+                        "OperateLightSwitch",
+                        "Thao tác công tắc điện",
+                        CreateElectricalFeedback("công tắc điện", gasLevel),
+                        PlayerActionResult.Incorrect,
+                        GameplayScoreRuleValues.OperateLightSwitch,
+                        gasLevel);
                 }
                 else
                 {
-                    LogIgnored(gameplayEvent, "fire was not extinguished by the fire extinguisher");
+                    LogIgnored(gameplayEvent, "light switch was operated below gas level 1");
                 }
                 break;
 
-            case GameplayEventType.LightTurnOnAttempted:
-                Publish(
-                    gameplayEvent, actorId, "TurnOnLight", "Mở đèn",
-                    CreateElectricalFeedback("bật đèn", gasLevel),
-                    PlayerActionResult.Incorrect, -10, gasLevel);
+            case GameplayEventType.FanControlOperated:
+            case GameplayEventType.FanTurnOnAttempted:
+                if (gasLevel >= 1)
+                {
+                    PublishOneShot(
+                        gameplayEvent, actorId,
+                        "OperateFanControl",
+                        "Thao tác quạt điện",
+                        CreateElectricalFeedback("núm điều khiển quạt", gasLevel),
+                        PlayerActionResult.Incorrect,
+                        GameplayScoreRuleValues.OperateFanControl,
+                        gasLevel);
+                }
+                else
+                {
+                    LogIgnored(gameplayEvent, "fan control was operated below gas level 1");
+                }
                 break;
 
-            case GameplayEventType.FanTurnOnAttempted:
-                Publish(
-                    gameplayEvent, actorId, "TurnOnFan", "Mở quạt",
-                    CreateElectricalFeedback("bật quạt", gasLevel),
-                    PlayerActionResult.Incorrect, -10, gasLevel);
+            case GameplayEventType.PlayerFainted:
+                if (IsActorInsideGasZone(actorId) || gasLevel >= 1)
+                {
+                    PublishOneShot(
+                        gameplayEvent, actorId,
+                        "FaintInGasArea",
+                        "Bất tỉnh trong vùng khí gas",
+                        "Người chơi đã bất tỉnh khi vẫn đang ở trong vùng có khí gas.",
+                        PlayerActionResult.Incorrect,
+                        GameplayScoreRuleValues.FaintInGasArea,
+                        gasLevel);
+                }
+                else
+                {
+                    LogIgnored(gameplayEvent, "player fainted outside the gas area");
+                }
                 break;
 
             default:
-                LogIgnored(gameplayEvent, "event is not an evaluated player action");
+                LogIgnored(gameplayEvent, "event is not part of the scoring rubric");
                 break;
         }
     }
 
-    private void TryEvaluateHeldItemInGas(
-        string actorId,
-        string itemId,
-        GameplayEvent sourceEvent)
+    private void EvaluatePhoneGrab(GameplayEvent gameplayEvent, string actorId)
     {
-        itemId = NormalizeItemId(itemId);
-        if (string.IsNullOrEmpty(itemId))
+        string itemId = NormalizeItemId(gameplayEvent.TargetId);
+        if (!IsItem(itemId, PhoneFlashlightId))
             return;
 
-        if (!gasZoneByActor.TryGetValue(actorId, out GasZoneState gasState) ||
-            !gasState.IsInside)
-        {
-            return;
-        }
-
-        if (!ContainsItem(heldItemsByActor, actorId, itemId) ||
-            !ContainsItem(activeItemsByActor, actorId, itemId))
-        {
-            return;
-        }
-
-        string latchKey = CreateActorItemKey(actorId, itemId);
-        if (!activeConditionLatches.Add(latchKey))
-            return;
-
-        int gasLevel = GetCurrentGasLevel(gasState.GasLevel);
-
-        if (IsItem(itemId, PhoneFlashlightId))
-        {
-            Publish(
-                sourceEvent, actorId,
-                "EnterGasZoneWithPhoneFlashlight",
-                "Dùng điện thoại soi sáng trong vùng gas",
-                CreatePortableIgnitionFeedback("điện thoại", gasLevel),
-                PlayerActionResult.Incorrect, -15, gasLevel);
-            return;
-        }
-
-        if (IsItem(itemId, LighterId))
-        {
-            Publish(
-                sourceEvent, actorId,
-                "EnterGasZoneWithLitLighter",
-                "Dùng bật lửa soi sáng trong vùng gas",
-                CreatePortableIgnitionFeedback("bật lửa", gasLevel),
-                PlayerActionResult.Incorrect, -20, gasLevel);
-            return;
-        }
-
-        if (IsItem(itemId, ExplosionProofFlashlightId))
-        {
-            Publish(
-                sourceEvent, actorId,
-                "EnterGasZoneWithExplosionProofFlashlight",
-                "Dùng đèn pin chống cháy nổ trong vùng gas",
-                "Đây là hành động đúng vì đèn pin chống cháy nổ không tạo nguồn đánh lửa gây cháy hoặc nổ khí gas.",
-                PlayerActionResult.Correct, 10, gasLevel);
-            return;
-        }
-
-        activeConditionLatches.Remove(latchKey);
-        LogIgnored(sourceEvent, $"unknown held item id '{itemId}'");
+        int gasLevel = ResolveGasLevel(gameplayEvent);
+        PublishOneShot(
+            gameplayEvent, actorId,
+            "HoldPhone",
+            "Sử dụng điện thoại",
+            "Người chơi đã cầm điện thoại trong phiên huấn luyện.",
+            PlayerActionResult.Incorrect,
+            GameplayScoreRuleValues.HoldPhone,
+            gasLevel);
     }
 
-    private void EvaluateAllHeldItems(string actorId, GameplayEvent sourceEvent)
+    private void EvaluateLighterActivation(GameplayEvent gameplayEvent, string actorId)
     {
-        if (!heldItemsByActor.TryGetValue(actorId, out HashSet<string> heldItems))
+        string itemId = NormalizeItemId(gameplayEvent.TargetId);
+        if (!IsItem(itemId, LighterId))
             return;
 
-        string[] snapshot = new string[heldItems.Count];
-        heldItems.CopyTo(snapshot);
+        int gasLevel = ResolveGasLevel(gameplayEvent);
+        if (gasLevel < 1)
+        {
+            LogIgnored(gameplayEvent, "lighter was activated below gas level 1");
+            return;
+        }
 
-        foreach (string itemId in snapshot)
-            TryEvaluateHeldItemInGas(actorId, itemId, sourceEvent);
+        PublishOneShot(
+            gameplayEvent, actorId,
+            "ActivateLighter",
+            "Sử dụng bật lửa",
+            CreatePortableIgnitionFeedback("bật lửa", gasLevel),
+            PlayerActionResult.Incorrect,
+            GameplayScoreRuleValues.ActivateLighter,
+            gasLevel);
+    }
+
+    private void RecordVentOpened(GameplayEvent gameplayEvent)
+    {
+        openedVentTargets.Add(CreateVentKey(gameplayEvent));
+    }
+
+    private void EvaluateVentClosed(
+        GameplayEvent gameplayEvent,
+        string actorId,
+        int gasLevel)
+    {
+        bool wasOpened = openedVentTargets.Remove(CreateVentKey(gameplayEvent));
+        if (!wasOpened)
+        {
+            LogIgnored(gameplayEvent, "ventilation had not been observed in the open state");
+            return;
+        }
+
+        if (!IsIncidentUnresolved(gameplayEvent))
+        {
+            LogIgnored(gameplayEvent, "gas leak incident was already fully resolved");
+            return;
+        }
+
+        PublishOneShot(
+            gameplayEvent, actorId,
+            "CloseVentilation",
+            "Đóng lại cửa thông gió",
+            "Người chơi đã đóng cửa chính hoặc cửa sổ khi dòng rò hoặc lượng khí trong phòng chưa được xử lý hoàn toàn.",
+            PlayerActionResult.Incorrect,
+            GameplayScoreRuleValues.CloseVentilation,
+            gasLevel);
+    }
+
+    private void RegisterExtinguisherParticipant(string actorId)
+    {
+        if (!string.IsNullOrWhiteSpace(actorId))
+            extinguisherParticipants.Add(actorId);
+    }
+
+    private void TryPublishFireExtinguishingCompletion(
+        GameplayEvent sourceEvent,
+        int gasLevel)
+    {
+        if (extinguisherParticipants.Count == 0 || !AreAllFiresOut())
+            return;
+
+        List<string> participants = new List<string>(extinguisherParticipants);
+        participants.Sort(StringComparer.OrdinalIgnoreCase);
+
+        PublishOneShot(
+            sourceEvent,
+            string.Join(", ", participants),
+            "ParticipateInFireExtinguishing",
+            "Tham gia dập lửa",
+            "Bình chữa cháy do người chơi sử dụng đã tác động đến vùng cháy và toàn bộ các vùng cháy sau đó đã được dập.",
+            PlayerActionResult.Correct,
+            GameplayScoreRuleValues.ParticipateInFireExtinguishing,
+            gasLevel);
+    }
+
+    private static bool AreAllFiresOut()
+    {
+        foreach (FlameNode node in FlameNode.All)
+        {
+            if (node != null && node.IsBurning)
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsGasPresent(GameplayEvent gameplayEvent)
+    {
+        if (GasSystem.Instance != null)
+            return GasSystem.Instance.HasGasInRoom;
+
+        return ResolveGasLevel(gameplayEvent) >= 1;
+    }
+
+    private static bool IsIncidentUnresolved(GameplayEvent gameplayEvent)
+    {
+        if (GasSystem.Instance != null)
+        {
+            return GasSystem.Instance.LeakActive ||
+                   GasSystem.Instance.HasGasInRoom;
+        }
+
+        return ResolveGasLevel(gameplayEvent) >= 1;
+    }
+
+    private bool IsActorInsideGasZone(string actorId)
+    {
+        return gasZoneByActor.TryGetValue(actorId, out GasZoneState state) &&
+               state.IsInside;
     }
 
     private void PublishOneShot(
@@ -298,8 +413,14 @@ public class GameplayActionEvaluator : MonoBehaviour
             return;
 
         Publish(
-            sourceEvent, actorId, actionId, actionName, feedback,
-            result, scoreDelta, gasLevel);
+            sourceEvent,
+            actorId,
+            actionId,
+            actionName,
+            feedback,
+            result,
+            scoreDelta,
+            gasLevel);
     }
 
     private static void Publish(
@@ -334,23 +455,23 @@ public class GameplayActionEvaluator : MonoBehaviour
     private static string CreateElectricalFeedback(string actionName, int gasLevel)
     {
         if (gasLevel >= 3)
-            return $"Hành động {actionName} đã tạo nguồn đánh lửa và gây nổ khí gas.";
+            return $"Thao tác {actionName} trong môi trường có khí gas có thể tạo nguồn đánh lửa và gây nổ.";
 
         if (gasLevel == 2)
-            return $"Hành động {actionName} đã tạo nguồn đánh lửa và gây cháy khí gas.";
+            return $"Thao tác {actionName} trong môi trường có khí gas có thể tạo nguồn đánh lửa và gây cháy.";
 
-        return $"Ở mức gas 1, hành động {actionName} chưa gây cháy nhưng vẫn không nên thực hiện trong khu vực đang rò rỉ khí gas.";
+        return $"Không nên thao tác {actionName} khi hệ thống đã ghi nhận khí gas trong phòng.";
     }
 
     private static string CreatePortableIgnitionFeedback(string itemName, int gasLevel)
     {
         if (gasLevel >= 3)
-            return $"Sử dụng {itemName} trong vùng gas đã tạo nguồn đánh lửa và gây nổ khí gas.";
+            return $"Kích hoạt {itemName} trong vùng gas có thể tạo nguồn đánh lửa và gây nổ.";
 
         if (gasLevel == 2)
-            return $"Sử dụng {itemName} trong vùng gas đã tạo nguồn đánh lửa và gây cháy khí gas.";
+            return $"Kích hoạt {itemName} trong vùng gas có thể tạo nguồn đánh lửa và gây cháy.";
 
-        return $"Ở mức gas 1, hành động này chưa gây cháy nhưng vẫn không nên sử dụng {itemName} trong khu vực đang rò rỉ khí gas.";
+        return $"Không nên kích hoạt {itemName} khi hệ thống đã ghi nhận khí gas trong phòng.";
     }
 
     private static bool IsFireExtinguisherSource(object payload)
@@ -367,19 +488,56 @@ public class GameplayActionEvaluator : MonoBehaviour
 
     private static int ResolveGasLevel(GameplayEvent gameplayEvent)
     {
-        switch (gameplayEvent.Payload)
+        if (EventPayloadContainsGasLevel(gameplayEvent.Type) &&
+            TryReadGasLevel(gameplayEvent.Payload, out int payloadGasLevel))
         {
-            case int value:
-                return Mathf.Clamp(value, 0, 3);
-            case float value:
-                return Mathf.Clamp(Mathf.RoundToInt(value), 0, 3);
-            case double value:
-                return Mathf.Clamp((int)Math.Round(value), 0, 3);
-            case long value:
-                return Mathf.Clamp((int)value, 0, 3);
+            return payloadGasLevel;
         }
 
         return GetCurrentGasLevel(0);
+    }
+
+    private static bool EventPayloadContainsGasLevel(GameplayEventType eventType)
+    {
+        switch (eventType)
+        {
+            case GameplayEventType.GasLevelChanged:
+            case GameplayEventType.PlayerEnteredGasZone:
+            case GameplayEventType.PlayerExitedGasZone:
+            case GameplayEventType.PlayerMovedOutOfGasZone:
+            case GameplayEventType.PlayerEnteredDangerZone:
+            case GameplayEventType.PlayerExitedDangerZone:
+            case GameplayEventType.PlayerFainted:
+            case GameplayEventType.LightSwitchOperated:
+            case GameplayEventType.LightTurnOnAttempted:
+            case GameplayEventType.FanControlOperated:
+            case GameplayEventType.FanTurnOnAttempted:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool TryReadGasLevel(object payload, out int gasLevel)
+    {
+        switch (payload)
+        {
+            case int value:
+                gasLevel = Mathf.Clamp(value, 0, 3);
+                return true;
+            case float value:
+                gasLevel = Mathf.Clamp(Mathf.RoundToInt(value), 0, 3);
+                return true;
+            case double value:
+                gasLevel = Mathf.Clamp((int)Math.Round(value), 0, 3);
+                return true;
+            case long value:
+                gasLevel = Mathf.Clamp((int)value, 0, 3);
+                return true;
+            default:
+                gasLevel = 0;
+                return false;
+        }
     }
 
     private static int GetCurrentGasLevel(int fallback)
@@ -414,70 +572,26 @@ public class GameplayActionEvaluator : MonoBehaviour
         }
     }
 
-    private static void SetItemState(
-        Dictionary<string, HashSet<string>> states,
-        string actorId,
-        string itemId,
-        bool active)
+    private static string CreateVentKey(GameplayEvent gameplayEvent)
     {
-        itemId = NormalizeItemId(itemId);
-        if (string.IsNullOrEmpty(itemId))
-            return;
+        string ventType =
+            gameplayEvent.Type == GameplayEventType.WindowOpened ||
+            gameplayEvent.Type == GameplayEventType.WindowClosed
+                ? "Window"
+                : "Door";
 
-        if (!states.TryGetValue(actorId, out HashSet<string> items))
-        {
-            items = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            states[actorId] = items;
-        }
+        string targetId = string.IsNullOrWhiteSpace(gameplayEvent.TargetId)
+            ? "UnknownVent"
+            : gameplayEvent.TargetId.Trim();
 
-        if (active)
-            items.Add(itemId);
-        else
-            items.Remove(itemId);
-    }
-
-    private static bool ContainsItem(
-        Dictionary<string, HashSet<string>> states,
-        string actorId,
-        string itemId)
-    {
-        return states.TryGetValue(actorId, out HashSet<string> items) &&
-               items.Contains(itemId);
-    }
-
-    private void ClearConditionLatch(string actorId, string itemId)
-    {
-        activeConditionLatches.Remove(
-            CreateActorItemKey(actorId, NormalizeItemId(itemId)));
-    }
-
-    private void ClearActorConditionLatches(string actorId)
-    {
-        string prefix = actorId + "|";
-        activeConditionLatches.RemoveWhere(key =>
-            key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string CreateActorItemKey(string actorId, string itemId)
-    {
-        return actorId + "|" + itemId;
+        return ventType + "|" + targetId;
     }
 
     private static string NormalizeActorId(string actorId)
     {
-        if (string.IsNullOrWhiteSpace(actorId))
-            return "LocalPlayer";
-
-        string normalized = actorId.Trim();
-        if (normalized.Equals("Player", StringComparison.OrdinalIgnoreCase) ||
-            normalized.Equals("Host", StringComparison.OrdinalIgnoreCase) ||
-            normalized.Equals("Local", StringComparison.OrdinalIgnoreCase) ||
-            normalized.StartsWith("Player_", StringComparison.OrdinalIgnoreCase))
-        {
-            return "LocalPlayer";
-        }
-
-        return normalized;
+        return string.IsNullOrWhiteSpace(actorId)
+            ? "LocalPlayer"
+            : actorId.Trim();
     }
 
     private static string NormalizeItemId(string itemId)

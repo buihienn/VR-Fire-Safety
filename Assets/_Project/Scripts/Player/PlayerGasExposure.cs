@@ -169,6 +169,9 @@ public class PlayerGasExposure : MonoBehaviour
         GasSystem gas = other.GetComponentInParent<GasSystem>();
         if (gas == null) return;
 
+        bool wasInsideAnyGasVolume = overlappingGasSystems.Count > 0;
+        int gasLevelAtExit = gas.GasLevel();
+
         if (overlappingGasSystems.TryGetValue(gas, out int overlapCount))
         {
             overlapCount--;
@@ -179,6 +182,18 @@ public class PlayerGasExposure : MonoBehaviour
         }
 
         insideGasZone = overlappingGasSystems.Count > 0;
+
+        // PlayerExitedGasZone in Update can also occur when gas dissipates while
+        // the player is standing still. This separate event is raised only when
+        // the player physically leaves the final overlapping gas volume.
+        if (wasInsideAnyGasVolume && !insideGasZone && gasLevelAtExit >= 1)
+        {
+            GameplayEventBus.Raise(
+                GameplayEventType.PlayerMovedOutOfGasZone,
+                actorId: GetActorId(),
+                targetId: gas.gameObject.name,
+                payload: gasLevelAtExit);
+        }
 
         if (gas == currentGas)
         {
@@ -198,13 +213,14 @@ public class PlayerGasExposure : MonoBehaviour
         fainted = true;
         faintProgress01 = 1f;
 
-        onFainted?.Invoke();
-
         GameplayEventBus.Raise(
             GameplayEventType.PlayerFainted,
             actorId: GetActorId(),
             targetId: currentGas != null ? currentGas.gameObject.name : "GasZone",
             payload: currentGasLevel);
+
+        // Record and score the terminal action before GameFlow closes scoring.
+        onFainted?.Invoke();
 
         if (notifyGameFlowManager && GameFlowManager.Instance != null)
         {

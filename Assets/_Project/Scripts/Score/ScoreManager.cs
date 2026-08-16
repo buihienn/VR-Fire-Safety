@@ -8,7 +8,7 @@ public class ScoreManager : MonoBehaviour
 
     [Header("Score")]
     [Min(1)]
-    [SerializeField] private int maxScore = 100;
+    [SerializeField] private int maxScore = GameplayScoreRuleValues.MaximumPositiveScore;
     [SerializeField] private int totalScore;
     [SerializeField] private int earnedScore;
     [SerializeField] private int penaltyScore;
@@ -73,6 +73,11 @@ public class ScoreManager : MonoBehaviour
         if (action == null)
             return;
 
+        if (GameFlowManager.Instance != null &&
+            GameFlowManager.Instance.IsMatchEnded &&
+            !string.Equals(action.actionId, "LeaveGasArea", StringComparison.OrdinalIgnoreCase))
+            return;
+
         if (action.result == PlayerActionResult.Correct)
         {
             if (!awardedCorrectActions.Add(action.actionId))
@@ -102,7 +107,9 @@ public class ScoreManager : MonoBehaviour
 
     private void RecalculateScore()
     {
-        SetScore(Mathf.Clamp(earnedScore - penaltyScore, 0, maxScore));
+        // Keep the positive ceiling defined by the rubric, while allowing a
+        // negative final result so unsafe actions retain their full penalty.
+        SetScore(Mathf.Min(earnedScore - penaltyScore, maxScore));
     }
 
     private void SetScore(int value)

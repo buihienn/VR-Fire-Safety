@@ -36,6 +36,8 @@ public class FireManager : NetworkBehaviour
 
     private bool fusionSpawned;
     private Coroutine[] spreadIgniteRoutines;
+    private readonly HashSet<string> extinguisherImpactActors =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     public bool IsFusionSpawned => fusionSpawned;
 
@@ -341,6 +343,20 @@ public class FireManager : NetworkBehaviour
         FlameNode node = flameNodes[nodeIndex];
         if (node == null) return;
         if (!node.IsBurning) return;
+
+        string participantActorId = string.IsNullOrWhiteSpace(actorId)
+            ? "LocalPlayer"
+            : actorId;
+
+        if (source == FireExtinguishSource.FireExtinguisher &&
+            extinguisherImpactActors.Add(participantActorId))
+        {
+            GameplayEventBus.Raise(
+                GameplayEventType.FireExtinguisherApplied,
+                participantActorId,
+                node.FlameId,
+                source);
+        }
 
         bool extinguished = node.ApplyExtinguishFromFireManager(amount);
 

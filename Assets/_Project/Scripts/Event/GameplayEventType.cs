@@ -29,5 +29,11 @@ public enum GameplayEventType
     HeldItemGrabbed,
     HeldItemReleased,
     HeldItemActivated,
-    HeldItemDeactivated
+    HeldItemDeactivated,
+
+    // Scoring-specific events. Appended to preserve serialized enum values.
+    PlayerMovedOutOfGasZone,
+    LightSwitchOperated,
+    FanControlOperated,
+    FireExtinguisherApplied
 }
