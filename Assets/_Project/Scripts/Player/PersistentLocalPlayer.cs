@@ -8,15 +8,18 @@ using UnityCharacterController = UnityEngine.CharacterController;
 
 public class PersistentLocalPlayer : MonoBehaviour
 {
+    private const string TutorialQuickMenuObjectName = "TutorialQuickMenu";
+
     [SerializeField] private string lobbySceneName = "StartScene";
     [SerializeField] private string gameSceneName = "MainScene";
     [SerializeField] private string endGameSceneName = "EndGameScene";
-    [SerializeField] private string[] scenePlayerMarkerNames =
-    {
-        "MainScenePlayerSpawn",
-        "PlayerSpawn",
-        "SpawnPoint"
-    };
+    [SerializeField] private string tutorialSceneName = "TutorialScene";
+
+    [Header("Scene Player Spawn Markers")]
+    [SerializeField] private string lobbyPlayerMarkerName = "StartScenePlayerSpawn";
+    [SerializeField] private string gamePlayerMarkerName = "MainScenePlayerSpawn";
+    [SerializeField] private string endGamePlayerMarkerName = "EndGameScenePlayerSpawn";
+    [SerializeField] private string tutorialPlayerMarkerName = "TutorialScenePlayerSpawn";
     [SerializeField] private Vector3 spawnPositionOffset;
     [SerializeField, Min(0)] private int sceneReadyDelayFrames = 3;
     [SerializeField, Min(0f)] private float sceneReadyDelaySeconds = 0.5f;
@@ -39,6 +42,7 @@ public class PersistentLocalPlayer : MonoBehaviour
     private Quaternion initialPlayerRigLocalRotation;
     private Vector3 initialPlayerRigLocalScale;
     private bool hasInitialPlayerRigPose;
+    private GameObject tutorialQuickMenu;
 
     private void Awake()
     {
@@ -49,6 +53,8 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
 
         instance = this;
+        ResolveTutorialQuickMenu();
+        UpdateTutorialQuickMenuVisibility(SceneManager.GetActiveScene());
         CacheInitialPlayerRigPose();
         DontDestroyOnLoad(gameObject);
     }
@@ -65,11 +71,9 @@ public class PersistentLocalPlayer : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        bool shouldPlacePlayer =
-            scene.name == gameSceneName ||
-            scene.name == endGameSceneName;
+        UpdateTutorialQuickMenuVisibility(scene);
 
-        if (!shouldPlacePlayer)
+        if (!TryGetScenePlayerMarkerName(scene.name, out string markerName))
         {
             return;
         }
@@ -81,10 +85,10 @@ public class PersistentLocalPlayer : MonoBehaviour
             StopCoroutine(sceneReadyRoutine);
         }
 
-        sceneReadyRoutine = StartCoroutine(PlacePlayerWhenSceneIsReady(scene));
+        sceneReadyRoutine = StartCoroutine(PlacePlayerWhenSceneIsReady(scene, markerName));
     }
 
-    private IEnumerator PlacePlayerWhenSceneIsReady(Scene scene)
+    private IEnumerator PlacePlayerWhenSceneIsReady(Scene scene, string markerName)
     {
         PreserveNetworkRunners();
         SceneManager.SetActiveScene(scene);
@@ -101,12 +105,12 @@ public class PersistentLocalPlayer : MonoBehaviour
 
         Physics.SyncTransforms();
 
-        Transform marker = FindSceneTransform(scene, scenePlayerMarkerNames);
+        Transform marker = FindSceneTransform(scene, markerName);
         if (marker == null || marker == transform)
         {
             Debug.LogWarning(
-                $"[{nameof(PersistentLocalPlayer)}] Could not find a player spawn marker in {scene.name}. " +
-                "Create an empty GameObject named MainScenePlayerSpawn, PlayerSpawn, or SpawnPoint in the target scene.");
+                $"[{nameof(PersistentLocalPlayer)}] Could not find player spawn marker " +
+                $"'{markerName}' in scene '{scene.name}'.");
         }
         else
         {
@@ -116,8 +120,42 @@ public class PersistentLocalPlayer : MonoBehaviour
                 $"{marker.name}: {transform.position}.");
         }
 
-        yield return UnloadLobbySceneAfterFrame();
+        if (scene.name != lobbySceneName)
+        {
+            yield return UnloadLobbySceneAfterFrame();
+        }
+
         sceneReadyRoutine = null;
+    }
+
+    private bool TryGetScenePlayerMarkerName(string sceneName, out string markerName)
+    {
+        if (sceneName == lobbySceneName)
+        {
+            markerName = lobbyPlayerMarkerName;
+            return true;
+        }
+
+        if (sceneName == gameSceneName)
+        {
+            markerName = gamePlayerMarkerName;
+            return true;
+        }
+
+        if (sceneName == endGameSceneName)
+        {
+            markerName = endGamePlayerMarkerName;
+            return true;
+        }
+
+        if (sceneName == tutorialSceneName)
+        {
+            markerName = tutorialPlayerMarkerName;
+            return true;
+        }
+
+        markerName = null;
+        return false;
     }
 
     private void MovePlayerTo(Transform marker)
@@ -253,7 +291,7 @@ public class PersistentLocalPlayer : MonoBehaviour
             {
                 Debug.LogWarning(
                     $"[{nameof(PersistentLocalPlayer)}] Meta locomotion controller could not find ground below {feetPosition}. " +
-                    "Check the MainScene floor collider and the PlayerController locomotion Layer Mask.");
+                    "Check the target scene floor collider and the PlayerController locomotion Layer Mask.");
             }
         }
     }
@@ -364,18 +402,15 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
     }
 
-    private static Transform FindSceneTransform(Scene scene, string[] objectNames)
+    private static Transform FindSceneTransform(Scene scene, string objectName)
     {
         GameObject[] roots = scene.GetRootGameObjects();
-        foreach (string objectName in objectNames)
+        foreach (GameObject root in roots)
         {
-            foreach (GameObject root in roots)
+            Transform found = FindTransformRecursive(root.transform, objectName);
+            if (found != null)
             {
-                Transform found = FindTransformRecursive(root.transform, objectName);
-                if (found != null)
-                {
-                    return found;
-                }
+                return found;
             }
         }
 
@@ -399,5 +434,25 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
 
         return null;
+    }
+
+    private void ResolveTutorialQuickMenu()
+    {
+        if (tutorialQuickMenu != null)
+        {
+            return;
+        }
+
+        Transform quickMenuTransform = FindTransformRecursive(transform, TutorialQuickMenuObjectName);
+        tutorialQuickMenu = quickMenuTransform != null ? quickMenuTransform.gameObject : null;
+    }
+
+    private void UpdateTutorialQuickMenuVisibility(Scene scene)
+    {
+        ResolveTutorialQuickMenu();
+        if (tutorialQuickMenu != null)
+        {
+            tutorialQuickMenu.SetActive(scene.IsValid() && scene.name == tutorialSceneName);
+        }
     }
 }

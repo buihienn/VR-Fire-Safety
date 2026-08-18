@@ -11,7 +11,7 @@ public class LobbyNetworkSceneStart : MonoBehaviour
 {
     [Header("Scene")]
     [SerializeField] private string gameSceneNameOrPath = "MainScene";
-    [SerializeField] private int gameSceneBuildIndex = 4;
+    [SerializeField] private int gameSceneBuildIndex = 1;
     [SerializeField] private LoadSceneMode loadSceneMode = LoadSceneMode.Single;
 
     [Header("Authority")]

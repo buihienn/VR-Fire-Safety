@@ -9660,10 +9660,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sparksFx: {fileID: 486857148}
   sparkAudio: {fileID: 0}
+  enableGasIgnition: 0
+  ignitionController: {fileID: 0}
   ignitionNode: {fileID: 2066216906}
-  autoFindNearestIfMissing: 1
-  autoFindRadius: 1
-  requiredGasLevelForIgnition: 1
+  sourceId: KitchenLightSwitch
   playSparkEvenIfCannotIgnite: 1
   debugLog: 0
 --- !u!1001 &473392710
@@ -31609,10 +31609,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sparksFx: {fileID: 579691867}
   sparkAudio: {fileID: 0}
+  enableGasIgnition: 0
+  ignitionController: {fileID: 0}
   ignitionNode: {fileID: 1106150928}
-  autoFindNearestIfMissing: 1
-  autoFindRadius: 1
-  requiredGasLevelForIgnition: 1
+  sourceId: KitchenLightSwitch
   playSparkEvenIfCannotIgnite: 1
   debugLog: 0
 --- !u!1001 &1714751068
@@ -34450,8 +34450,6 @@ MonoBehaviour:
   fireLoopSoundName: FlameLoop
   visibleBurnThreshold: 0.02
   checkOnUpdate: 1
-  raiseFireExtinguishedEvent: 1
-  actorId: Player
 --- !u!1 &1978948133
 GameObject:
   m_ObjectHideFlags: 0
@@ -35131,7 +35129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2031501056}
   m_Layer: 0
-  m_Name: MainScenePlayerSpawn
+  m_Name: EndGameScenePlayerSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
