@@ -5,6 +5,7 @@ using Meta.XR.MultiplayerBlocks.Shared;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -15,7 +16,9 @@ public class StartSceneLobbyUI : MonoBehaviour
 
     [Header("Scene")]
     [SerializeField] private string gameSceneNameOrPath = "MainScene";
-    [SerializeField] private int gameSceneBuildIndex = 4;
+    [SerializeField] private int gameSceneBuildIndex = 1;
+    [SerializeField] private string tutorialSceneNameOrPath = "TutorialScene";
+    [SerializeField] private int tutorialSceneBuildIndex = 3;
 
     [Header("Scene References")]
     [SerializeField] private CustomMatchmaking customMatchmaking;
@@ -33,6 +36,8 @@ public class StartSceneLobbyUI : MonoBehaviour
     [SerializeField] private Button joinButton;
     [SerializeField] private Button copyButton;
     [SerializeField] private Button startButton;
+    [SerializeField] private Button singleplayerButton;
+    [SerializeField] private Button tutorialButton;
 
     private string currentRoomId = string.Empty;
     private bool busy;
@@ -53,6 +58,7 @@ public class StartSceneLobbyUI : MonoBehaviour
     private void Awake()
     {
         ResolveMissingReferences();
+        EnsureTutorialButton();
         ResolveOrCreatePlayerNameInput();
         DisablePlatformAccountNameLookup();
         RegisterRoomIdInputKeyboard();
@@ -80,6 +86,11 @@ public class StartSceneLobbyUI : MonoBehaviour
             {
                 playerNameEventTrigger.triggers.Remove(playerNamePointerClickEntry);
             }
+        }
+
+        if (tutorialButton != null)
+        {
+            tutorialButton.onClick.RemoveListener(StartTutorial);
         }
     }
 
@@ -204,17 +215,32 @@ public class StartSceneLobbyUI : MonoBehaviour
 
     private void StartGameInternal()
     {
+        StartGameInternal(gameSceneNameOrPath, gameSceneBuildIndex);
+    }
+
+    private void StartGameInternal(string sceneNameOrPath, int sceneBuildIndex)
+    {
         if (lobbySceneStart == null)
         {
             lobbySceneStart = gameObject.AddComponent<LobbyNetworkSceneStart>();
         }
 
-        lobbySceneStart.ConfigureGameScene(gameSceneNameOrPath);
-        lobbySceneStart.ConfigureGameScene(gameSceneBuildIndex);
+        lobbySceneStart.ConfigureGameScene(sceneNameOrPath);
+        lobbySceneStart.ConfigureGameScene(sceneBuildIndex);
         lobbySceneStart.StartGameForRoom();
     }
 
-    public async void StartGameAsSingleplayer()
+    public void StartGameAsSingleplayer()
+    {
+        StartLocalSession(gameSceneNameOrPath, gameSceneBuildIndex, "local game");
+    }
+
+    public void StartTutorial()
+    {
+        StartLocalSession(tutorialSceneNameOrPath, tutorialSceneBuildIndex, "tutorial");
+    }
+
+    private async void StartLocalSession(string sceneNameOrPath, int sceneBuildIndex, string sessionLabel)
     {
         if (busy || singleplayerStarting)
         {
@@ -223,7 +249,7 @@ public class StartSceneLobbyUI : MonoBehaviour
 
         singleplayerStarting = true;
         multiplayerSession = false;
-        SetBusy(true, "Starting local game...");
+        SetBusy(true, $"Starting {sessionLabel}...");
 
         NetworkRunner runner = null;
         try
@@ -255,9 +281,9 @@ public class StartSceneLobbyUI : MonoBehaviour
                 return;
             }
 
-            SetBusy(false, "Local game ready.");
+            SetBusy(false, $"{sessionLabel} ready.");
             singleplayerStarting = false;
-            StartGameInternal();
+            StartGameInternal(sceneNameOrPath, sceneBuildIndex);
         }
         catch (System.Exception exception)
         {
@@ -341,6 +367,8 @@ public class StartSceneLobbyUI : MonoBehaviour
         if (joinButton != null) joinButton.interactable = interactable && !roomCreated;
         if (copyButton != null) copyButton.interactable = interactable;
         if (startButton != null) startButton.interactable = interactable && hasPlayerName;
+        if (singleplayerButton != null) singleplayerButton.interactable = interactable;
+        if (tutorialButton != null) tutorialButton.interactable = interactable;
     }
 
     private void UpdateStatus()
@@ -526,6 +554,16 @@ public class StartSceneLobbyUI : MonoBehaviour
             startButton = FindButtonByName("StartButton");
         }
 
+        if (singleplayerButton == null)
+        {
+            singleplayerButton = FindButtonByName("SingleButton");
+        }
+
+        if (tutorialButton == null)
+        {
+            tutorialButton = FindButtonByName("TutorialButton");
+        }
+
         if (joinRoomInput == null)
         {
             joinRoomInput = FindInputByName("Room ID", "Join Room ID");
@@ -538,6 +576,54 @@ public class StartSceneLobbyUI : MonoBehaviour
 
         SetStatus("Create a room or join with Room ID.");
         UpdateStatus();
+    }
+
+    private void EnsureTutorialButton()
+    {
+        if (tutorialButton == null && singleplayerButton != null)
+        {
+            GameObject tutorialButtonObject = Instantiate(
+                singleplayerButton.gameObject,
+                singleplayerButton.transform.parent,
+                false);
+            tutorialButtonObject.name = "TutorialButton";
+            tutorialButtonObject.transform.SetSiblingIndex(singleplayerButton.transform.GetSiblingIndex() + 1);
+            tutorialButton = tutorialButtonObject.GetComponent<Button>();
+
+            for (int i = 0; i < tutorialButton.onClick.GetPersistentEventCount(); i++)
+            {
+                tutorialButton.onClick.SetPersistentListenerState(i, UnityEventCallState.Off);
+            }
+
+            TMP_Text label = tutorialButtonObject.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                label.text = "TUTORIAL";
+            }
+        }
+
+        if (tutorialButton == null)
+        {
+            Debug.LogError($"[{nameof(StartSceneLobbyUI)}] Could not create the Tutorial button.", this);
+            return;
+        }
+
+        bool hasPersistentTutorialListener = false;
+        for (int i = 0; i < tutorialButton.onClick.GetPersistentEventCount(); i++)
+        {
+            if (tutorialButton.onClick.GetPersistentTarget(i) == this &&
+                tutorialButton.onClick.GetPersistentMethodName(i) == nameof(StartTutorial))
+            {
+                hasPersistentTutorialListener = true;
+                break;
+            }
+        }
+
+        tutorialButton.onClick.RemoveListener(StartTutorial);
+        if (!hasPersistentTutorialListener)
+        {
+            tutorialButton.onClick.AddListener(StartTutorial);
+        }
     }
 
     private void ResolveOrCreatePlayerNameInput()

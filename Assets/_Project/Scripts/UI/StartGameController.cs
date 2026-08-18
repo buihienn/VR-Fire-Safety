@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 public class StartButton : MonoBehaviour
 {
     [SerializeField] private string networkGameSceneNameOrPath = "MainScene";
-    [SerializeField] private int networkGameSceneBuildIndex = 4;
+    [SerializeField] private int networkGameSceneBuildIndex = 1;
     [SerializeField] private GameObject startMenuLayout;
     [SerializeField] private GameObject loadingLayout;
     [SerializeField] private SceneTransitionManager sceneTransitionManager;
