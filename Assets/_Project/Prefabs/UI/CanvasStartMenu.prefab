@@ -2808,6 +2808,8 @@ MonoBehaviour:
   roomIdText: {fileID: 4691082506475956160}
   statusText: {fileID: 0}
   playerCountText: {fileID: 7685583012126835493}
+  playerNameTagPrefab: {fileID: 6531646136820615647, guid: 7f1f582839553344c8827c8e7f15e4b2, type: 3}
+  playerNameInput: {fileID: 0}
   joinRoomInput: {fileID: 7620494651971346802}
   createButton: {fileID: 4148380415746015024}
   joinButton: {fileID: 1288603512234921993}
