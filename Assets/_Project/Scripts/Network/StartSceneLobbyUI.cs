@@ -1,12 +1,18 @@
+using System.Text;
 using Fusion;
+using Meta.XR.MultiplayerBlocks.Fusion;
 using Meta.XR.MultiplayerBlocks.Shared;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class StartSceneLobbyUI : MonoBehaviour
 {
+    private const string PlayerNamePrefsKey = "VRFireSafety.PlayerName";
+    private const int PlayerNameCharacterLimit = 24;
+
     [Header("Scene")]
     [SerializeField] private string gameSceneNameOrPath = "MainScene";
     [SerializeField] private int gameSceneBuildIndex = 4;
@@ -19,6 +25,9 @@ public class StartSceneLobbyUI : MonoBehaviour
     [SerializeField] private TMP_Text roomIdText;
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text playerCountText;
+    [NetworkPrefab]
+    [SerializeField] private NetworkObject playerNameTagPrefab;
+    [SerializeField] private TMP_InputField playerNameInput;
     [SerializeField] private TMP_InputField joinRoomInput;
     [SerializeField] private Button createButton;
     [SerializeField] private Button joinButton;
@@ -28,33 +37,60 @@ public class StartSceneLobbyUI : MonoBehaviour
     private string currentRoomId = string.Empty;
     private bool busy;
     private bool roomCreated;
+    private bool singleplayerStarting;
+    private bool multiplayerSession;
+    private bool nameTagSpawned;
     private TouchScreenKeyboard roomIdKeyboard;
+    private TouchScreenKeyboard playerNameKeyboard;
     private EventTrigger roomIdEventTrigger;
     private EventTrigger.Entry roomIdPointerClickEntry;
+    private EventTrigger playerNameEventTrigger;
+    private EventTrigger.Entry playerNamePointerClickEntry;
+
+    public static string CurrentPlayerName { get; private set; } = string.Empty;
+    public bool IsMultiplayerSession => multiplayerSession;
 
     private void Awake()
     {
         ResolveMissingReferences();
+        ResolveOrCreatePlayerNameInput();
+        DisablePlatformAccountNameLookup();
         RegisterRoomIdInputKeyboard();
+        RegisterPlayerNameInput();
+        ApplyMultiplayerLobbyPhase();
     }
 
     private void OnDestroy()
     {
-        if (joinRoomInput == null)
+        if (joinRoomInput != null)
         {
-            return;
+            joinRoomInput.onSelect.RemoveListener(OpenRoomIdKeyboard);
+            if (roomIdEventTrigger != null && roomIdPointerClickEntry != null)
+            {
+                roomIdEventTrigger.triggers.Remove(roomIdPointerClickEntry);
+            }
         }
 
-        joinRoomInput.onSelect.RemoveListener(OpenRoomIdKeyboard);
-        if (roomIdEventTrigger != null && roomIdPointerClickEntry != null)
+        if (playerNameInput != null)
         {
-            roomIdEventTrigger.triggers.Remove(roomIdPointerClickEntry);
+            playerNameInput.onSelect.RemoveListener(OpenPlayerNameKeyboard);
+            playerNameInput.onValueChanged.RemoveListener(OnPlayerNameValueChanged);
+            playerNameInput.onEndEdit.RemoveListener(OnPlayerNameEndEdit);
+            if (playerNameEventTrigger != null && playerNamePointerClickEntry != null)
+            {
+                playerNameEventTrigger.triggers.Remove(playerNamePointerClickEntry);
+            }
         }
     }
 
     private void Update()
     {
         SyncRoomIdKeyboard();
+        SyncPlayerNameKeyboard();
+        if (multiplayerSession)
+        {
+            TrySpawnPlayerNameTag();
+        }
         UpdateStatus();
     }
 
@@ -119,6 +155,55 @@ public class StartSceneLobbyUI : MonoBehaviour
 
     public void StartGame()
     {
+        if (!TryCommitPlayerName())
+        {
+            return;
+        }
+
+        if (!TrySpawnPlayerNameTag())
+        {
+            SetStatus("Waiting for the player name tag to connect...");
+            return;
+        }
+
+        NetworkRunner runner = GetActiveRunner();
+        if (!AreAllPlayersNamed(runner))
+        {
+            SetStatus("Waiting for every player to enter a Player Name...");
+            return;
+        }
+
+        StartGameInternal();
+    }
+
+    public bool SetPlayerName(string playerName)
+    {
+        if (playerNameInput == null)
+        {
+            ResolveOrCreatePlayerNameInput();
+        }
+
+        if (playerNameInput == null)
+        {
+            SetStatus("Player Name input is unavailable.");
+            return false;
+        }
+
+        playerNameInput.SetTextWithoutNotify(playerName ?? string.Empty);
+        playerNameInput.ForceLabelUpdate();
+
+        bool committed = TryCommitPlayerName();
+        if (committed && multiplayerSession)
+        {
+            TrySpawnPlayerNameTag();
+        }
+
+        UpdateStatus();
+        return committed;
+    }
+
+    private void StartGameInternal()
+    {
         if (lobbySceneStart == null)
         {
             lobbySceneStart = gameObject.AddComponent<LobbyNetworkSceneStart>();
@@ -131,14 +216,60 @@ public class StartSceneLobbyUI : MonoBehaviour
 
     public async void StartGameAsSingleplayer()
     {
-        CreateRoom();
-
-        while (busy)
+        if (busy || singleplayerStarting)
         {
-            await System.Threading.Tasks.Task.Yield();
+            return;
         }
 
-        StartGame();
+        singleplayerStarting = true;
+        multiplayerSession = false;
+        SetBusy(true, "Starting local game...");
+
+        NetworkRunner runner = null;
+        try
+        {
+            runner = CreateLocalNetworkRunner();
+            if (runner == null)
+            {
+                SetBusy(false, "Could not find the Fusion NetworkRunner template.");
+                singleplayerStarting = false;
+                return;
+            }
+
+            NetworkSceneInfo startSceneInfo = GetCurrentSceneInfo();
+            StartGameResult result = await runner.StartGame(new StartGameArgs
+            {
+                GameMode = GameMode.Single,
+                Scene = startSceneInfo
+            });
+
+            if (!result.Ok)
+            {
+                SetBusy(false, $"Could not start local game: {result.ShutdownReason}");
+                Debug.LogError(
+                    $"[{nameof(StartSceneLobbyUI)}] Fusion GameMode.Single failed: " +
+                    $"{result.ShutdownReason}, {result.ErrorMessage}",
+                    this);
+                Destroy(runner.gameObject);
+                singleplayerStarting = false;
+                return;
+            }
+
+            SetBusy(false, "Local game ready.");
+            singleplayerStarting = false;
+            StartGameInternal();
+        }
+        catch (System.Exception exception)
+        {
+            SetBusy(false, $"Could not start local game: {exception.Message}");
+            Debug.LogException(exception, this);
+            if (runner != null)
+            {
+                Destroy(runner.gameObject);
+            }
+
+            singleplayerStarting = false;
+        }
     }
 
     private bool CanUseMatchmaking()
@@ -174,6 +305,9 @@ public class StartSceneLobbyUI : MonoBehaviour
 
         currentRoomId = result.RoomToken ?? string.Empty;
         roomCreated = true;
+        multiplayerSession = true;
+        ApplyMultiplayerLobbyPhase();
+        TrySpawnPlayerNameTag();
 
         if (joinRoomInput != null && string.IsNullOrWhiteSpace(joinRoomInput.text))
         {
@@ -202,10 +336,11 @@ public class StartSceneLobbyUI : MonoBehaviour
 
     private void SetButtonsInteractable(bool interactable)
     {
+        bool hasPlayerName = HasValidPlayerName();
         if (createButton != null) createButton.interactable = interactable && !roomCreated;
         if (joinButton != null) joinButton.interactable = interactable && !roomCreated;
         if (copyButton != null) copyButton.interactable = interactable;
-        if (startButton != null) startButton.interactable = interactable;
+        if (startButton != null) startButton.interactable = interactable && hasPlayerName;
     }
 
     private void UpdateStatus()
@@ -228,7 +363,9 @@ public class StartSceneLobbyUI : MonoBehaviour
         if (playerCountText != null)
         {
             int players = runner != null ? CountPlayers(runner) : 0;
-            playerCountText.text = $"Players: {players}";
+            playerCountText.text = multiplayerSession
+                ? $"Players: {players} | Named: {CountNamedPlayers(runner)}/{players}"
+                : $"Players: {players}";
         }
 
         if (copyButton != null)
@@ -238,7 +375,19 @@ public class StartSceneLobbyUI : MonoBehaviour
 
         if (startButton != null)
         {
-            startButton.interactable = !busy && runner != null && runner.IsRunning && runner.IsSharedModeMasterClient;
+            startButton.gameObject.SetActive(
+                multiplayerSession &&
+                runner != null &&
+                runner.IsRunning &&
+                runner.IsSharedModeMasterClient);
+            startButton.interactable =
+                !busy &&
+                HasValidPlayerName() &&
+                nameTagSpawned &&
+                runner != null &&
+                runner.IsRunning &&
+                AreAllPlayersNamed(runner) &&
+                runner.IsSharedModeMasterClient;
         }
         if (createButton != null)
         {
@@ -283,6 +432,68 @@ public class StartSceneLobbyUI : MonoBehaviour
         return count;
     }
 
+    private static bool AreAllPlayersNamed(NetworkRunner runner)
+    {
+        if (runner == null || !runner.IsRunning)
+        {
+            return false;
+        }
+
+        PlayerNameTagFusion[] nameTags =
+            FindObjectsByType<PlayerNameTagFusion>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (PlayerRef player in runner.ActivePlayers)
+        {
+            if (!HasPlayerNameTag(runner, player, nameTags))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static int CountNamedPlayers(NetworkRunner runner)
+    {
+        if (runner == null || !runner.IsRunning)
+        {
+            return 0;
+        }
+
+        int namedPlayers = 0;
+        PlayerNameTagFusion[] nameTags =
+            FindObjectsByType<PlayerNameTagFusion>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (PlayerRef player in runner.ActivePlayers)
+        {
+            if (HasPlayerNameTag(runner, player, nameTags))
+            {
+                namedPlayers++;
+            }
+        }
+
+        return namedPlayers;
+    }
+
+    private static bool HasPlayerNameTag(
+        NetworkRunner runner,
+        PlayerRef player,
+        PlayerNameTagFusion[] nameTags)
+    {
+        foreach (PlayerNameTagFusion nameTag in nameTags)
+        {
+            if (nameTag != null &&
+                nameTag.Object != null &&
+                nameTag.Object.Runner == runner &&
+                nameTag.Object.InputAuthority == player &&
+                !string.IsNullOrWhiteSpace(nameTag.OculusName.ToString()))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void ResolveMissingReferences()
     {
         if (customMatchmaking == null)
@@ -320,8 +531,406 @@ public class StartSceneLobbyUI : MonoBehaviour
             joinRoomInput = FindInputByName("Room ID", "Join Room ID");
         }
 
+        if (playerNameInput == null)
+        {
+            playerNameInput = FindInputByName("Player Name", "PlayerNameInput");
+        }
+
         SetStatus("Create a room or join with Room ID.");
         UpdateStatus();
+    }
+
+    private void ResolveOrCreatePlayerNameInput()
+    {
+        if (playerNameInput == null)
+        {
+            playerNameInput = FindInputByName("Player Name", "PlayerNameInput");
+        }
+
+        if (playerNameInput == null && joinRoomInput != null)
+        {
+            Transform joinRow = joinRoomInput.transform.parent;
+            Transform inputList = joinRow != null ? joinRow.parent : null;
+            if (inputList != null)
+            {
+                GameObject inputObject = Instantiate(joinRoomInput.gameObject, inputList, false);
+                inputObject.name = "Player Name";
+                inputObject.transform.SetSiblingIndex(joinRow.GetSiblingIndex());
+                playerNameInput = inputObject.GetComponent<TMP_InputField>();
+
+                if (inputObject.transform is RectTransform inputRect && joinRow is RectTransform joinRowRect)
+                {
+                    inputRect.sizeDelta = joinRowRect.sizeDelta;
+                }
+            }
+        }
+
+        if (playerNameInput == null)
+        {
+            Debug.LogError($"[{nameof(StartSceneLobbyUI)}] Could not create the Player Name input field.", this);
+            return;
+        }
+
+        playerNameInput.characterLimit = PlayerNameCharacterLimit;
+        playerNameInput.lineType = TMP_InputField.LineType.SingleLine;
+        playerNameInput.contentType = TMP_InputField.ContentType.Standard;
+
+        if (playerNameInput.placeholder is TMP_Text placeholder)
+        {
+            placeholder.text = "Enter Player Name";
+        }
+
+        string savedName = NormalizePlayerName(PlayerPrefs.GetString(PlayerNamePrefsKey, string.Empty));
+        CurrentPlayerName = savedName;
+        playerNameInput.SetTextWithoutNotify(savedName);
+        playerNameInput.ForceLabelUpdate();
+    }
+
+    private void ApplyMultiplayerLobbyPhase()
+    {
+        if (playerNameInput != null)
+        {
+            playerNameInput.gameObject.SetActive(multiplayerSession);
+        }
+
+        if (createButton != null)
+        {
+            createButton.gameObject.SetActive(!multiplayerSession);
+        }
+
+        if (joinRoomInput != null && joinRoomInput.transform.parent != null)
+        {
+            joinRoomInput.transform.parent.gameObject.SetActive(!multiplayerSession);
+        }
+        else if (joinButton != null)
+        {
+            joinButton.gameObject.SetActive(!multiplayerSession);
+        }
+
+        if (startButton != null)
+        {
+            NetworkRunner runner = GetActiveRunner();
+            bool canShowStart =
+                multiplayerSession &&
+                runner != null &&
+                runner.IsRunning &&
+                runner.IsSharedModeMasterClient;
+            startButton.gameObject.SetActive(canShowStart);
+        }
+    }
+
+    private static NetworkRunner CreateLocalNetworkRunner()
+    {
+        NetworkRunner[] runners =
+            FindObjectsByType<NetworkRunner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        NetworkRunner runnerTemplate = null;
+        foreach (NetworkRunner candidate in runners)
+        {
+            if (candidate != null && !candidate.IsRunning)
+            {
+                runnerTemplate = candidate;
+                break;
+            }
+        }
+
+        if (runnerTemplate == null)
+        {
+            return null;
+        }
+
+        runnerTemplate.gameObject.SetActive(false);
+        NetworkRunner localRunner = Instantiate(runnerTemplate);
+        localRunner.name = "Single Player Runner";
+        localRunner.gameObject.SetActive(true);
+        DontDestroyOnLoad(localRunner.gameObject);
+        return localRunner;
+    }
+
+    private static NetworkSceneInfo GetCurrentSceneInfo()
+    {
+        NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (activeScene.buildIndex >= 0 && activeScene.buildIndex < SceneManager.sceneCountInBuildSettings)
+        {
+            sceneInfo.AddSceneRef(SceneRef.FromIndex(activeScene.buildIndex), LoadSceneMode.Additive);
+        }
+
+        return sceneInfo;
+    }
+
+    private void DisablePlatformAccountNameLookup()
+    {
+        PlayerNameTagSpawner[] platformNameSpawners =
+            FindObjectsByType<PlayerNameTagSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (PlayerNameTagSpawner platformNameSpawner in platformNameSpawners)
+        {
+            platformNameSpawner.enabled = false;
+        }
+
+    }
+
+    private void RegisterPlayerNameInput()
+    {
+        if (playerNameInput == null)
+        {
+            return;
+        }
+
+        playerNameInput.onSelect.RemoveListener(OpenPlayerNameKeyboard);
+        playerNameInput.onSelect.AddListener(OpenPlayerNameKeyboard);
+        playerNameInput.onValueChanged.RemoveListener(OnPlayerNameValueChanged);
+        playerNameInput.onValueChanged.AddListener(OnPlayerNameValueChanged);
+        playerNameInput.onEndEdit.RemoveListener(OnPlayerNameEndEdit);
+        playerNameInput.onEndEdit.AddListener(OnPlayerNameEndEdit);
+
+        playerNameEventTrigger = playerNameInput.GetComponent<EventTrigger>();
+        if (playerNameEventTrigger == null)
+        {
+            playerNameEventTrigger = playerNameInput.gameObject.AddComponent<EventTrigger>();
+        }
+
+        playerNamePointerClickEntry = new EventTrigger.Entry
+        {
+            eventID = EventTriggerType.PointerClick
+        };
+        playerNamePointerClickEntry.callback.AddListener(_ => OpenPlayerNameKeyboard(playerNameInput.text));
+        playerNameEventTrigger.triggers.Add(playerNamePointerClickEntry);
+    }
+
+    private void OpenPlayerNameKeyboard(string _)
+    {
+        if (playerNameInput == null || !playerNameInput.interactable)
+        {
+            return;
+        }
+
+        if (!TouchScreenKeyboard.isSupported)
+        {
+            return;
+        }
+
+        playerNameInput.ActivateInputField();
+        playerNameKeyboard = TouchScreenKeyboard.Open(
+            playerNameInput.text,
+            TouchScreenKeyboardType.Default,
+            false,
+            false,
+            false,
+            false,
+            "Input Player Name",
+            PlayerNameCharacterLimit);
+    }
+
+    private void SyncPlayerNameKeyboard()
+    {
+        if (playerNameKeyboard == null)
+        {
+            return;
+        }
+
+        if (playerNameKeyboard.status == TouchScreenKeyboard.Status.Visible)
+        {
+            ApplyPlayerNameKeyboardText();
+            return;
+        }
+
+        if (playerNameKeyboard.status == TouchScreenKeyboard.Status.Done)
+        {
+            ApplyPlayerNameKeyboardText();
+            playerNameKeyboard = null;
+            TryCommitPlayerName(false);
+            return;
+        }
+
+        if (playerNameKeyboard.status == TouchScreenKeyboard.Status.Canceled ||
+            playerNameKeyboard.status == TouchScreenKeyboard.Status.LostFocus)
+        {
+            playerNameKeyboard = null;
+        }
+    }
+
+    private void ApplyPlayerNameKeyboardText()
+    {
+        if (playerNameInput == null || playerNameKeyboard == null)
+        {
+            return;
+        }
+
+        string keyboardText = playerNameKeyboard.text;
+        if (playerNameInput.text == keyboardText)
+        {
+            return;
+        }
+
+        playerNameInput.SetTextWithoutNotify(keyboardText);
+        playerNameInput.ForceLabelUpdate();
+    }
+
+    private void OnPlayerNameValueChanged(string _)
+    {
+        UpdateStatus();
+    }
+
+    private void OnPlayerNameEndEdit(string _)
+    {
+        TryCommitPlayerName(false);
+    }
+
+    private bool TryCommitPlayerName(bool showValidationMessage = true)
+    {
+        string normalizedName = NormalizePlayerName(playerNameInput != null ? playerNameInput.text : string.Empty);
+        if (string.IsNullOrWhiteSpace(normalizedName))
+        {
+            CurrentPlayerName = string.Empty;
+            if (showValidationMessage)
+            {
+                SetStatus("Enter your Player Name before continuing.");
+            }
+
+            return false;
+        }
+
+        CurrentPlayerName = normalizedName;
+        PlayerPrefs.SetString(PlayerNamePrefsKey, CurrentPlayerName);
+        PlayerPrefs.Save();
+
+        if (playerNameInput != null && playerNameInput.text != CurrentPlayerName)
+        {
+            playerNameInput.SetTextWithoutNotify(CurrentPlayerName);
+            playerNameInput.ForceLabelUpdate();
+        }
+
+        ApplyPlayerNameToExistingTag();
+        return true;
+    }
+
+    private bool HasValidPlayerName()
+    {
+        return !string.IsNullOrWhiteSpace(
+            NormalizePlayerName(playerNameInput != null ? playerNameInput.text : CurrentPlayerName));
+    }
+
+    private bool TrySpawnPlayerNameTag()
+    {
+        if (nameTagSpawned)
+        {
+            return true;
+        }
+
+        if (!HasValidPlayerName())
+        {
+            return false;
+        }
+
+        NetworkRunner runner = GetActiveRunner();
+        if (playerNameTagPrefab == null ||
+            runner == null ||
+            !runner.IsRunning ||
+            runner.LocalPlayer == PlayerRef.None ||
+            !runner.CanSpawn)
+        {
+            return false;
+        }
+
+        if (!TryCommitPlayerName(false))
+        {
+            return false;
+        }
+
+        try
+        {
+            NetworkObject spawnedNameTag = runner.Spawn(
+                playerNameTagPrefab,
+                Vector3.zero,
+                Quaternion.identity,
+                runner.LocalPlayer,
+                (_, spawnedObject) =>
+                {
+                    PlayerNameTagFusion nameTag = spawnedObject.GetComponent<PlayerNameTagFusion>();
+                    if (nameTag != null)
+                    {
+                        PlayerNameTagTrackingAnchor.Bind(nameTag);
+                        nameTag.OculusName = CurrentPlayerName;
+                    }
+                },
+                NetworkSpawnFlags.DontDestroyOnLoad);
+
+            if (spawnedNameTag == null)
+            {
+                Debug.LogError($"[{nameof(StartSceneLobbyUI)}] Fusion returned no Player Name Tag object.", this);
+                return false;
+            }
+
+            nameTagSpawned = true;
+            return true;
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError($"[{nameof(StartSceneLobbyUI)}] Could not spawn the player name tag.", this);
+            Debug.LogException(exception, this);
+            return false;
+        }
+    }
+
+    private void ApplyPlayerNameToExistingTag()
+    {
+        if (!nameTagSpawned || string.IsNullOrWhiteSpace(CurrentPlayerName))
+        {
+            return;
+        }
+
+        PlayerNameTagFusion[] nameTags =
+            FindObjectsByType<PlayerNameTagFusion>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (PlayerNameTagFusion nameTag in nameTags)
+        {
+            if (nameTag != null && nameTag.Object != null && nameTag.Object.HasStateAuthority)
+            {
+                nameTag.OculusName = CurrentPlayerName;
+            }
+        }
+    }
+
+    private static string NormalizePlayerName(string rawName)
+    {
+        if (string.IsNullOrWhiteSpace(rawName))
+        {
+            return string.Empty;
+        }
+
+        StringBuilder builder = new StringBuilder(Mathf.Min(rawName.Length, PlayerNameCharacterLimit));
+        bool previousWasSpace = false;
+
+        foreach (char character in rawName.Trim())
+        {
+            if (builder.Length >= PlayerNameCharacterLimit)
+            {
+                break;
+            }
+
+            if (char.IsControl(character) || character == '<' || character == '>')
+            {
+                continue;
+            }
+
+            if (char.IsWhiteSpace(character))
+            {
+                if (previousWasSpace || builder.Length == 0)
+                {
+                    continue;
+                }
+
+                builder.Append(' ');
+                previousWasSpace = true;
+                continue;
+            }
+
+            builder.Append(character);
+            previousWasSpace = false;
+        }
+
+        return builder.ToString().TrimEnd();
     }
 
     private void RegisterRoomIdInputKeyboard()

@@ -76,7 +76,7 @@ public class LobbyNetworkSceneStart : MonoBehaviour
         activePlayerCount = CountActivePlayers(runner);
         isSharedModeMasterClient = runner.IsSharedModeMasterClient;
 
-        if (requireSharedModeMasterClient && !runner.IsSharedModeMasterClient)
+        if (requireSharedModeMasterClient && !HasSceneLoadAuthority(runner))
         {
             Fail("Only the Shared Mode Master Client should start the game scene.");
             return;
@@ -105,7 +105,7 @@ public class LobbyNetworkSceneStart : MonoBehaviour
         }
 
         NetworkRunner runner = GetActiveRunner();
-        if (runner == null || !runner.IsRunning || !runner.IsSharedModeMasterClient)
+        if (runner == null || !runner.IsRunning || !HasSceneLoadAuthority(runner))
         {
             return false;
         }
@@ -134,7 +134,7 @@ public class LobbyNetworkSceneStart : MonoBehaviour
             return;
         }
 
-        if (!runner.IsSharedModeMasterClient)
+        if (!HasSceneLoadAuthority(runner))
         {
             Fail("Only the Shared Mode Master Client can start another attempt.");
             return;
@@ -176,7 +176,7 @@ public class LobbyNetworkSceneStart : MonoBehaviour
             yield break;
         }
 
-        if (!runner.IsSharedModeMasterClient)
+        if (!HasSceneLoadAuthority(runner))
         {
             CancelTryAgain("This player is no longer the Shared Mode Master Client.");
             yield break;
@@ -274,6 +274,11 @@ public class LobbyNetworkSceneStart : MonoBehaviour
         }
 
         return count;
+    }
+
+    private static bool HasSceneLoadAuthority(NetworkRunner runner)
+    {
+        return runner != null && (runner.IsSinglePlayer || runner.IsSharedModeMasterClient);
     }
 
     private bool TryLoadSceneWithRunner(NetworkRunner runner, SceneRef sceneRef)
