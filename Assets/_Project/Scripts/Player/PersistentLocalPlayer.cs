@@ -8,7 +8,7 @@ using UnityCharacterController = UnityEngine.CharacterController;
 
 public class PersistentLocalPlayer : MonoBehaviour
 {
-    private const string TutorialQuickMenuObjectName = "TutorialQuickMenu";
+    private const string TutorialCanvasObjectName = "TutorialCanvas";
 
     [SerializeField] private string lobbySceneName = "StartScene";
     [SerializeField] private string gameSceneName = "MainScene";
@@ -42,7 +42,7 @@ public class PersistentLocalPlayer : MonoBehaviour
     private Quaternion initialPlayerRigLocalRotation;
     private Vector3 initialPlayerRigLocalScale;
     private bool hasInitialPlayerRigPose;
-    private GameObject tutorialQuickMenu;
+    private GameObject tutorialCanvas;
 
     private void Awake()
     {
@@ -53,8 +53,8 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
 
         instance = this;
-        ResolveTutorialQuickMenu();
-        UpdateTutorialQuickMenuVisibility(SceneManager.GetActiveScene());
+        ResolveTutorialCanvas();
+        UpdateTutorialCanvasVisibility(SceneManager.GetActiveScene());
         CacheInitialPlayerRigPose();
         DontDestroyOnLoad(gameObject);
     }
@@ -71,7 +71,7 @@ public class PersistentLocalPlayer : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        UpdateTutorialQuickMenuVisibility(scene);
+        UpdateTutorialCanvasVisibility(scene);
 
         if (!TryGetScenePlayerMarkerName(scene.name, out string markerName))
         {
@@ -436,23 +436,23 @@ public class PersistentLocalPlayer : MonoBehaviour
         return null;
     }
 
-    private void ResolveTutorialQuickMenu()
+    private void ResolveTutorialCanvas()
     {
-        if (tutorialQuickMenu != null)
+        if (tutorialCanvas != null)
         {
             return;
         }
 
-        Transform quickMenuTransform = FindTransformRecursive(transform, TutorialQuickMenuObjectName);
-        tutorialQuickMenu = quickMenuTransform != null ? quickMenuTransform.gameObject : null;
+        Transform canvasTransform = FindTransformRecursive(transform, TutorialCanvasObjectName);
+        tutorialCanvas = canvasTransform != null ? canvasTransform.gameObject : null;
     }
 
-    private void UpdateTutorialQuickMenuVisibility(Scene scene)
+    private void UpdateTutorialCanvasVisibility(Scene scene)
     {
-        ResolveTutorialQuickMenu();
-        if (tutorialQuickMenu != null)
+        ResolveTutorialCanvas();
+        if (tutorialCanvas != null)
         {
-            tutorialQuickMenu.SetActive(scene.IsValid() && scene.name == tutorialSceneName);
+            tutorialCanvas.SetActive(scene.IsValid() && scene.name == tutorialSceneName);
         }
     }
 }
