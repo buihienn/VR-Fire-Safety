@@ -30,6 +30,9 @@ public class GasIgnitionController : NetworkBehaviour
     [Header("Game Flow")]
     [SerializeField] private bool endMatchOnExplosion = true;
 
+    [Header("Voice Over")]
+    [SerializeField] private string fireIgnitedVoKey = "VO_FireIgnited";
+
     [Header("Debug")]
     [SerializeField] private bool debugLog;
 
@@ -39,6 +42,7 @@ public class GasIgnitionController : NetworkBehaviour
     private bool fusionSpawned;
     private bool flareTriggeredLocal;
     private bool explosionTriggeredLocal;
+    private bool fireIgnitedVoPlayedLocal;
 
     public bool HasIgnitionAuthority =>
         !fusionSpawned || (Object != null && Object.HasStateAuthority);
@@ -231,9 +235,7 @@ public class GasIgnitionController : NetworkBehaviour
         {
             case IgnitionOutcome.Fire:
                 PlayFlareLocal(firePosition);
-
-                if (AudioManager.Instance != null)
-                    AudioManager.Instance.PlayOneShot("VO_GasFlareIgnited");
+                PlayFireIgnitedVoOnceLocal();
                 break;
 
             case IgnitionOutcome.ExplosionAndFire:
@@ -255,6 +257,15 @@ public class GasIgnitionController : NetworkBehaviour
                 }
                 break;
         }
+    }
+
+    private void PlayFireIgnitedVoOnceLocal()
+    {
+        if (fireIgnitedVoPlayedLocal || AudioManager.Instance == null)
+            return;
+
+        AudioManager.Instance.PlayOneShot(fireIgnitedVoKey);
+        fireIgnitedVoPlayedLocal = true;
     }
 
     private void PlayFlareLocal(Vector3 position)

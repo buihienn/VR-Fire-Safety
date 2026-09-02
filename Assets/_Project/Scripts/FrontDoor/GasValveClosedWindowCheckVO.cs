@@ -52,6 +52,14 @@ public class GasValveClosedWindowCheckVO : MonoBehaviour
         if (AudioManager.Instance == null)
             return;
 
+        // GasValveLeakByAngle owns the valve-close VO. Avoid replaying the
+        // same clip from this legacy window-state check in the same moment.
+        if (AudioManager.Instance.IsPlaying(voKey))
+        {
+            hasPlayedInScene = true;
+            return;
+        }
+
         AudioManager.Instance.PlayOneShot(voKey);
         hasPlayedInScene = true;
     }

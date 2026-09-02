@@ -153,6 +153,14 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
         RefreshDebugValues();
     }
 
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        fusionSpawned = false;
+        CancelStartDelay();
+        StopSprayVisual();
+        UpdateLever(0f);
+    }
+
     private void Update()
     {
         // Single player fallback. Khi có Fusion thì KHÔNG trừ timer trong Update.
@@ -654,7 +662,7 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
                 smokeFX.Play(true);
         }
 
-        if (useAudio && AudioManager.Instance != null)
+        if (!wasSpraying && useAudio && AudioManager.Instance != null)
         {
             if (!AudioManager.Instance.IsPlaying(sprayLoopSound))
                 AudioManager.Instance.Play(sprayLoopSound);
@@ -679,7 +687,7 @@ public class FireExtinguisherSmokeUse : NetworkBehaviour, IHandGrabUseDelegate
                 smokeFX.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        if (useAudio && AudioManager.Instance != null)
+        if (wasSpraying && useAudio && AudioManager.Instance != null)
             AudioManager.Instance.Stop(sprayLoopSound);
 
         if (wasSpraying)
