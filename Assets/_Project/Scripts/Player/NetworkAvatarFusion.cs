@@ -9,6 +9,8 @@ using StreamLOD = Oculus.Avatar2.OvrAvatarEntity.StreamLOD;
 public class NetworkAvatarFusion : NetworkBehaviour
 {
     private const int MaxAvatarStreamBytes = ushort.MaxValue;
+    private const string LeftHandVisualObjectName = "OVRLeftHandVisual";
+    private const string RightHandVisualObjectName = "OVRRightHandVisual";
     public const int MaxAvatarOption = 5;
 
     [Header("Meta Avatar Entities")]
@@ -40,6 +42,10 @@ public class NetworkAvatarFusion : NetworkBehaviour
 
     private bool hasReceiveSequence;
     private bool firstPersonLodAssigned;
+    private bool localRigHandVisualsHidden;
+    private bool localRigHandVisualsHiddenLogged;
+    private GameObject leftHandVisual;
+    private GameObject rightHandVisual;
     private ushort receiveSequence;
     private byte[] receiveBuffer;
     private bool[] receivedChunks;
@@ -125,6 +131,7 @@ public class NetworkAvatarFusion : NetworkBehaviour
             if (localAvatar != null && localAvatar.HasJoints)
             {
                 AssignFirstPersonAvatarLod();
+                HideLocalRigHandVisuals();
 
                 if (debugVisuals != null)
                 {
@@ -359,6 +366,59 @@ public class NetworkAvatarFusion : NetworkBehaviour
             else if (Camera.main != null)
             {
                 localRigRoot = Camera.main.transform.root;
+            }
+        }
+    }
+
+    private void HideLocalRigHandVisuals()
+    {
+        ResolveLocalRigHandVisuals();
+
+        if (leftHandVisual != null && leftHandVisual.activeSelf)
+        {
+            leftHandVisual.SetActive(false);
+        }
+
+        if (rightHandVisual != null && rightHandVisual.activeSelf)
+        {
+            rightHandVisual.SetActive(false);
+        }
+
+        localRigHandVisualsHidden =
+            leftHandVisual != null && !leftHandVisual.activeSelf &&
+            rightHandVisual != null && !rightHandVisual.activeSelf;
+
+        if (localRigHandVisualsHidden && !localRigHandVisualsHiddenLogged)
+        {
+            localRigHandVisualsHiddenLogged = true;
+            Debug.Log(
+                $"[{nameof(NetworkAvatarFusion)}] Keeping the local OVR left and right hand visuals hidden after the avatar became ready.",
+                this);
+        }
+    }
+
+    private void ResolveLocalRigHandVisuals()
+    {
+        if (localRigRoot == null || (leftHandVisual != null && rightHandVisual != null))
+        {
+            return;
+        }
+
+        Transform[] rigTransforms = localRigRoot.GetComponentsInChildren<Transform>(true);
+        foreach (Transform rigTransform in rigTransforms)
+        {
+            if (leftHandVisual == null && rigTransform.name == LeftHandVisualObjectName)
+            {
+                leftHandVisual = rigTransform.gameObject;
+            }
+            else if (rightHandVisual == null && rigTransform.name == RightHandVisualObjectName)
+            {
+                rightHandVisual = rigTransform.gameObject;
+            }
+
+            if (leftHandVisual != null && rightHandVisual != null)
+            {
+                return;
             }
         }
     }

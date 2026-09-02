@@ -8,6 +8,7 @@ using UnityCharacterController = UnityEngine.CharacterController;
 
 public class PersistentLocalPlayer : MonoBehaviour
 {
+    private const string StartMenuCanvasObjectName = "CanvasStartMenu";
     private const string TutorialCanvasObjectName = "TutorialCanvas";
 
     [SerializeField] private string lobbySceneName = "StartScene";
@@ -37,11 +38,14 @@ public class PersistentLocalPlayer : MonoBehaviour
     [SerializeField] private Transform playerRigRoot;
 
     private static PersistentLocalPlayer instance;
+    public static bool HasInstance => instance != null;
+
     private Coroutine sceneReadyRoutine;
     private Vector3 initialPlayerRigLocalPosition;
     private Quaternion initialPlayerRigLocalRotation;
     private Vector3 initialPlayerRigLocalScale;
     private bool hasInitialPlayerRigPose;
+    private GameObject startMenuCanvas;
     private GameObject tutorialCanvas;
 
     private void Awake()
@@ -53,8 +57,8 @@ public class PersistentLocalPlayer : MonoBehaviour
         }
 
         instance = this;
-        ResolveTutorialCanvas();
-        UpdateTutorialCanvasVisibility(SceneManager.GetActiveScene());
+        ResolveSceneCanvases();
+        UpdateSceneCanvasVisibility(SceneManager.GetActiveScene());
         CacheInitialPlayerRigPose();
         DontDestroyOnLoad(gameObject);
     }
@@ -69,9 +73,17 @@ public class PersistentLocalPlayer : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    private void OnDestroy()
+    {
+        if (instance == this)
+        {
+            instance = null;
+        }
+    }
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        UpdateTutorialCanvasVisibility(scene);
+        UpdateSceneCanvasVisibility(scene);
 
         if (!TryGetScenePlayerMarkerName(scene.name, out string markerName))
         {
@@ -436,23 +448,34 @@ public class PersistentLocalPlayer : MonoBehaviour
         return null;
     }
 
-    private void ResolveTutorialCanvas()
+    private void ResolveSceneCanvases()
     {
-        if (tutorialCanvas != null)
+        if (startMenuCanvas == null)
         {
-            return;
+            Transform startMenuTransform = FindTransformRecursive(transform, StartMenuCanvasObjectName);
+            startMenuCanvas = startMenuTransform != null ? startMenuTransform.gameObject : null;
         }
 
-        Transform canvasTransform = FindTransformRecursive(transform, TutorialCanvasObjectName);
-        tutorialCanvas = canvasTransform != null ? canvasTransform.gameObject : null;
+        if (tutorialCanvas == null)
+        {
+            Transform tutorialCanvasTransform = FindTransformRecursive(transform, TutorialCanvasObjectName);
+            tutorialCanvas = tutorialCanvasTransform != null ? tutorialCanvasTransform.gameObject : null;
+        }
     }
 
-    private void UpdateTutorialCanvasVisibility(Scene scene)
+    private void UpdateSceneCanvasVisibility(Scene scene)
     {
-        ResolveTutorialCanvas();
+        ResolveSceneCanvases();
+        bool hasValidScene = scene.IsValid();
+
+        if (startMenuCanvas != null)
+        {
+            startMenuCanvas.SetActive(hasValidScene && scene.name == lobbySceneName);
+        }
+
         if (tutorialCanvas != null)
         {
-            tutorialCanvas.SetActive(scene.IsValid() && scene.name == tutorialSceneName);
+            tutorialCanvas.SetActive(hasValidScene && scene.name == tutorialSceneName);
         }
     }
 }

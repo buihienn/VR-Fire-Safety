@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class GasSystem : NetworkBehaviour
 {
@@ -74,12 +73,14 @@ public class GasSystem : NetworkBehaviour
     [Tooltip("Van mo max + co leak + khong thong gio: tu gas01 = 0 len 1 mat khoang nay")]
     public float secondsToFullAtMaxLeak = 60f;
 
-    [Tooltip("Thoi gian de gas giam tu 1 ve 0 khi co dung 1 opening mo hoan toan va khong con leak.")]
-    public float secondsToClearWithFullVent = 40f;
+    [Tooltip("Toc do thoat gas co dinh khi van con ro ri va co it nhat mot cua so hoac cua chinh dang mo. Khong phu thuoc goc mo va khong cong don theo so cua.")]
+    [Min(0f)] [SerializeField] private float fixedOpeningVentDrainRate01PerSec = 0.003f;
 
-    [FormerlySerializedAs("maximumCombinedVentilation01")]
-    [Tooltip("He so thong gio khi ca 2 opening deu mo hoan toan. 1.25 = nhanh hon 25% so voi 1 opening.")]
-    [Range(1f, 2f)] [SerializeField] private float twoOpeningsVentilationMultiplier = 1.25f;
+    [Tooltip("Khi van con ro ri, toc do thoat toi da bang ty le nay cua toc do gas vao de gas khong the giam.")]
+    [Range(0f, 0.99f)] [SerializeField] private float maximumVentToLeakRatioWhileLeaking = 0.9f;
+
+    [Tooltip("Toc do thoat gas khi da khoa van, khong con ro ri va co it nhat mot cua dang mo. 0.05/s lam gas giam tu 0.5 ve 0 trong 10 giay.")]
+    [Min(0f)] [SerializeField] private float stoppedLeakOpeningVentDrainRate01PerSec = 0.05f;
 
     [Tooltip("Khong con leak, khong mo cua: sau thoi gian nay luong gas hien co tu giam khoang 63%.")]
     public float secondsToClearNaturally = 480f;
@@ -90,10 +91,10 @@ public class GasSystem : NetworkBehaviour
     [SerializeField] private bool mainSupplyOpen = false;
     [SerializeField] private int activeOpenings = 0;
 
-    [Tooltip("Tong muc thong gio cong don tu cac vent, co the > 1")]
+    [Tooltip("Trang thai thong gio co dinh: 0 = dong, 1 = co it nhat mot opening dang mo.")]
     public float vent01 = 0f;
 
-    [Tooltip("Muc thong gio thuc te sau khi ap dung gioi han cong don.")]
+    [Tooltip("Muc thong gio thuc te: 0 = dong, 1 = dang thong gio.")]
     [SerializeField] private float effectiveVentilation01 = 0f;
 
     [Tooltip("Do manh leak hien tai, da tinh theo van chinh")]
@@ -252,22 +253,29 @@ public class GasSystem : NetworkBehaviour
             ? leakStrength01 / Mathf.Max(0.01f, secondsToFullAtMaxLeak)
             : 0f;
 
-        float totalOpening01 = Mathf.Max(0f, vent01);
-        float firstOpening01 = Mathf.Min(totalOpening01, 1f);
-        float secondOpening01 = Mathf.Clamp01(totalOpening01 - 1f);
+        // Doors and windows use the same fixed ventilation strength. Opening
+        // farther, or opening both at once, does not increase the drain rate.
+        effectiveVentilation01 = activeOpenings > 0 ? 1f : 0f;
 
-        // The first opening contributes 1.0x. The second opening gradually adds
-        // only the remaining amount needed to reach the configured multiplier.
-        effectiveVentilation01 = firstOpening01 +
-            secondOpening01 * (twoOpeningsVentilationMultiplier - 1f);
+        float configuredVentDrainRate01PerSec = leakActive
+            ? fixedOpeningVentDrainRate01PerSec
+            : stoppedLeakOpeningVentDrainRate01PerSec;
 
-        // Linear drain gives an exact clear time: 1 / 40 = 0.025 gas per second.
         float ventDrainRate01PerSec = effectiveVentilation01 > 0f
-            ? effectiveVentilation01 / Mathf.Max(0.01f, secondsToClearWithFullVent)
+            ? Mathf.Max(0f, configuredVentDrainRate01PerSec)
             : 0f;
 
-        // Do not add natural dissipation while a vent is active; otherwise the
-        // configured 40-second clear time would become shorter than requested.
+        // Gameplay rule: gas must not decrease while a leak is still active.
+        // The base drain remains fixed, but is capped for a partially opened
+        // valve so it always stays below the accepted incoming leak rate.
+        if (leakActive)
+        {
+            ventDrainRate01PerSec = Mathf.Min(
+                ventDrainRate01PerSec,
+                fillRate01PerSec * maximumVentToLeakRatioWhileLeaking);
+        }
+
+        // Do not stack natural dissipation on top of the fixed opening drain.
         float naturalDrainRate01PerSec = !leakActive && effectiveVentilation01 <= 0f
             ? gas01 / Mathf.Max(0.01f, secondsToClearNaturally)
             : 0f;
@@ -472,7 +480,6 @@ public class GasSystem : NetworkBehaviour
     private void UpdateVentilation()
     {
         activeOpenings = 0;
-        float ventSum = 0f;
 
         bool hasSynchronizedOpenings = false;
         for (int i = 0; i < openingRegistered.Length; i++)
@@ -481,7 +488,6 @@ public class GasSystem : NetworkBehaviour
 
             hasSynchronizedOpenings = true;
             float open01 = GetOpeningOpen01(i);
-            ventSum += open01;
 
             if (open01 > 0f)
                 activeOpenings++;
@@ -489,7 +495,7 @@ public class GasSystem : NetworkBehaviour
 
         if (hasSynchronizedOpenings)
         {
-            vent01 = Mathf.Max(0f, ventSum);
+            vent01 = activeOpenings > 0 ? 1f : 0f;
             return;
         }
 
@@ -498,16 +504,11 @@ public class GasSystem : NetworkBehaviour
             var v = vents[i];
             if (!v) continue;
 
-            float open01 = Mathf.Clamp01(v.GetOpen01());
-            ventSum += open01;
-
             if (v.IsOpenEnough())
                 activeOpenings++;
         }
 
-        // Same as old version: do not clamp to 1.
-        // 1 max vent = 1, 2 max vents = 2, etc.
-        vent01 = Mathf.Max(0f, ventSum);
+        vent01 = activeOpenings > 0 ? 1f : 0f;
     }
 
     public void RegisterOpening(int slot, bool isWindow, float initialAngle)
@@ -851,13 +852,16 @@ public class GasSystem : NetworkBehaviour
         if (secondsToFullAtMaxLeak < 0.01f)
             secondsToFullAtMaxLeak = 0.01f;
 
-        if (secondsToClearWithFullVent < 0.01f)
-            secondsToClearWithFullVent = 0.01f;
+        if (fixedOpeningVentDrainRate01PerSec < 0f)
+            fixedOpeningVentDrainRate01PerSec = 0f;
 
-        twoOpeningsVentilationMultiplier = Mathf.Clamp(
-            twoOpeningsVentilationMultiplier,
-            1f,
-            2f);
+        if (stoppedLeakOpeningVentDrainRate01PerSec < 0f)
+            stoppedLeakOpeningVentDrainRate01PerSec = 0f;
+
+        maximumVentToLeakRatioWhileLeaking = Mathf.Clamp(
+            maximumVentToLeakRatioWhileLeaking,
+            0f,
+            0.99f);
 
         if (secondsToClearNaturally < 0.01f)
             secondsToClearNaturally = 0.01f;

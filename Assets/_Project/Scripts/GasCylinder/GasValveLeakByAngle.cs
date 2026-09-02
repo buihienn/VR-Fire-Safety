@@ -33,6 +33,10 @@ public class GasValveLeakByAngle : NetworkBehaviour
     [SerializeField] private bool raiseValveOpenedEvent = true;
     [SerializeField] private bool raiseOncePerScene = true;
 
+    [Header("Voice Over")]
+    [SerializeField] private string valveClosedVoKey = "VO_RightAction";
+    [SerializeField] private bool playValveClosedVoOnce = true;
+
     [Header("Debug")]
     [SerializeField] private float currentAngle;
     [Range(0f, 1f)] [SerializeField] private float valveOpen01;
@@ -44,6 +48,7 @@ public class GasValveLeakByAngle : NetworkBehaviour
     private bool wasClosed;
     private bool hasRaisedCloseInScene;
     private bool hasRaisedOpenInScene;
+    private bool hasPlayedValveClosedVoLocal;
 
     private float lastSentValveOpen01 = -999f;
     private float nextSendTime;
@@ -220,6 +225,9 @@ public class GasValveLeakByAngle : NetworkBehaviour
             }
         }
 
+        if (!wasClosed && closedNow)
+            PlayValveClosedVoForEveryone();
+
         if (raiseValveOpenedEvent && wasClosed && openedNow)
         {
             bool canRaise = !raiseOncePerScene || !hasRaisedOpenInScene;
@@ -236,6 +244,37 @@ public class GasValveLeakByAngle : NetworkBehaviour
                     hasRaisedOpenInScene = true;
             }
         }
+    }
+
+    private void PlayValveClosedVoForEveryone()
+    {
+        if (fusionSpawned)
+        {
+            if (Object.HasStateAuthority)
+                RPC_PlayValveClosedVo();
+
+            return;
+        }
+
+        PlayValveClosedVoLocal();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All, Channel = RpcChannel.Reliable)]
+    private void RPC_PlayValveClosedVo()
+    {
+        PlayValveClosedVoLocal();
+    }
+
+    private void PlayValveClosedVoLocal()
+    {
+        if ((playValveClosedVoOnce && hasPlayedValveClosedVoLocal) ||
+            AudioManager.Instance == null)
+        {
+            return;
+        }
+
+        AudioManager.Instance.PlayOneShot(valveClosedVoKey);
+        hasPlayedValveClosedVoLocal = true;
     }
 
     private float ReadCurrentAngle()
