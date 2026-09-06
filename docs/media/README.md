@@ -4,6 +4,7 @@ Add the final showcase media to this folder, then replace the placeholders in th
 
 Suggested filenames:
 
+- `system-architecture.jpg` - overall architecture of the VR training system
 - `singleplayer-demo.gif` - a short gas-leak response sequence
 - `multiplayer-demo.gif` - two participants coordinating in one room
 - `kitchen-scenario.png` - a wide view of the residential kitchen

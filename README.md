@@ -62,30 +62,9 @@ Residential gas leaks can cause asphyxiation, fire, or explosion, yet realistic 
 
 ## System architecture
 
-```mermaid
-flowchart LR
-    User[VR participants<br/>Meta Quest] -->|headset and controllers| Interaction
-
-    subgraph Device[Unity VR application on each headset]
-        Interaction[Meta XR + OpenXR<br/>input and object interaction]
-        Simulation[Rule-based scenario<br/>gas · ventilation · fire · smoke]
-        Events[Gameplay event bus]
-        Feedback[Audio · UI · scoring<br/>session progression]
-        Review[Local video + JSON action logs<br/>post-session review]
-        Network[Photon Fusion<br/>room and state synchronization]
-
-        Interaction --> Simulation
-        Interaction --> Events
-        Simulation --> Events
-        Events --> Feedback
-        Events --> Review
-        Network <--> Interaction
-        Network <--> Simulation
-        Network <--> Feedback
-    end
-
-    Network <-->|Internet| Cloud[Photon Cloud]
-```
+<p align="center">
+  <img src="docs/media/system-architecture.jpg" alt="Overall architecture of the multi-user VR gas-leak response training system" width="100%">
+</p>
 
 Photon Fusion Shared Mode coordinates room membership and transfers state authority for shared objects. The authoritative state is synchronized so participants observe the same gas, fire, smoke, object, timer, and session outcomes. Recordings and structured action logs remain on the VR device for review and export.
 
@@ -166,6 +145,12 @@ Most assistance concerned manipulating VR objects rather than choosing a respons
 
 The enabled application flow is `StartScene` → `MainScene` → `EndGameScene`, with `TutorialScene` available from the start experience. A packaged public demo build is not currently included.
 
+### Known editor issue: Meta Avatars SDK
+
+With Meta Avatars SDK `40.0.1`, Unity may crash when entering Play Mode repeatedly because `AvatarAssetsPackageCheckTrigger` runs again during assembly reload. If you encounter this issue, follow the documented [Meta Avatar Unity Editor crash workaround](ProjectPatches/MetaAvatar/README.md).
+
+The workaround adds a `SessionState` guard so the package-asset check runs only once per Unity Editor session. It modifies a generated file under `Library/PackageCache`, so it is optional, is not tracked by Git, and may need to be reapplied after Unity refreshes or updates the package.
+
 ## Project structure
 
 ```text
@@ -180,6 +165,7 @@ Assets/_Project/
 Assets/Plugins/Android/     # Quest screen-recording integration
 Assets/Photon/              # Photon Fusion SDK
 Assets/WireBuilder/         # Third-party cable/hose construction tool
+ProjectPatches/MetaAvatar/  # Reproducible workaround for a Meta SDK editor crash
 docs/thesis/                # Full thesis report
 docs/media/                 # README demos and screenshots
 ```

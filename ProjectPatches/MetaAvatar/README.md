@@ -1,4 +1,6 @@
-# Meta Avatar Unity Editor Crash Fix
+# Meta Avatar Unity Editor Crash Workaround
+
+This is an optional local workaround for a Unity Editor crash observed with the package versions below. Apply it only if Unity crashes when entering Play Mode repeatedly.
 
 ## Environment
 
@@ -55,3 +57,15 @@ public class AvatarAssetsPackageCheckTrigger
         CoreAssetsMover.CopyAssets();
     }
 }
+```
+
+## What the Workaround Changes
+
+The `SessionState` guard allows the package-asset check to run only once during each Unity Editor session. This avoids repeating the preset packaging and asset-copy operation after an assembly reload.
+
+## Important
+
+- Close Unity before editing the package file.
+- `Library/PackageCache` is generated locally and is intentionally not committed to Git.
+- Unity may overwrite this change after a package refresh, reinstallation, or upgrade. Reapply the workaround if the crash returns.
+- Remove the workaround when upgrading to a Meta Avatars SDK release that resolves the underlying issue.
